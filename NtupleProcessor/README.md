@@ -1,9 +1,9 @@
 ================================================================================
 #NtupleProcessor
-*/TreeIterator
-*/EntryHandler
-*/HistogramMaker
-*/...
+* /TreeIterator
+* /EntryHandler
+* /HistogramMaker
+* /...
 
 
 NtupleProcessor is a program used to run through the ntuples created by the
