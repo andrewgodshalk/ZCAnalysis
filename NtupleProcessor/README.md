@@ -1,12 +1,10 @@
 ================================================================================
 #NtupleProcessor
+*/TreeIterator
+*/EntryHandler
+*/HistogramMaker
+*/...
 
-```
-  /TreeIterator
-  /EntryHandler
-  /HistogramMaker
-  /...
-```
 
 NtupleProcessor is a program used to run through the ntuples created by the
 ZCAnalysis/Ntupler and extract information and histograms necessary for the 
@@ -15,10 +13,14 @@ analysis of the
 **To compile**:
 
 ```
-    g++ -o NtupleProcessor main.cpp `root-config --cflags --glibs`
+g++ -o NtupleProcessor main.cpp `root-config --cflags --glibs`
 ```
 
-**To run** type: NtupleProcess \<inputconfigfile\>
+**To run**
+
+```
+NtupleProcess \<inputconfigfile\>
+```
 
 Three classes are used to extract histograms from the ntuples:
 
