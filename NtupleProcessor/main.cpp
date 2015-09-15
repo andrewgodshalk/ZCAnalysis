@@ -1,6 +1,15 @@
 /*------------------------------------------------------------------------------
    main.cpp
 
+Modified: 2015-09-14
+
+Main file for the NtupleProcessor program.
+
+Options taken at command line:
+
+To compile from directory containing ZCAnalysis:
+   g++ -o NtupleProcessor ZCAnalysis/ZCLibrary/ZCConfig.cpp ZCAnalysis/NtupleProcessor/src/*.cpp ZCAnalysis/NtupleProcessor/main.cpp `root-config --cflags --glibs`
+
 ------------------------------------------------------------------------------*/
 
 // HEADERS
@@ -9,7 +18,9 @@
 #include "TFile.h"                  // ROOT class headers
 #include "TString.h"
 #include "TTree.h"
-#include "../ZCLibrary/interface/timestamp.h"
+#include "../ZCLibrary/timestamp.h"
+#include "../ZCLibrary/ZCConfig.h"
+#include "interface/NtupleProcessor.h"
 
 using namespace std;
 
@@ -19,18 +30,24 @@ int main(int argc, char* argv[])
     TString ts_mainBegin  = timeStamp();
     TString fts_mainBegin = fileTimeStamp();
 
-  // TEST OUTPUT
+  // COMMAND LINE OUTPUT
     cout << "\n\n"
-            "============================================\n"
-            "===ZCHistogramExtractor=====================\n"
+            "================================================================================\n"
+            "===NtupleProcessor==============================================================\n"
             "  Processing Begun: " << ts_mainBegin << "\n"
             "\n";
 
+  // Create the NtupleProcessor
+    NtupleProcessor ntplproc("");
 
 
+  // CLOSING OUTPUT.
+    TString ts_mainEnd = timeStamp();
     cout << "\n"
-            "===ZCHistogramExtractor - FINISHED==========\n"
-            "============================================\n" << endl;
+            "  Completion time: " << ts_mainEnd <<      "\n"
+            "===NtupleProcessor - COMPLETE===================================================\n"
+            "================================================================================\n"
+         << endl;
 
     return 0;
 }
