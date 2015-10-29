@@ -5,4 +5,3 @@ all : NtupleProcessor
 
 clean :
 	make clean -f NtupleProcessor/makefile
-	rm *.o

@@ -6,3 +6,8 @@ association with c quarks relative to Z+jets inclusive for the CMS experiment.
 Current code packages included:
 - NtupleProcessor
 
+To compile all code:
+
+```
+make all
+```

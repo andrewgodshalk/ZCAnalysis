@@ -13,14 +13,16 @@ analysis of the
 
 **To compile**:
 
+From ZCAnalysis folder:
+
 ```
-g++ -o NtupleProcessor main.cpp `root-config --cflags --glibs`
+make -f NtupleProcessor/makefile
 ```
 
 **To run**
 
 ```
-NtupleProcess \<inputconfigfile\>
+./NtupleProcessor.exe \<inputconfigfile\>
 ```
 
 Three classes are used to extract histograms from the ntuples:
@@ -47,7 +49,7 @@ OUTPUT: Simple timestamped log file.
 
 ####HistogramMaker
 Uses selection variables from EntryHandler to create histograms. This class is a
-virtual class. The analysis is actually done by child classes inheritted from
+_virtual class_. The analysis is actually done by child classes inheritted from
 this class.
 
 INPUT: Dependent on class.
