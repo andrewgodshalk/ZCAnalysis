@@ -2,7 +2,7 @@
 NtupleProcessor.cpp
 
  Created : 2015-09-14  godshalk
- Modified: 2015-09-14  godshalk
+ Modified: 2015-10-28  godshalk
 
 ------------------------------------------------------------------------------*/
 
@@ -13,7 +13,7 @@ NtupleProcessor.cpp
 using std::cout;   using std::endl;
 
 NtupleProcessor::NtupleProcessor(TString o, TString fnc)
-:  options(o), fn_config(fnc), zcConf(fnc)
+:  options(o), fn_config(fnc), runParams(fnc)
 {
   // TEST output
     cout << "    NtupleProcessor: Created.\n"

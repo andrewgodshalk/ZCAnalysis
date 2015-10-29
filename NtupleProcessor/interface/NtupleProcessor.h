@@ -14,16 +14,16 @@
 
 ------------------------------------------------------------------------------*/
 #include <TString.h>
-#include "../../ZCLibrary/ZCConfig.h"
+#include "NtupleProcConfig.h"
 
 
 class NtupleProcessor
 {
   public:
-    NtupleProcessor( TString o = "", TString fnc = "../ZCLibrary/zc_standard_config.ini");
+    NtupleProcessor( TString o = "", TString fnc = "ZCLibrary/zc_standard_config.ini");
    ~NtupleProcessor(){}
 
-    ZCConfig zcConf;    // Contains all parameters for the analysis
+    NtupleProcConfig runParams;    // Contains all parameters for the analysis
 
   private: 
     TString fn_config;  // Location of the configuration file for this processing.

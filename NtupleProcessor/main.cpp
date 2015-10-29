@@ -19,8 +19,7 @@ To compile from directory containing ZCAnalysis:
 #include "TString.h"
 #include "TTree.h"
 #include "../ZCLibrary/timestamp.h"
-#include "../ZCLibrary/ZCConfig.h"
-#include "interface/NtupleProcessor.h"
+#include "../NtupleProcessor/interface/NtupleProcessor.h"
 
 using namespace std;
 
