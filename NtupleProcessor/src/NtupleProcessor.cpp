@@ -13,7 +13,7 @@ NtupleProcessor.cpp
 using std::cout;   using std::endl;
 
 NtupleProcessor::NtupleProcessor(TString o, TString fnc)
-:  options(o), fn_config(fnc), runParams(fnc)
+:  runParams(fnc), options(o), fn_config(fnc)
 {
   // TEST output
     cout << "    NtupleProcessor: Created.\n"

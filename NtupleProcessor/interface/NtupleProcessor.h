@@ -26,8 +26,8 @@ class NtupleProcessor
     NtupleProcConfig runParams;    // Contains all parameters for the analysis
 
   private: 
-    TString fn_config;  // Location of the configuration file for this processing.
     TString options;    // Options for this processing.
+    TString fn_config;  // Location of the configuration file for this processing.
 
 };
 

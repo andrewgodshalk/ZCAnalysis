@@ -5,19 +5,14 @@ Modified: 2015-09-14
 
 Main file for the NtupleProcessor program.
 
-Options taken at command line:
-
-To compile from directory containing ZCAnalysis:
-   g++ -o NtupleProcessor ZCAnalysis/ZCLibrary/ZCConfig.cpp ZCAnalysis/NtupleProcessor/src/*.cpp ZCAnalysis/NtupleProcessor/main.cpp `root-config --cflags --glibs`
-
 ------------------------------------------------------------------------------*/
 
 // HEADERS
 #include <iostream>                 // stdlib
 #include <string>
-#include "TFile.h"                  // ROOT class headers
-#include "TString.h"
-#include "TTree.h"
+#include <TFile.h>                  // ROOT class headers
+#include <TString.h>
+#include <TTree.h>
 #include "../ZCLibrary/timestamp.h"
 #include "../NtupleProcessor/interface/NtupleProcessor.h"
 
