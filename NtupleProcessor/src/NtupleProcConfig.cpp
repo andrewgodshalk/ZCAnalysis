@@ -1,8 +1,8 @@
 /*------------------------------------------------------------------------------
-ZCConfig.cpp
+NtupleProcConfig.cpp
 
  Created : 2015-09-15  godshalk
- Modified: 2015-10-28  godshalk
+ Modified: 2015-11-09  godshalk
 
 ------------------------------------------------------------------------------*/
 
@@ -12,6 +12,7 @@ ZCConfig.cpp
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/ini_parser.hpp>
 #include <TString.h>
+#include <TRegexp.h>
 #include "../interface/NtupleProcConfig.h"
 
 using std::cout;     using std::endl;   using std::stringstream;
@@ -21,7 +22,7 @@ NtupleProcConfig::NtupleProcConfig(TString fnc)
 : ConfigReader(fnc)
 {
   // TEST output
-    cout << "    ZCConfig: Created.\n"
+    cout << "    NtupleProcConfig: Created.\n"
             "      Config Input File: " << fn_config << "\n"
          << endl;
 
@@ -132,24 +133,57 @@ NtupleProcConfig::NtupleProcConfig(TString fnc)
 
 void NtupleProcConfig::processBinString(vector<pair<float,float> >& binSet, string& inputString)
 {
-    cout << "processBinString: INPUT STRING " << inputString << endl; 
-    vector<float> binBounds = getListFromString<float>(inputString);
-    int numBins = binBounds.size();
-    binSet.push_back({binBounds[0], binBounds[numBins-1]});
-    cout << "processBinString: PUSHING BACK " << binBounds[0] << "," << binBounds[numBins-1] << endl;
-    for(int i=1; i<numBins; i++)
-    {   // Remember, fencepost problem...
-        binSet.push_back({binBounds[i-1], binBounds[i]});
-        cout << "processBinString: PUSHING BACK " << binBounds[i-1] << "," << binBounds[i] << endl;
-    }
+    binSet.clear();
+  // Debug:
+    //cout << "  NtupleProcConfig::processBinString:\n  Initial String:     " << inputString << endl;
 
-    cout << "processBinString: FINAL PAIR LIST: ";
-    for(auto& bin : binSet) cout << "(" << bin.first << "," << bin.second << "), ";
-    cout << endl;
+  // Define a regex expression to use to match strings of (float, float) format and a size variable to pass as the size of the resulting match.
+    TRegexp numPairRegex("\\(-?[0-9]+\\.?[0-9]?,-?[0-9]+\\.?[0-9]?\\)");
+    int* matchLength = new int;
+
+  // Get list of bin strings from input string.
+    vector<string> binStrings;
+    getListFromString(inputString, binStrings);
+
+  // Extract number information from list of bin strings (Should have format: (i,j) ).
+    for(auto& binStr : binStrings)
+    {
+      // Check if the bin string is a formatted properly.
+        *matchLength = 0;
+        if(numPairRegex.Index(binStr, matchLength) != 0 || (unsigned int)(*matchLength) != binStr.length())
+        { // If the regex expression doesn't find itself in the string *OR* the matched string isn't the full length of the input string...
+            cout << "  ERROR (NtupleProcConfig::processBinString)\n: Bin string does not have (p,q) format: " << binStr << endl << endl;
+          // Debug:
+            //cout << "    Returned index:  " << numPairRegex.Index(binStr, matchLength) << endl;
+            //cout << "    Returned length: " << *matchLength << endl;
+            //cout << "    Actual length:   " << binStr.length() << endl << endl;
+            return;     // KICK
+        }
+
+        float binMin, binMax;
+        TString numStr = "";
+        string::iterator it=binStr.begin()+1;
+
+      // Extract bin minimum value
+        do{ numStr+=*(it++); } while( it != binStr.end() && *it != ',');
+        binMin = numStr.Atof();
+
+     // Extract bin maximum value
+        numStr = ""; it++;  // Reset bin number string and move past the comma
+        do{ numStr+=*(it++); } while( it != binStr.end() && *it != ')');
+        binMax = numStr.Atof();
+
+      // Add pair to bin set.
+        binSet.push_back({binMin, binMax});
+    }
+  // Debug:
+    //cout << "  Final List of Bins: ";
+    //for(auto& bin : binSet) cout << "(" << bin.first << "," << bin.second << ") ";
+    //cout << endl << endl;
 }
 
 
 void NtupleProcConfig::processTriggerString(vector<int>& trigSet, string& inputString)
 {
-    trigSet = getListFromString<int>(inputString);
+    getListFromString<int>(inputString, trigSet);
 }

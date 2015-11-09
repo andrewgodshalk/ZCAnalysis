@@ -9,6 +9,7 @@
 
  Main class of NtupleProcessor program. Created to handle input and running of
  ntuple processing.
+
  Takes input variables (datasets, configurations, etc) and sets up the
  appropriate classes to handle each portion of the analysis process.
 
@@ -20,14 +21,14 @@
 class NtupleProcessor
 {
   public:
-    NtupleProcessor( TString o = "", TString fnc = "ZCLibrary/zc_standard_config.ini");
+    NtupleProcessor(TString, TString o = "");  // Primary constructor.
+    NtupleProcessor() : NtupleProcessor("ZCLibrary/zc_standard_config.ini") {}   // Default constructor. Call primary constructor w/ a default file.
    ~NtupleProcessor(){}
 
-    NtupleProcConfig runParams;    // Contains all parameters for the analysis
+    NtupleProcConfig runParams;    // Contains options specific for NtupleProcessor to run
 
   private: 
     TString options;    // Options for this processing.
-    TString fn_config;  // Location of the configuration file for this processing.
 
 };
 

@@ -12,13 +12,13 @@ NtupleProcessor.cpp
 
 using std::cout;   using std::endl;
 
-NtupleProcessor::NtupleProcessor(TString o, TString fnc)
-:  runParams(fnc), options(o), fn_config(fnc)
+NtupleProcessor::NtupleProcessor(TString fnpc, TString o)
+:  runParams(fnpc), options(o)
 {
   // TEST output
     cout << "    NtupleProcessor: Created.\n"
-            "      Config File: " << fn_config << "\n"
-            "      Options: "     << options   << "\n"
+            "      Ntuple Processing Config File: " << fnpc << "\n"
+            "      Options:                       " << options   << "\n"
          << endl;
 
 

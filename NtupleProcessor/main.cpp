@@ -32,7 +32,7 @@ int main(int argc, char* argv[])
             "\n";
 
   // Create the NtupleProcessor
-    NtupleProcessor ntplproc("");
+    NtupleProcessor ntplproc;
 
 
   // CLOSING OUTPUT.

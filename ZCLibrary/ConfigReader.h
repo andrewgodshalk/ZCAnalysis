@@ -36,29 +36,19 @@ class ConfigReader {
       // Property tree read from file.
 
     template <typename T>
-      std::vector<T> getListFromString(std::string& str)   // Simple function that extracts numbers from a string.
-    { // Feeds string into a stringstream and, while there is still something to
-      //   read out, ouputs the numbers from the stream into an int and pushes
-      //   the ints into the output vector.
-        std::vector<T> list;
-
-        std::cout << " getIntsFromString: INPUT STRING: " << str << std::endl;
-    
-      // Remove commas from string with spaces.
-        std::string newStr = "";
-        for ( std::string::iterator it=str.begin(); it!=str.end(); ++it)
-            *it == ',' ? newStr+=" " : newStr+=*it;
-    
-        std::stringstream strm(newStr);
+      void getListFromString(std::string& str, std::vector<T>& list)
+    { // Simple function that extracts numbers from a string.
+      // Feeds string into a stringstream and, while there is still something to
+      //   read out, ouputs the entry from the stream into an variable and
+      //   pushes the variable into the output vector.
+        list.clear();
+        std::stringstream strm(str);
         while(true) {
             T n;
             strm >> n;
             if(!strm) break;
             list.push_back(n);
-            std::cout << " From " << str << ": Pushing back " << n << std::endl;
         }
-    
-    return list;
     }
 };
 
