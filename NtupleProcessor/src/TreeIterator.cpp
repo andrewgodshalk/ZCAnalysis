@@ -28,6 +28,10 @@ void TreeIterator::SlaveBegin(TTree * /*tree*/)
   // Initialize log, counters
     nEntries          = 0;
     nEntriesProcessed = 0;
+
+
+  // TEST
+    cout << "    TreeIterator::SlaveBegin: Initialized." << endl;
 }
 
 
@@ -75,7 +79,7 @@ Bool_t TreeIterator::Process(Long64_t entry)
     //cout << "  #" << entry << endl;
 
   // Evaluate the criteria for this entry
-    //eHandler->evalCriteria();
+    eHandler->evalCriteria();
     //cout << "  Entry #" << entry << ": Criteria Evaluated" << endl;
 
 // Call each of the HistogramMakers on this entry.

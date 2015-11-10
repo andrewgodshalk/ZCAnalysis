@@ -1,5 +1,5 @@
 /*
- * EntryHandler.cpp
+ * EventHandler.cpp
  *
  *  Created on: May 14, 2015
  *      Author: godshalk
@@ -14,7 +14,7 @@
 
 using std::cout;   using std::endl;   using std::vector;
 
-EntryHandler::EntryHandler(TTree* tree, TString o) : options(o)
+EventHandler::EventHandler(TString fnac, TString o) : analCfg(fnac), options(o)
 {
   // Check the option to see if we're working with Simulation or Data, and whether you're looking for Zee or Zuu events
     usingSim = (options.Contains("Sim", TString::kIgnoreCase) ? true : false);
@@ -22,11 +22,11 @@ EntryHandler::EntryHandler(TTree* tree, TString o) : options(o)
     usingZuu = (options.Contains("Zuu", TString::kIgnoreCase) ? true : false);
 
   // Map the handler's variables to the input tree.
-    mapTree(tree);
+    //mapTree(tree);
 
 }
 
-bool EntryHandler::mapTree(TTree* tree)
+bool EventHandler::mapTree(TTree* tree)
 {
   // Maps TTree to class' variables.
   // TO DO: Implement check for correct mapping, return result?
@@ -82,7 +82,7 @@ bool EntryHandler::mapTree(TTree* tree)
 }
 
 
-void EntryHandler::evalCriteria()
+void EventHandler::evalCriteria()
 { // Evaluates the class' list of event selection criteria
 /*
   // Check JSON if working with a data event.
@@ -155,7 +155,7 @@ void EntryHandler::evalCriteria()
 }
 
 // Returns whether or not this event has any of the listed triggers.
-bool EntryHandler::triggered(vector<int> &triggersToTest)
+bool EventHandler::triggered(vector<int> &triggersToTest)
 {
 /*
     //for(int i : triggersToTest) cout << "    Value at trigger listing " << i << ": " << m_triggers[i] << " --> Returning " << (m_triggers[i] ? "TRUE" : "FALSE") << endl;

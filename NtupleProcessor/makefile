@@ -1,7 +1,7 @@
 # Make file for ZCAnalysis/NtupleProcessor package
 
 CC=g++
-CFLAGS=-c -Wall
+CFLAGS=-c -Wall 
 ROOTFLAGS=`root-config --cflags --glibs`
 OBJDIR=NtupleProcessor/obj
 OBJS=$(OBJDIR)/main.o $(OBJDIR)/NtupleProcessor.o $(OBJDIR)/NtupleProcConfig.o $(OBJDIR)/TreeIterator.o $(OBJDIR)/EventHandler.o $(OBJDIR)/ControlPlotExtractor.o $(OBJDIR)/AnalysisConfig.o $(OBJDIR)/ControlPlotConfig.o
@@ -11,12 +11,12 @@ SRCDIR=NtupleProcessor/src
 NtupleProcessor : NtupleProcessor.exe
 
 NtupleProcessor.exe : $(OBJS)
-	$(CC) $(OBJS) -o NtupleProcessor.exe $(ROOTFLAGS)
+	$(CC) $(OBJS) -o NtupleProcessor.exe $(ROOTFLAGS) -lboost_program_options
 
 $(OBJDIR)/main.o : NtupleProcessor/main.cpp ZCLibrary/timestamp.h $(HDRDIR)/NtupleProcessor.h $(HDRDIR)/NtupleProcConfig.h ZCLibrary/ConfigReader.h
 	$(CC) $(CFLAGS) NtupleProcessor/main.cpp -o $(OBJDIR)/main.o $(ROOTFLAGS)
 
-$(OBJDIR)/NtupleProcessor.o : $(SRCDIR)/NtupleProcessor.cpp $(HDRDIR)/NtupleProcessor.h $(HDRDIR)/NtupleProcConfig.h $(HDRDIR)/TreeIterator.h $(HDRDIR)/EventHandler.h $(HDRDIR)/HistogramExtractor.h $(HDRDIR)/ControlPlotExtractor.h
+$(OBJDIR)/NtupleProcessor.o : $(SRCDIR)/NtupleProcessor.cpp $(HDRDIR)/NtupleProcessor.h $(HDRDIR)/NtupleProcConfig.h ZCLibrary/ConfigReader.h $(HDRDIR)/TreeIterator.h $(HDRDIR)/EventHandler.h $(HDRDIR)/HistogramExtractor.h $(HDRDIR)/ControlPlotExtractor.h
 	$(CC) $(CFLAGS) $(SRCDIR)/NtupleProcessor.cpp -o $(OBJDIR)/NtupleProcessor.o $(ROOTFLAGS)
 
 $(OBJDIR)/TreeIterator.o : $(SRCDIR)/TreeIterator.cpp $(HDRDIR)/TreeIterator.h $(HDRDIR)/EventHandler.h $(HDRDIR)/HistogramExtractor.h

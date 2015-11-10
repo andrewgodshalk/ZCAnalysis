@@ -7,13 +7,14 @@ NtupleProcessor.cpp
 ------------------------------------------------------------------------------*/
 
 #include <iostream>
+#include <TFile.h>
 #include <TString.h>
 #include "../interface/NtupleProcessor.h"
 
-using std::cout;   using std::endl;
+using std::cout;   using std::endl;   using std::vector;
 
-NtupleProcessor::NtupleProcessor(TString fnpc, TString o)
-:  runParams(fnpc), options(o)
+NtupleProcessor::NtupleProcessor(TString ds, TString fnpc, TString fnac, TString o, int me)
+:  dataset(ds), runParams(fnpc), eHandler(fnac), tIter(eHandler, hExtractors), options(o), maxEvents(me)
 {
   // TEST output
     cout << "    NtupleProcessor: Created.\n"
@@ -21,17 +22,22 @@ NtupleProcessor::NtupleProcessor(TString fnpc, TString o)
             "      Options:                       " << options   << "\n"
          << endl;
 
+  // Open and set up appropriate file & tree
+    TFile *testFile = TFile::Open(runParams.fn_ntuple[dataset.Data()]);
+    TTree *ntuple   = (TTree*) testFile->Get("tree");
 
-  // Takes input options and processes appropriately
-  //   Options that can be specified:
-  //     - Operating points
-  //     - Differential variables (default: JetPT)
-  //     - Dataset ntuple file to run on (default: all)
-  //     - Desired number of entry to run on per file and entries to skip.
-  //     - Modifications to the analysis (systematic analyses, etc)
-  // For each dataset that needs to be run over...
-  //   Opens the appropriate file and tree
-  //   Creates a TreeIterator, EventHandler, and the desired HistogramMakers
-  //   Runs the TreeIterator.
+  // Create HistogramExtractors from strings from NtupleProcConfig
+    TString testString = "";
+    hExtractors.push_back(createHistogramExtractorFromString(testString));
 
+  // Process the ntuple using the given tree iterator.
+    if(maxEvents!=-1) ntuple->Process(&tIter, options, maxEvents);
+    else              ntuple->Process(&tIter, options);
+}
+
+
+HistogramExtractor* NtupleProcessor::createHistogramExtractorFromString(TString& inputString)
+{
+
+return NULL;
 }

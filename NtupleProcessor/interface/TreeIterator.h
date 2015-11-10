@@ -21,16 +21,16 @@
 #include <TChain.h>
 #include <TSelector.h>
 #include <TTree.h>
-//#include "EntryHandler.h"
-//#include "HistogramMaker.h"
+#include "EventHandler.h"
+#include "HistogramExtractor.h"
 
 typedef unsigned long counter;
 
 class TreeIterator : public TSelector
 {
 public:
-    TreeIterator(TTree* /*tree*/= 0) : fChain(0){}
-    virtual        ~TreeIterator(){}
+    TreeIterator(EventHandler &eh, std::vector<HistogramExtractor*> &he) : eHandler(eh), hExtractors(he), fChain(0) {}
+    virtual ~TreeIterator(){}
 
   // Overloaded TSelector Functions
     virtual Int_t   Version() const { return 2; }
@@ -49,12 +49,9 @@ public:
     virtual void    SlaveTerminate();
     virtual void    Terminate();
 
-  // Method for adding Histogram Makers to the processing list.
-//    void addHistogramMaker(HistogramMaker*);
-
   // Entry handler & list of Histogram Extractors
-//    EntryHandler *eHandler;
-//    std::vector<HistogramMaker*> histoMakers;
+    EventHandler &eHandler;
+    std::vector<HistogramExtractor*> &hExtractors;
 
   // TTree
     TTree *fChain;

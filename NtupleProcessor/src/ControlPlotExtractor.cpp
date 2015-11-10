@@ -18,10 +18,10 @@ using std::stringstream;   using std::string;     using std::cout;
 using std::endl;           using std::ofstream;
 typedef unsigned int Index;
 
-ControlPlotExtractor::ControlPlotExtractor(TString fn, TString o) : HistogramExtractor(fn, o){}
+ControlPlotExtractor::ControlPlotExtractor(EventHandler& eh, TString o) : HistogramExtractor(eh, o){}
 
 
-void ControlPlotExtractor::fillHistos(EntryHandler* e)
+void ControlPlotExtractor::fillHistos()
 {
 /*
 

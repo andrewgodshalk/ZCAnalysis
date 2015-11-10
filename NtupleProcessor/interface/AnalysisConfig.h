@@ -24,7 +24,7 @@
 class AnalysisConfig : public ConfigReader
 {
   public:
-    AnalysisConfig( TString fnc = "NtupleProcessor/etc/analysisConfig_default.ini");
+    AnalysisConfig(TString fnc = "NtupleProcessor/etc/analysisConfig_default.ini");
    ~AnalysisConfig(){}
 
   // Config variables

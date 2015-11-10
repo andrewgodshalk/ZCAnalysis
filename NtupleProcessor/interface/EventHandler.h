@@ -21,19 +21,22 @@ TO DO
 #include <sstream>
 #include <vector>
 #include <TTree.h>
+#include <TString.h>
+#include "AnalysisConfig.h"
 
 typedef unsigned int Index;
 
-class EntryHandler {
+class EventHandler {
 
 public:
-    EntryHandler(TTree*, TString);
-    virtual ~EntryHandler(){}
+    EventHandler(TString, TString o="");
+    virtual ~EventHandler(){}
 
     const static int maxNumJets  = 130;   /// TEMPORARY WORKING VARIABLE - will be included in config file?
     const static int maxNumMuons = 130;   /// TEMPORARY WORKING VARIABLE - will be included in config file?
     const static int maxNumElecs = 130;   /// TEMPORARY WORKING VARIABLE - will be included in config file?
 
+    AnalysisConfig analCfg;
 
   // Methods
     bool mapTree(TTree*);                         // Maps class variables to an input TTree.

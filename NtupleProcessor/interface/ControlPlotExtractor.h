@@ -14,16 +14,17 @@
 
 #include <TString.h>
 #include "HistogramExtractor.h"
+#include "EventHandler.h"
 
 typedef unsigned long count;
 
 class ControlPlotExtractor : public HistogramExtractor {
 public:
-    ControlPlotExtractor(TString, TString o = "CSVT,JetPt");
+    ControlPlotExtractor(EventHandler&, TString o = "CSVT,JetPt");
     virtual ~ControlPlotExtractor(){}
 
-    void fillHistos(EntryHandler*);     // Fills the class' contained histograms from the passed Entry.
-    void saveToFile();                  // Saves the histograms and the log to file.
+    void fillHistos();     // Fills the class' contained histograms from the passed Entry.
+    void saveToFile();     // Saves the histograms and the log to file.
 
     bool    usingDY;
     bool    usingZee;

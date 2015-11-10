@@ -24,10 +24,10 @@
 class HistogramExtractor {
   public:
     virtual ~HistogramExtractor(){}
-    HistogramExtractor(TString fn, TString o = "") : fn_output(fn), fTimeStamp(fileTimeStamp()), options(o){}
+    HistogramExtractor(EventHandler& eh, TString o = "") : eHandler(eh), fTimeStamp(fileTimeStamp()), options(o){}
 
   // Function that fills histograms based on event criteria
-    virtual void fillHistos(EntryHandler*){}
+    virtual void fillHistos(){}
 
   // Function that saves the histograms, log, and performs any final actions.
     virtual void saveToFile(){}
@@ -35,8 +35,10 @@ class HistogramExtractor {
   // Histogram collection
     std::map<TString, TH1*> h;    // List of histograms that will be filled by the fillHistos function
 
+  // Reference to EventHandler where information will be extracted from.
+    EventHandler &eHandler;
+
   // File information for output root and log files.
-    TString fn_output;   // output filename.
     TFile  *outFile;     // Output file where histograms are stored.
     TString fTimeStamp;  // Time program was started, stored for use in file timestamps.
 
