@@ -32,10 +32,10 @@ int main(int argc, char* argv[])
     TString fts_mainBegin = fileTimeStamp();
 
   // Variables needed for Ntuple processor
-    TString dataset  = "dy";
-    TString npconfig = "NtupleProcessor/etc/zcNtupleProcConfig_default.ini";
-    TString anconfig = "NtupleProcessor/etc/zcAnalysisConfig_default.ini";
-    TString options  = "";
+    string dataset  = "dy";
+    string npconfig = "NtupleProcessor/etc/zcNtupleProcConfig_default.ini";
+    string anconfig = "NtupleProcessor/etc/zcAnalysisConfig_default.ini";
+    string options  = "";
     int maxEvents = -1;
 
   // Set up list of valid datsets
@@ -51,12 +51,12 @@ int main(int argc, char* argv[])
     // Set up options
     po::options_description opDesc("Z+c Ntuple Processor options");
     opDesc.add_options()
-        ("help",                                            "show help message"                        )
-        ("dataset",    po::value<string>()                , "dataset processed by NtupleProcessor"     )
-        ("npconfig",   po::value<string>()                , "NtupleProcConfig file"                    )
-        ("anconfig",   po::value<string>()                , "AnalysisConfig file"                      )
-        ("options",    po::value<string>()                , "Misc. options"                            )
-        ("maxevents",  po::value<int>()->default_value(-1), "Number of events processor will run over" )
+        ("help"     ,                                                 "show help message"                        )
+        ("dataset"  ,  po::value<string>()->default_value(dataset  ), "dataset processed by NtupleProcessor"     )
+        ("npconfig" ,  po::value<string>()->default_value(npconfig ), "NtupleProcConfig file"                    )
+        ("anconfig" ,  po::value<string>()->default_value(anconfig ), "AnalysisConfig file"                      )
+        ("options"  ,  po::value<string>()->default_value(options  ), "Misc. options"                            )
+        ("maxevents",  po::value<int>()   ->default_value(maxEvents), "Number of events processor will run over" )
     ;
     po::variables_map cmdInput;
     po::store(po::parse_command_line(argc, argv, opDesc), cmdInput);

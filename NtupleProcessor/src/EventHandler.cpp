@@ -20,10 +20,6 @@ EventHandler::EventHandler(TString fnac, TString o) : analCfg(fnac), options(o)
     usingSim = (options.Contains("Sim", TString::kIgnoreCase) ? true : false);
     usingZee = (options.Contains("Zee", TString::kIgnoreCase) ? true : false);
     usingZuu = (options.Contains("Zuu", TString::kIgnoreCase) ? true : false);
-
-  // Map the handler's variables to the input tree.
-    //mapTree(tree);
-
 }
 
 bool EventHandler::mapTree(TTree* tree)
