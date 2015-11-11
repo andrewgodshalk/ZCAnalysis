@@ -49,20 +49,21 @@ int main(int argc, char* argv[])
 
   // Process command line input.
     // Set up options
-    po::options_description opDesc("Z+c Ntuple Processor options");
+    po::options_description opDesc("Z+c Ntuple Processor options", 150);
     opDesc.add_options()
-        ("help"     ,                                                 "show help message"                        )
-        ("dataset"  ,  po::value<string>()->default_value(dataset  ), "dataset processed by NtupleProcessor"     )
-        ("npconfig" ,  po::value<string>()->default_value(npconfig ), "NtupleProcConfig file"                    )
-        ("anconfig" ,  po::value<string>()->default_value(anconfig ), "AnalysisConfig file"                      )
-        ("options"  ,  po::value<string>()->default_value(options  ), "Misc. options"                            )
-        ("maxevents",  po::value<int>()   ->default_value(maxEvents), "Number of events processor will run over" )
+        ("help"     ",h",                                                 "Print help message"          )
+        ("dataset"  ",d",  po::value<string>()->default_value(dataset  ), "Dataset to process"          )
+        ("npconfig" ",n",  po::value<string>()->default_value(npconfig ), "NtupleProcConfig file"       )
+        ("anconfig" ",a",  po::value<string>()->default_value(anconfig ), "AnalysisConfig file"         )
+        ("options"  ",o",  po::value<string>()->default_value(options  ), "Misc. options"               )
+        ("maxevents"",m",  po::value<int>()   ->default_value(maxEvents), "Number of events to process" )
     ;
     po::variables_map cmdInput;
     po::store(po::parse_command_line(argc, argv, opDesc), cmdInput);
     po::notify(cmdInput);
     if(cmdInput.count("help"))
     {
+
         cout << opDesc << "\n" << "Possible dataset input options: ";
         for(auto& dsNm : datasetNames) cout << dsNm << ", ";
         cout << endl;
