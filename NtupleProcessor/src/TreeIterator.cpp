@@ -24,9 +24,6 @@ void TreeIterator::SlaveBegin(TTree * /*tree*/)
   // Initialize log, counters
     nEntries          = 0;
     nEntriesProcessed = 0;
-
-  // TEST
-    cout << "    TreeIterator::SlaveBegin: Initialized." << endl;
 }
 
 

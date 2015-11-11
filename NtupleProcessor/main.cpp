@@ -105,6 +105,10 @@ int main(int argc, char* argv[])
             "  Processing Begun: " << ts_mainBegin << "\n"
             "\n";
 
+  // Add secondary options to options input.
+    if( dataset!="muon" && dataset!= "elec"                   ) options += "Sim";
+    if( TString(dataset).Contains("dy", TString::kIgnoreCase) ) options += "DY" ;
+
   // Create the NtupleProcessor
     NtupleProcessor ntplproc(dataset, npconfig, anconfig, options, maxEvents);
 

@@ -14,7 +14,7 @@ NtupleProcessor.cpp
 using std::cout;   using std::endl;   using std::vector;
 
 NtupleProcessor::NtupleProcessor(TString ds, TString fnpc, TString fnac, TString o, int me)
-:  dataset(ds), runParams(fnpc), eHandler(fnac), tIter(eHandler, hExtractors), options(o), maxEvents(me)
+:  dataset(ds), runParams(fnpc), eHandler(fnac,o), tIter(eHandler, hExtractors), options(o), maxEvents(me)
 {
   // TEST output
     cout << "    NtupleProcessor: Created.\n"
@@ -24,6 +24,7 @@ NtupleProcessor::NtupleProcessor(TString ds, TString fnpc, TString fnac, TString
 
   // Open and set up appropriate file & tree
     TFile *testFile = TFile::Open(runParams.fn_ntuple[dataset.Data()]);
+    if(!testFile) cout << "NtupleProcessor: ERROR: Unable to open file " << runParams.fn_ntuple[dataset.Data()] << endl;
     TTree *ntuple   = (TTree*) testFile->Get("tree");
 
   // Create HistogramExtractors from strings from NtupleProcConfig
@@ -33,6 +34,7 @@ NtupleProcessor::NtupleProcessor(TString ds, TString fnpc, TString fnac, TString
   // Process the ntuple using the given tree iterator.
     if(maxEvents!=-1) ntuple->Process(&tIter, options, maxEvents);
     else              ntuple->Process(&tIter, options);
+
 }
 
 

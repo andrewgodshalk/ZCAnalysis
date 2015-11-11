@@ -25,6 +25,28 @@ void ControlPlotExtractor::fillHistos()
 {
 /*
 
+  // Initialize cut flow counter
+    nEvents["Analyzed in PAT"          ] = 0;
+    nEvents["Candidates from Ntupler"  ] = 0;
+    nEvents["w/ 2 valid muons"         ] = 0;
+    nEvents["w/ 2 valid electrons"     ] = 0;
+    nEvents["w/ 2 valid leptons"       ] = 0;
+    nEvents["w/ valid Z from muons"    ] = 0;
+    nEvents["w/ valid Z from electrons"] = 0;
+    nEvents["w/ valid Z"               ] = 0;
+    nEvents["Zuu+j"                    ] = 0;
+    nEvents["Zee+j"                    ] = 0;
+    nEvents["Z+j"                      ] = 0;
+    nEvents["Zuu+HF"                   ] = 0;
+    nEvents["Zee+HF"                   ] = 0;
+    nEvents["Z+HF"                     ] = 0;
+    nEvents["Zee+j w/ minMET"          ] = 0;
+    nEvents["Zuu+j w/ minMET"          ] = 0;
+    nEvents["Z+j w/ minMET"            ] = 0;
+    nEvents["Zee+HF w/ minMET"         ] = 0;
+    nEvents["Zuu+HF w/ minMET"         ] = 0;
+    nEvents["Z+HF w/ minMET"           ] = 0;
+
 //cout << "    Processing DiffXSHistoMaker for output " << fn_output << "...";
 
   // Check if the event is a valid Z+j event, then if there are HF jets of the desired operating point. Kick if not true.

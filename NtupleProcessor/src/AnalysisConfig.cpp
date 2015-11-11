@@ -22,35 +22,7 @@ AnalysisConfig::AnalysisConfig(TString fnc)
 : ConfigReader(fnc)
 {
 
-    cout << "    AnalysisConfig: Created.\n"
-            "      Config Input File: " << fn_config << "\n"
-         << endl;
-
-/*
   // Open and read in config file
-    cout << "\t\t" << pt.get<string>("FILE LOCATIONS.muon") << endl;
-    cout << "\t\t" << pt.get<float> ("MUON.muon_pt_min"   ) << endl;
-    cout << endl;
-
-    fn_ntuple["muon"   ] = pt.get<string>("FILE LOCATIONS.muon"   );
-    fn_ntuple["elec"   ] = pt.get<string>("FILE LOCATIONS.elec"   );
-    fn_ntuple["dy"     ] = pt.get<string>("FILE LOCATIONS.dy"     );
-    fn_ntuple["dy1j"   ] = pt.get<string>("FILE LOCATIONS.dy1j"   );
-    fn_ntuple["ww"     ] = pt.get<string>("FILE LOCATIONS.ww"     );
-    fn_ntuple["wz"     ] = pt.get<string>("FILE LOCATIONS.wz"     );
-    fn_ntuple["zz"     ] = pt.get<string>("FILE LOCATIONS.zz"     );
-    fn_ntuple["ttlep"  ] = pt.get<string>("FILE LOCATIONS.ttlep"  );
-    fn_ntuple["ttsemi" ] = pt.get<string>("FILE LOCATIONS.ttsemi" );
-    fn_ntuple["tthad"  ] = pt.get<string>("FILE LOCATIONS.tthad"  );
-    fn_ntuple["t_s"    ] = pt.get<string>("FILE LOCATIONS.t_s"    );
-    fn_ntuple["t_t"    ] = pt.get<string>("FILE LOCATIONS.t_t"    );
-    fn_ntuple["t_tw"   ] = pt.get<string>("FILE LOCATIONS.t_tw"   );
-    fn_ntuple["tbar_s" ] = pt.get<string>("FILE LOCATIONS.tbar_s" );
-    fn_ntuple["tbar_t" ] = pt.get<string>("FILE LOCATIONS.tbar_t" );
-    fn_ntuple["tbar_tw"] = pt.get<string>("FILE LOCATIONS.tbar_tw");
-
-    fn_output = pt.get<string>("FILE LOCATIONS.output");
-
     setWeight["dy"     ] = pt.get<float>("DATASET WEIGHTS.dy"     );
     setWeight["ww"     ] = pt.get<float>("DATASET WEIGHTS.ww"     );
     setWeight["wz"     ] = pt.get<float>("DATASET WEIGHTS.wz"     );
@@ -81,26 +53,20 @@ AnalysisConfig::AnalysisConfig(TString fnc)
     flatHFTagSF["CSVS"      ] = pt.get<float>("CSV SCALE FACTORS.CSVS"      );
     flatHFTagSF["CSVS_ljmis"] = pt.get<float>("CSV SCALE FACTORS.CSVS_ljmis");
 
-    maxNumJets  = pt.get<int>("RUNNING VARIABLES.max_ntuple_jets" );
-    maxNumMuons = pt.get<int>("RUNNING VARIABLES.max_ntuple_muons");
-    maxNumElecs = pt.get<int>("RUNNING VARIABLES.max_ntuple_elecs");
-
     muonPtMin  = pt.get<float>("MUON.muon_pt_min" );
     muonEtaMax = pt.get<float>("MUON.muon_eta_max");
-    //muon_iso
-    //muon_id
+    muonIsoMax = pt.get<float>("MUON.muon_iso_max");
 
     elecPtMin       = pt.get<float>("ELECTRON.elec_pt_min"        );
     elecEtaInnerMax = pt.get<float>("ELECTRON.elec_eta_inner_max" );
     elecEtaOuterMin = pt.get<float>("ELECTRON.elec_eta_outer_min" );
     elecEtaOuterMax = pt.get<float>("ELECTRON.elec_eta_outer_max" );
-    //elec_iso
-    //elec_id
+    elecIsoMax      = pt.get<float>("ELECTRON.elec_iso_max"       );
 
-    dilepInvMassMin = pt.get<float> ("DILEPTON.dimuon_invmass_min");
-    dilepInvMassMax = pt.get<float> ("DILEPTON.dimuon_invmass_max");
-    dilepMuonCharge = pt.get<string>("DILEPTON.dimuon_charge");
-    dilepElecCharge = pt.get<string>("DILEPTON.dielec_charge");
+    dilepInvMassMin     = pt.get<float>("DILEPTON.dimuon_invmass_min"  );
+    dilepInvMassMax     = pt.get<float>("DILEPTON.dimuon_invmass_max"  );
+    dilepMuonReqOppSign = pt.get<bool> ("DILEPTON.dimuon_reqoppsignlep");
+    dilepElecReqOppSign = pt.get<bool> ("DILEPTON.dielec_reqoppsignlep");
 
     metMax          = pt.get<float>("MET.met_max");
 
@@ -127,16 +93,12 @@ AnalysisConfig::AnalysisConfig(TString fnc)
     processBinString(     jetEtaBins    , binStr_jet_eta     );
     processBinString(     dileptonPtBins, binStr_dilepton_pt );
 
-    cout << "  TEST CONFIG FILE READ COMPLETE!! \n" << endl;
-*/
 }
 
 
 void AnalysisConfig::processBinString(vector<pair<float,float> >& binSet, string& inputString)
 {
     binSet.clear();
-  // Debug:
-    //cout << "  AnalysisConfig::processBinString:\n  Initial String:     " << inputString << endl;
 
   // Define a regex expression to use to match strings of (float, float) format and a size variable to pass as the size of the resulting match.
     TRegexp numPairRegex("\\(-?[0-9]+\\.?[0-9]?,-?[0-9]+\\.?[0-9]?\\)");
@@ -154,10 +116,6 @@ void AnalysisConfig::processBinString(vector<pair<float,float> >& binSet, string
         if(numPairRegex.Index(binStr, matchLength) != 0 || (unsigned int)(*matchLength) != binStr.length())
         { // If the regex expression doesn't find itself in the string *OR* the matched string isn't the full length of the input string...
             cout << "  ERROR (AnalysisConfig::processBinString)\n: Bin string does not have (p,q) format: " << binStr << endl << endl;
-          // Debug:
-            //cout << "    Returned index:  " << numPairRegex.Index(binStr, matchLength) << endl;
-            //cout << "    Returned length: " << *matchLength << endl;
-            //cout << "    Actual length:   " << binStr.length() << endl << endl;
             return;     // KICK
         }
 
@@ -177,10 +135,6 @@ void AnalysisConfig::processBinString(vector<pair<float,float> >& binSet, string
       // Add pair to bin set.
         binSet.push_back({binMin, binMax});
     }
-  // Debug:
-    //cout << "  Final List of Bins: ";
-    //for(auto& bin : binSet) cout << "(" << bin.first << "," << bin.second << ") ";
-    //cout << endl << endl;
 }
 
 

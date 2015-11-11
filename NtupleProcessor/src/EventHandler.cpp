@@ -12,14 +12,14 @@
 #include <TLeaf.h>
 #include "../interface/EventHandler.h"
 
-using std::cout;   using std::endl;   using std::vector;
+using std::cout;   using std::endl;   using std::vector;   using std::swap;
 
-EventHandler::EventHandler(TString fnac, TString o) : analCfg(fnac), options(o)
+EventHandler::EventHandler(TString fnac, TString o) : anCfg(fnac), options(o)
 {
   // Check the option to see if we're working with Simulation or Data, and whether you're looking for Zee or Zuu events
     usingSim = (options.Contains("Sim", TString::kIgnoreCase) ? true : false);
-    usingZee = (options.Contains("Zee", TString::kIgnoreCase) ? true : false);
-    usingZuu = (options.Contains("Zuu", TString::kIgnoreCase) ? true : false);
+    usingDY  = (options.Contains("DY" , TString::kIgnoreCase) ? true : false);
+
 }
 
 bool EventHandler::mapTree(TTree* tree)
@@ -27,20 +27,23 @@ bool EventHandler::mapTree(TTree* tree)
   // Maps TTree to class' variables.
   // TO DO: Implement check for correct mapping, return result?
   //    - Set up exception handling for negative result.
-/*
+
   TBranch * temp_branch;  // Temporary branch to get at members of struct-branches.
 
   // Z variables
-    tree->SetBranchAddress("Vtype", &m_Vtype);
+    m_zdecayMode = 0;
+    if(tree->GetListOfBranches()->FindObject("zdecayMode"))
+        tree->SetBranchAddress("zdecayMode", &m_zdecayMode );
+    tree->SetBranchAddress("Vtype"     ,          &m_Vtype       );
     temp_branch = tree->GetBranch("V");
-    temp_branch->GetLeaf( "mass" )->SetAddress(     &m_Z_mass      );
-    temp_branch->GetLeaf( "pt"   )->SetAddress(     &m_Z_pt        );
-    temp_branch->GetLeaf( "eta"  )->SetAddress(     &m_Z_eta       );
-    temp_branch->GetLeaf( "phi"  )->SetAddress(     &m_Z_phi       );
+    temp_branch->GetLeaf( "mass" )->SetAddress(   &m_Z_mass      );
+    temp_branch->GetLeaf( "pt"   )->SetAddress(   &m_Z_pt        );
+    temp_branch->GetLeaf( "eta"  )->SetAddress(   &m_Z_eta       );
+    temp_branch->GetLeaf( "phi"  )->SetAddress(   &m_Z_phi       );
 
   // JSON
     temp_branch = tree->GetBranch("EVENT");
-    temp_branch->GetLeaf( "json" )->SetAddress(     &m_json        );
+    temp_branch->GetLeaf( "json" )->SetAddress(   &m_json        );
 
   // Muon variables
     tree->SetBranchAddress( "nallMuons"         , &m_nMuons      );
@@ -68,41 +71,75 @@ bool EventHandler::mapTree(TTree* tree)
 
   // MET variables
     temp_branch = tree->GetBranch("MET");
-    temp_branch->GetLeaf( "et"  )->SetAddress(       &m_MET_et      );
-    temp_branch->GetLeaf( "phi" )->SetAddress(       &m_MET_phi     );
+    temp_branch->GetLeaf(   "et"  )->SetAddress(  &m_MET_et      );
+    temp_branch->GetLeaf(   "phi" )->SetAddress(  &m_MET_phi     );
 
   // Trigger variables
-    tree->SetBranchAddress("triggerFlags", m_triggers);
-*/
+    tree->SetBranchAddress( "triggerFlags",         m_triggers    );
+
     return true;
 }
 
 
 void EventHandler::evalCriteria()
 { // Evaluates the class' list of event selection criteria
-/*
+
   // Check JSON if working with a data event.
     if(usingSim) eventInJSON = false;       // If using simulation, automatically set the JSON variable to false.
     else         eventInJSON = m_json==1;   //  Otherwise, go with what value is given by the ntuple.
 
-  // Check for valid muons, electrons, Z-boson, and MET.
-    validMuons     = m_nMuons>=2   && m_Vtype==0        && m_muon_charge[0]*m_muon_charge[1]==-1        // Check number and charge of muons, and that this is a Zuu event
-                  && triggered(muonTriggers)
-                  && m_muon_pt[0]>=stdCuts["muonPtMin"] && fabs(m_muon_eta[0])<=stdCuts["muonEtaMax"]   // Check muon pT and eta.
-                  && m_muon_pt[1]>=stdCuts["muonPtMin"] && fabs(m_muon_eta[1])<=stdCuts["muonEtaMax"];
-    validElectrons = m_nElecs>=2 && m_Vtype==1          // Check number of electrons, type of Z event, then if within pT and eta range.
-                  && triggered(elecTriggers)
-                  && m_elec_pt[0]>=stdCuts["elecPtMin"] && (fabs(m_elec_eta[0])<=stdCuts["elecEtaInnerMax"] || (fabs(m_elec_eta[0])>=stdCuts["elecEtaOuterMin"] && fabs(m_elec_eta[0])<=stdCuts["elecEtaOuterMax"]))
-                  && m_elec_pt[1]>=stdCuts["elecPtMin"] && (fabs(m_elec_eta[1])<=stdCuts["elecEtaInnerMax"] || (fabs(m_elec_eta[1])>=stdCuts["elecEtaOuterMin"] && fabs(m_elec_eta[1])<=stdCuts["elecEtaOuterMax"]));
+  // Cycle through muons, electrons, find leading and sub-leading.
+    Index ldMu = 0; Index ldEl = 0;
+    Index slMu = 1; Index slEl = 1;
+    if(m_nMuons>=2)
+    {
+        if(m_muon_pt[ldMu]<m_muon_pt[slMu]) { ldMu = 1; slMu = 0; }
+        for(int i=2; i<m_nMuons; i++)
+        {
+            if(     m_muon_pt[i]>=m_muon_pt[ldMu]) {slMu = ldMu; ldMu = i;}
+            else if(m_muon_pt[i]>=m_muon_pt[slMu])  slMu = i;
+        }
+    }
+    if(m_nElecs>=2)
+    {
+        if(m_elec_pt[ldEl]<m_elec_pt[slEl]) { ldEl = 1; slEl = 0; }
+        for(int i=2; i<m_nElecs; i++)
+        {
+            if(     m_elec_pt[i]>=m_elec_pt[ldEl]) {slEl = ldEl; ldEl = i;}
+            else if(m_elec_pt[i]>=m_elec_pt[slEl])  slEl = i;
+        }
+    }
 
-    validZBoson    = m_Z_mass>=stdCuts["dilepInvMassMin"] && m_Z_mass<=stdCuts["dilepInvMassMax"];
-    validMET       = m_MET_et<=stdCuts["metMax"];
+  // Check for valid muons, electrons, Z-boson, and MET.
+    validMuons     = m_nMuons>=2   //  && m_Vtype==0
+                  && (m_muon_charge[ldMu]*m_muon_charge[slMu]==-1 || !anCfg.dilepMuonReqOppSign )
+                  && triggered(anCfg.muonTriggers)
+                  && m_muon_pt [ldMu]>=anCfg.muonPtMin  && fabs(m_muon_eta[ldMu])<=anCfg.muonEtaMax   // Check muon pT and eta.
+                  && m_muon_pt [slMu]>=anCfg.muonPtMin  && fabs(m_muon_eta[slMu])<=anCfg.muonEtaMax
+                  && m_muon_iso[ldMu]<=anCfg.muonIsoMax && m_muon_iso[slMu]<=anCfg.muonIsoMax
+    ;
+
+    validElectrons = m_nElecs>=2 //&& m_Vtype==1          // Check number of electrons, type of Z event, then if within pT and eta range.
+                  && (m_elec_charge[ldEl]*m_elec_charge[slEl]==-1 || !anCfg.dilepElecReqOppSign )
+                  && triggered(anCfg.elecTriggers)
+                  && m_elec_pt [ldEl]>=anCfg.elecPtMin  && (fabs(m_elec_eta[ldEl])<=anCfg.elecEtaInnerMax || (fabs(m_elec_eta[ldEl])>=anCfg.elecEtaOuterMin && fabs(m_elec_eta[ldEl])<=anCfg.elecEtaOuterMax))
+                  && m_elec_pt [slEl]>=anCfg.elecPtMin  && (fabs(m_elec_eta[slEl])<=anCfg.elecEtaInnerMax || (fabs(m_elec_eta[slEl])>=anCfg.elecEtaOuterMin && fabs(m_elec_eta[slEl])<=anCfg.elecEtaOuterMax))
+                  && m_muon_iso[ldEl]<=anCfg.muonIsoMax && m_muon_iso[slEl]<=anCfg.muonIsoMax;
+    ;
+
+    validZBoson    = m_Z_mass>=anCfg.dilepInvMassMin && m_Z_mass<=anCfg.dilepInvMassMax;
+    validMET       = m_MET_et<=anCfg.metMax;
 
   // Run through list of jets to find valid jets, then check those jets for various features.
     validJets = vector<Index>(0);
     for(int i=0; i<m_nJets; i++)
-        if(m_jet_pt[i]>=stdCuts["jetPtMin"] && fabs(m_jet_eta[i])<=stdCuts["jetEtaMax"])
-            validJets.push_back(i);
+        if(m_jet_pt[i]>=anCfg.jetPtMin && fabs(m_jet_eta[i])<=anCfg.jetEtaMax)
+        { // Insert jet in proper place in list.
+            Index temp=i;
+            for(int j=0; j<validJets.size(); j++)
+                if(m_jet_pt[validJets[j]]<m_jet_pt[temp]) swap(temp, validJets[j]); //cout << "SWAPED!!" << endl;
+            validJets.push_back(temp);
+        }
 
   // If there are valid jets, make some vectors to contain their heavy flavor tagging properties.
     if(validJets.size()>0)
@@ -112,26 +149,26 @@ void EventHandler::evalCriteria()
         HFJets["CSVM"] = vector<bool>(validJets.size(), false);   hasHFJets["CSVM"] = false;
         HFJets["CSVL"] = vector<bool>(validJets.size(), false);   hasHFJets["CSVL"] = false;
         HFJets["NoHF"] = vector<bool>(validJets.size(), false);   hasHFJets["NoHF"] = false;
-
     }
 
   // Check HF Tagging info for all valid jets
     for(Index vJet_i=0, evt_i=0; vJet_i<validJets.size(); vJet_i++)
     { // Jet is HF if it passes the CSV operating point and has a reconstructed secondary vertex.
         evt_i = validJets[vJet_i];  // Set the evt_i to the validJet's index within the EventHandler.
-        if(m_jet_csv[evt_i] < stdCSVOpPts["NoHF"]) cout << "   csv sub-NoHF: "  << m_jet_csv[evt_i] << " < " << stdCSVOpPts["NoHF"] << endl;
-        if(m_jet_msv[evt_i] < noSVT)               cout << "   csv sub-noSVT: " << m_jet_msv[evt_i] << " < " << minSVT              << endl;
+        if(m_jet_csv[evt_i] < anCfg.stdCSVOpPts["NoHF"]) cout << "   csv sub-NoHF: "  << m_jet_csv[evt_i] << " < " << anCfg.stdCSVOpPts["NoHF"] << endl;
+        if(m_jet_msv[evt_i] < anCfg.noSVT)               cout << "   csv sub-noSVT: " << m_jet_msv[evt_i] << " < " << anCfg.minSVT              << endl;
 
-        if(m_jet_csv[evt_i]>=stdCSVOpPts["NoHF"] && m_jet_msv[evt_i]>= noSVT) { HFJets["NoHF"][vJet_i]=true; hasHFJets["NoHF"] = true; } else continue;
-        if(m_jet_csv[evt_i]>=stdCSVOpPts["CSVL"] && m_jet_msv[evt_i]>=minSVT) { HFJets["CSVL"][vJet_i]=true; hasHFJets["CSVL"] = true; } else continue;
-        if(m_jet_csv[evt_i]>=stdCSVOpPts["CSVM"] && m_jet_msv[evt_i]>=minSVT) { HFJets["CSVM"][vJet_i]=true; hasHFJets["CSVM"] = true; } else continue;
-        if(m_jet_csv[evt_i]>=stdCSVOpPts["CSVT"] && m_jet_msv[evt_i]>=minSVT) { HFJets["CSVT"][vJet_i]=true; hasHFJets["CSVT"] = true; } else continue;
-        if(m_jet_csv[evt_i]>=stdCSVOpPts["CSVS"] && m_jet_msv[evt_i]>=minSVT) { HFJets["CSVS"][vJet_i]=true; hasHFJets["CSVS"] = true; } else continue;
+        if(m_jet_csv[evt_i]>=anCfg.stdCSVOpPts["NoHF"] && m_jet_msv[evt_i]>=anCfg. noSVT) { HFJets["NoHF"][vJet_i]=true; hasHFJets["NoHF"] = true; } else continue;
+        if(m_jet_csv[evt_i]>=anCfg.stdCSVOpPts["CSVL"] && m_jet_msv[evt_i]>=anCfg.minSVT) { HFJets["CSVL"][vJet_i]=true; hasHFJets["CSVL"] = true; } else continue;
+        if(m_jet_csv[evt_i]>=anCfg.stdCSVOpPts["CSVM"] && m_jet_msv[evt_i]>=anCfg.minSVT) { HFJets["CSVM"][vJet_i]=true; hasHFJets["CSVM"] = true; } else continue;
+        if(m_jet_csv[evt_i]>=anCfg.stdCSVOpPts["CSVT"] && m_jet_msv[evt_i]>=anCfg.minSVT) { HFJets["CSVT"][vJet_i]=true; hasHFJets["CSVT"] = true; } else continue;
+        if(m_jet_csv[evt_i]>=anCfg.stdCSVOpPts["CSVS"] && m_jet_msv[evt_i]>=anCfg.minSVT) { HFJets["CSVS"][vJet_i]=true; hasHFJets["CSVS"] = true; } else continue;
+
     }
 
   // Combine a few of the checks into a couple of comprehensive variables.
-    validZeeEvent = (usingSim || eventInJSON) && usingZee && validElectrons && validZBoson && validMET;
-    validZuuEvent = (usingSim || eventInJSON) && usingZuu && validMuons     && validZBoson && validMET;
+    validZeeEvent = (usingSim || eventInJSON) && validElectrons && validZBoson && validMET;
+    validZuuEvent = (usingSim || eventInJSON) && validMuons     && validZBoson && validMET;
     validStdEvent = validZeeEvent || validZuuEvent;
     validZPJEvent = validStdEvent && validJets.size()>0;
 
@@ -147,16 +184,17 @@ void EventHandler::evalCriteria()
         if(fabs(m_jet_flv[evt_i])==4) { cMCJets[vJet_i]=true; hasCJet = true; }
         lMCJets[vJet_i] = fabs(m_jet_flv[evt_i])!=5 && fabs(m_jet_flv[evt_i])!=4;
     }
-*/
+
+  // Kick function if not using DY. Otherwise, check for origin from Z->tautau
+    if(!usingDY) return;
+    zBosonFromTaus = (m_zdecayMode==3);
+
 }
+
 
 // Returns whether or not this event has any of the listed triggers.
 bool EventHandler::triggered(vector<int> &triggersToTest)
 {
-/*
-    //for(int i : triggersToTest) cout << "    Value at trigger listing " << i << ": " << m_triggers[i] << " --> Returning " << (m_triggers[i] ? "TRUE" : "FALSE") << endl;
     for(int i : triggersToTest) if(m_triggers[i]) return true;
-*/
     return false;
-
 }

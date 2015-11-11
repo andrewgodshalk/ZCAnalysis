@@ -114,9 +114,6 @@ ControlPlotConfig::ControlPlotConfig(TString fnc)
     string binStr_jet_eta     = pt.get<string>("DIFFERENTIAL ANALYSIS.jet_eta_bins"    );
     string binStr_dilepton_pt = pt.get<string>("DIFFERENTIAL ANALYSIS.dilepton_pt_bins");
 
-  // Close config file.
-
-
   // Complete processing on config file variables.
     processTriggerString( muonTriggers  , triggerStr_muon    );
     processTriggerString( elecTriggers  , triggerStr_elec    );

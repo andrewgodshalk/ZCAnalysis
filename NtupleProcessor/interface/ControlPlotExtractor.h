@@ -12,6 +12,7 @@
 
 ------------------------------------------------------------------------------*/
 
+#include <map>
 #include <TString.h>
 #include "HistogramExtractor.h"
 #include "EventHandler.h"
@@ -39,6 +40,9 @@ public:
     count nValidBEvents   ;
     count nValidCEvents   ;
     count nValidLEvents   ;
+
+  // Counter for cut flow table.
+    std::map<TString, count> nEvents;
 };
 
 #endif
