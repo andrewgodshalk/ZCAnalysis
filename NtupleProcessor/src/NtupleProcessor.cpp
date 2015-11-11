@@ -10,6 +10,7 @@ NtupleProcessor.cpp
 #include <TFile.h>
 #include <TString.h>
 #include "../interface/NtupleProcessor.h"
+#include "../interface/ControlPlotExtractor.h"
 
 using std::cout;   using std::endl;   using std::vector;
 
@@ -28,8 +29,7 @@ NtupleProcessor::NtupleProcessor(TString ds, TString fnpc, TString fnac, TString
     TTree *ntuple   = (TTree*) testFile->Get("tree");
 
   // Create HistogramExtractors from strings from NtupleProcConfig
-    TString testString = "";
-    hExtractors.push_back(createHistogramExtractorFromString(testString));
+    for(auto& heStr : runParams.hExtractorStrs) hExtractors.push_back(createHistogramExtractorFromString(heStr));
 
   // Process the ntuple using the given tree iterator.
     if(maxEvents!=-1) ntuple->Process(&tIter, options, maxEvents);
@@ -40,6 +40,6 @@ NtupleProcessor::NtupleProcessor(TString ds, TString fnpc, TString fnac, TString
 
 HistogramExtractor* NtupleProcessor::createHistogramExtractorFromString(TString& inputString)
 {
-
+    if(inputString == "ControlPlotExtractor") return new ControlPlotExtractor(eHandler);
 return NULL;
 }

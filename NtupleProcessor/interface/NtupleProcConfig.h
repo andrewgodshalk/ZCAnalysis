@@ -35,6 +35,7 @@ class NtupleProcConfig : public ConfigReader
     int         maxNumMuons     =  100      ;    // Max number of raw muons stored in ntuples.
     int         maxNumElecs     =  100      ;
 
+    std::vector<TString> hExtractorStrs; // List of histogram extracters requested by config.
 
 };
 

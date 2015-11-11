@@ -50,4 +50,8 @@ NtupleProcConfig::NtupleProcConfig(TString fnc)
     maxNumMuons = pt.get<int>("RUNNING VARIABLES.max_ntuple_muons");
     maxNumElecs = pt.get<int>("RUNNING VARIABLES.max_ntuple_elecs");
 
+  // Extract HistogramExtractors
+    boost::property_tree::ptree extList = pt.get_child("HISTOGRAM EXTRACTORS");
+    for( const auto& kv : extList) hExtractorStrs.push_back(kv.second.data());
+
 }

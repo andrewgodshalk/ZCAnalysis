@@ -18,7 +18,26 @@ using std::stringstream;   using std::string;     using std::cout;
 using std::endl;           using std::ofstream;
 typedef unsigned int Index;
 
-ControlPlotExtractor::ControlPlotExtractor(EventHandler& eh, TString o) : HistogramExtractor(eh, o){}
+ControlPlotExtractor::ControlPlotExtractor(EventHandler& eh, TString o) : HistogramExtractor(eh, o)
+{
+    cout << " CPE CREATED!!" << endl;
+
+// Initialize histograms from config file.
+    TString histoName, binStr, minStr, maxStr, histoTitle;
+    for(auto& kv : cfg.h_strings)
+    {
+        for(auto& str : kv.second) cout << " " << str;
+        cout << endl;
+        histoName  = kv.first;
+        binStr     = kv.second[0];
+        minStr     = kv.second[1];
+        maxStr     = kv.second[2];
+        histoTitle = kv.second[3];
+        for(int i=4; i<kv.second.size(); i++) histoTitle += " " + kv.second[i];
+        h[histoName] = new TH1F(histoName, histoTitle, atoi(binStr), atof(minStr), atof(maxStr));
+    }
+
+}
 
 
 void ControlPlotExtractor::fillHistos()

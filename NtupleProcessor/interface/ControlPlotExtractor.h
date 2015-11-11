@@ -16,6 +16,7 @@
 #include <TString.h>
 #include "HistogramExtractor.h"
 #include "EventHandler.h"
+#include "ControlPlotConfig.h"
 
 typedef unsigned long count;
 
@@ -26,6 +27,8 @@ public:
 
     void fillHistos();     // Fills the class' contained histograms from the passed Entry.
     void saveToFile();     // Saves the histograms and the log to file.
+
+    ControlPlotConfig cfg;
 
     bool    usingDY;
     bool    usingZee;

@@ -188,7 +188,6 @@ void EventHandler::evalCriteria()
   // Kick function if not using DY. Otherwise, check for origin from Z->tautau
     if(!usingDY) return;
     zBosonFromTaus = (m_zdecayMode==3);
-
 }
 
 
