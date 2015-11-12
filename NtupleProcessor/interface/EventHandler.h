@@ -46,7 +46,6 @@ public:
 
   // Running Variables
     TString options;         // Options input with TreeIterator.
-//    std::stringstream log;   // log stream for recording event-by-event output of histogram makers.
 
 // Variables for mapping tree entries. Public so they can be referred to by outside classes.
     float m_Z_mass;     int   m_nJets;                 int   m_nMuons;                     int   m_nElecs;                     float m_MET_et      ;

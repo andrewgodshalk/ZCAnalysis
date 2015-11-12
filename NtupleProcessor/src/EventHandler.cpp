@@ -16,7 +16,7 @@ using std::cout;   using std::endl;   using std::vector;   using std::swap;
 
 EventHandler::EventHandler(TString fnac, TString o) : anCfg(fnac), options(o)
 {
-  // Check the option to see if we're working with Simulation or Data, and whether you're looking for Zee or Zuu events
+  // Check the option to see if we're working with Simulation or Data
     usingSim = (options.Contains("Sim", TString::kIgnoreCase) ? true : false);
     usingDY  = (options.Contains("DY" , TString::kIgnoreCase) ? true : false);
 
@@ -30,10 +30,23 @@ bool EventHandler::mapTree(TTree* tree)
 
   TBranch * temp_branch;  // Temporary branch to get at members of struct-branches.
 
+  // Deactivate all branches, reactivate as necessary.
+    tree->SetBranchStatus("*",0);
+    vector<TString> branches_to_reactivate = {
+        "Vtype"      , "nallMuons"         , "nallElectrons"     , "nallJets"          ,
+        "V*"         , "allMuon_pt"        , "allElectron_pt"    , "allJet_pt"         ,
+        "zdecayMode" , "allMuon_eta"       , "allElectron_eta"   , "allJet_eta"        ,
+        "EVENT*" , "allMuon_phi"       , "allElectron_phi"   , "allJet_phi"        ,
+         "MET*"      , "allMuon_charge"    , "allElectron_charge", "allJet_csv"        ,
+                       "allMuon_pfCorrIso" ,                       "allJet_vtxMass"    ,
+        "triggerFlags",                                            "allJet_flavour"
+    };
+    for(TString br : branches_to_reactivate) tree->SetBranchStatus(br.Data(), 1);
+
   // Z variables
     m_zdecayMode = 0;
     if(tree->GetListOfBranches()->FindObject("zdecayMode"))
-        tree->SetBranchAddress("zdecayMode", &m_zdecayMode );
+        tree->SetBranchAddress("zdecayMode",      &m_zdecayMode  );
     tree->SetBranchAddress("Vtype"     ,          &m_Vtype       );
     temp_branch = tree->GetBranch("V");
     temp_branch->GetLeaf( "mass" )->SetAddress(   &m_Z_mass      );
@@ -171,6 +184,9 @@ void EventHandler::evalCriteria()
     validZuuEvent = (usingSim || eventInJSON) && validMuons     && validZBoson && validMET;
     validStdEvent = validZeeEvent || validZuuEvent;
     validZPJEvent = validStdEvent && validJets.size()>0;
+
+// TEST //
+   //cout << "    " << m_muon_pt[ldMu] << ", " << m_muon_pt[slMu] << ", " << m_Z_mass << endl;
 
   // Kick function if not using Sim. Otherwise, check jets for flavor properties
     if(!usingSim) return;

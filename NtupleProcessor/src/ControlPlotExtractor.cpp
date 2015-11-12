@@ -9,32 +9,41 @@
 #include <iostream>
 #include <fstream>
 #include <TFile.h>
+#include <TDirectory.h>
 #include <TH1F.h>
 #include <TH2F.h>
 #include "../interface/ControlPlotExtractor.h"
-//#include "../../ZCLibrary/timestamp.h"
 
 using std::stringstream;   using std::string;     using std::cout;
 using std::endl;           using std::ofstream;
 typedef unsigned int Index;
 
-ControlPlotExtractor::ControlPlotExtractor(EventHandler& eh, TString o) : HistogramExtractor(eh, o)
-{
-    cout << " CPE CREATED!!" << endl;
+ControlPlotConfig ControlPlotExtractor::cfg = ControlPlotConfig();
 
-// Initialize histograms from config file.
+ControlPlotExtractor::ControlPlotExtractor(EventHandler& eh, TDirectory* d, TString o) : HistogramExtractor(eh, d, o)
+{
+    cout << "    ControlPlotExtractor: Created.\n"
+            "      Options: " << options
+         << endl;
+
+  // Initialize histograms from config file.
+    hDir->cd();     // Move to this extractor's output directory to initialize the histograms.
     TString histoName, binStr, minStr, maxStr, histoTitle;
     for(auto& kv : cfg.h_strings)
     {
-        for(auto& str : kv.second) cout << " " << str;
-        cout << endl;
+      // Extract histogram information from config file strings.
         histoName  = kv.first;
         binStr     = kv.second[0];
         minStr     = kv.second[1];
         maxStr     = kv.second[2];
         histoTitle = kv.second[3];
         for(int i=4; i<kv.second.size(); i++) histoTitle += " " + kv.second[i];
+
+      // Check if histo already exists in the directory. If so, overwrite.
+        // TO DO: Overwrite handling.
+        cout << "    ControlPlotExtractor::ControlPlotExtractor(): Creating histogram " << histoName << endl;
         h[histoName] = new TH1F(histoName, histoTitle, atoi(binStr), atof(minStr), atof(maxStr));
+        hDir->WriteTObject(h[histoName], 0, "Overwrite");
     }
 
 }
@@ -161,5 +170,8 @@ void ControlPlotExtractor::fillHistos()
 
 void ControlPlotExtractor::saveToFile()
 {
+  // Save each file to directory or overwrite.
+    cout << "   ControlPlotExtractor::saveToFile(): TEST: Saving to file: " << hDir->GetPath() << endl;
+    for(const auto& hist : h) hist.second->Write("", TObject::kOverwrite);
 
 }

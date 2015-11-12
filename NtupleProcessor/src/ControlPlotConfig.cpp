@@ -22,7 +22,7 @@ ControlPlotConfig::ControlPlotConfig(TString fnc)
 : ConfigReader(fnc)
 {
     cout << "    ControlPlotConfig: Created.\n"
-            "      Config Input File: " << fn_config << "\n"
+            "      Config Input File: " << fn_config
          << endl;
 
   // Read in histogram strings from config file.

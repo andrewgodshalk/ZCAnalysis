@@ -15,6 +15,7 @@
 ------------------------------------------------------------------------------*/
 
 #include <map>
+#include <TDirectory.h>
 #include <TH1.h>
 #include <TString.h>
 #include "EventHandler.h"
@@ -24,7 +25,7 @@
 class HistogramExtractor {
   public:
     virtual ~HistogramExtractor(){}
-    HistogramExtractor(EventHandler& eh, TString o = "") : eHandler(eh), fTimeStamp(fileTimeStamp()), options(o){}
+    HistogramExtractor(EventHandler& eh, TDirectory* d, TString o = "") : eHandler(eh), hDir(d), fTimeStamp(fileTimeStamp()), options(o){}
 
   // Function that fills histograms based on event criteria
     virtual void fillHistos(){}
@@ -32,18 +33,16 @@ class HistogramExtractor {
   // Function that saves the histograms, log, and performs any final actions.
     virtual void saveToFile(){}
 
-  // Histogram collection
-    std::map<TString, TH1*> h;    // List of histograms that will be filled by the fillHistos function
-
   // Reference to EventHandler where information will be extracted from.
     EventHandler &eHandler;
 
-  // File information for output root and log files.
-    TFile  *outFile;     // Output file where histograms are stored.
-    TString fTimeStamp;  // Time program was started, stored for use in file timestamps.
+  // Histogram collection
+    TDirectory* hDir;
+    std::map<TString, TH1*> h;    // List of histograms that will be filled by the fillHistos function
 
-  // Option string
-    TString options;
+  // Other run information
+    TString fTimeStamp;  // Time program was started, stored for use in file timestamps.
+    TString options   ;  // Option strings. Provides additional selection information
 
 };
 

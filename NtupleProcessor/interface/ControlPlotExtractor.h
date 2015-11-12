@@ -22,19 +22,16 @@ typedef unsigned long count;
 
 class ControlPlotExtractor : public HistogramExtractor {
 public:
-    ControlPlotExtractor(EventHandler&, TString o = "CSVT,JetPt");
+    ControlPlotExtractor(EventHandler&, TDirectory*, TString o = "");
     virtual ~ControlPlotExtractor(){}
 
-    void fillHistos();     // Fills the class' contained histograms from the passed Entry.
-    void saveToFile();     // Saves the histograms and the log to file.
+    void fillHistos();       // Fills the class' contained histograms from the passed Entry.
+    void saveToFile(); // Saves the histograms and the log to file.
 
-    ControlPlotConfig cfg;
+    static ControlPlotConfig cfg;
 
-    bool    usingDY;
-    bool    usingZee;
-    bool    usingZuu;
-    TString csvOpPt;
-    TString diffVariable;
+    TString csvOpPt       ;
+    TString diffVariable  ;
 
     count nEventsProcessed;
     count nZPJEvents      ;

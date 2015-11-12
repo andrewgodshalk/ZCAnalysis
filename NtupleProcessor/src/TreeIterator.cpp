@@ -10,7 +10,6 @@ TreeIterator.cpp
 #include <iostream>
 #include <string>
 #include <TString.h>
-//#include "../../ZCLibrary/timestamp.h"    // Project specific
 #include "../interface/TreeIterator.h"
 
 using std::cout;  using std::endl;   using std::setw;   using std::string;
@@ -58,7 +57,7 @@ Bool_t TreeIterator::Process(Long64_t entry)
     eHandler.evalCriteria();
 
   // Call each of the HistogramMakers on this entry.
-    //for(HistogramMaker* h : histoMakers) log << h->fillHistos(eHandler);
+    //for(HistogramMaker* h : histoMakers.second) log << h->fillHistos(eHandler);
 
 return true;
 }

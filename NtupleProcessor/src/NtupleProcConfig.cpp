@@ -43,7 +43,6 @@ NtupleProcConfig::NtupleProcConfig(TString fnc)
     fn_ntuple["tbar_s" ] = pt.get<string>("FILE LOCATIONS.tbar_s" );
     fn_ntuple["tbar_t" ] = pt.get<string>("FILE LOCATIONS.tbar_t" );
     fn_ntuple["tbar_tw"] = pt.get<string>("FILE LOCATIONS.tbar_tw");
-
     fn_output = pt.get<string>("FILE LOCATIONS.output");
 
     maxNumJets  = pt.get<int>("RUNNING VARIABLES.max_ntuple_jets" );

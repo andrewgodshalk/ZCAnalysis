@@ -28,6 +28,7 @@ class AnalysisConfig : public ConfigReader
    ~AnalysisConfig(){}
 
   // Config variables
+    std::string                          fn_output              ;
     std::map<std::string, float>         setWeight              ;    // Number used to scale simulated signal and background based on luminosity, cross section, and dataset size.
     std::map<std::string, float>         flatHFTagSF            ;    // Scale factor to apply heavy flavor tagged data.
     std::map<std::string, float>         stdCSVOpPts            ;

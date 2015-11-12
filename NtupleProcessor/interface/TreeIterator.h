@@ -14,7 +14,7 @@
 
 ------------------------------------------------------------------------------*/
 
-
+#include <map>
 #include <sstream>
 #include <vector>
 #include <TBranch.h>
@@ -29,7 +29,7 @@ typedef unsigned long counter;
 class TreeIterator : public TSelector
 {
 public:
-    TreeIterator(EventHandler &eh, std::vector<HistogramExtractor*> &he) : eHandler(eh), hExtractors(he), fChain(0) {}
+    TreeIterator(EventHandler &eh, std::map<TString, HistogramExtractor*> &he) : eHandler(eh), hExtractors(he), fChain(0) {}
     virtual ~TreeIterator(){}
 
   // Overloaded TSelector Functions
@@ -51,7 +51,7 @@ public:
 
   // Entry handler & list of Histogram Extractors
     EventHandler &eHandler;
-    std::vector<HistogramExtractor*> &hExtractors;
+    std::map<TString, HistogramExtractor*> &hExtractors;
 
   // TTree
     TTree *fChain;

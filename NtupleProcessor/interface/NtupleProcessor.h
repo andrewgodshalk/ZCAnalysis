@@ -16,10 +16,10 @@
 ------------------------------------------------------------------------------*/
 #include <TString.h>
 #include <vector>
-#include "NtupleProcConfig.h"
-#include "TreeIterator.h"
 #include "EventHandler.h"
 #include "HistogramExtractor.h"
+#include "NtupleProcConfig.h"
+#include "TreeIterator.h"
 
 
 class NtupleProcessor
@@ -31,15 +31,18 @@ class NtupleProcessor
   private:
     TString           dataset;
     NtupleProcConfig  runParams;      // Contains options specific for NtupleProcessor to run
-    EventHandler      eHandler;
+    EventHandler      eHandler;       // TreeIterator and EventHandler for running over the ntuple and extracting the desired information.
     TreeIterator      tIter;
-    TString           options;    // Options for this processing.
-    int               maxEvents;
+    TString           options;        // Extra options for this processing.
+    int               maxEvents;      // Max number of events to run over in this ntuple
+    TFile*            outputFile;     // ROOT output file where histograms are stored.
 
-    std::vector<HistogramExtractor*> hExtractors;
+    bool usingSim;
+    bool usingDY;
 
+    std::map<TString, HistogramExtractor*> hExtractors;    // Map of histogram extractors. Key is the output directory within the output file where histograms are stored.
 
-    HistogramExtractor* createHistogramExtractorFromString(TString&);
+    void createHistogramExtractorFromString(TString&);
 
 };
 

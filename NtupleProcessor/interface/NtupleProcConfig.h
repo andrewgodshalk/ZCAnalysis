@@ -30,7 +30,7 @@ class NtupleProcConfig : public ConfigReader
 
   // Config variables
     std::map<std::string, TString> fn_ntuple;    // Ntuple locations.
-    std::string fn_output                   ;
+    TString     fn_output;                       // Location of output plots.
     int         maxNumJets      =  130      ;    // Max number of raw jets  stored in ntuples per event.
     int         maxNumMuons     =  100      ;    // Max number of raw muons stored in ntuples.
     int         maxNumElecs     =  100      ;
