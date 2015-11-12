@@ -56,11 +56,14 @@ public:
     int   m_zdecayMode; float m_jet_msv[maxNumJets];   float m_muon_iso   [maxNumMuons];
                         float m_jet_flv[maxNumJets];
 
+// Calculated variables
+    float Z_DelR, Z_DelPhi, Z_DelEta;
+
   // Selection Variables
     bool usingSim; // Simulation events. For plotting sim-truth information.
     bool usingDY ;
 
-    bool eventInJSON   ;
+    bool inJSON        ;
     bool validMuons    ;
     bool validElectrons;
     bool validZBoson   ;
@@ -70,6 +73,9 @@ public:
     bool validZuuEvent ;
     bool validZPJEvent ;
     bool zBosonFromTaus;
+
+  // Lepton Selection Variables
+    Index ldMu, ldEl, slMu, slEl;
 
   // Jet Selection Variables
     std::vector<Index> validJets;       // lists all "valid" jets from standard cuts.

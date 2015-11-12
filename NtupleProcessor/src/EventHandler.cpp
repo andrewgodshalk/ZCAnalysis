@@ -98,12 +98,12 @@ void EventHandler::evalCriteria()
 { // Evaluates the class' list of event selection criteria
 
   // Check JSON if working with a data event.
-    if(usingSim) eventInJSON = false;       // If using simulation, automatically set the JSON variable to false.
-    else         eventInJSON = m_json==1;   //  Otherwise, go with what value is given by the ntuple.
+    if(usingSim) inJSON = false;       // If using simulation, automatically set the JSON variable to false.
+    else         inJSON = m_json==1;   //  Otherwise, go with what value is given by the ntuple.
 
   // Cycle through muons, electrons, find leading and sub-leading.
-    Index ldMu = 0; Index ldEl = 0;
-    Index slMu = 1; Index slEl = 1;
+    ldMu = ldEl = 0;
+    slMu = slEl = 1;
     if(m_nMuons>=2)
     {
         if(m_muon_pt[ldMu]<m_muon_pt[slMu]) { ldMu = 1; slMu = 0; }
@@ -139,6 +139,21 @@ void EventHandler::evalCriteria()
                   && m_elec_pt [slEl]>=anCfg.elecPtMin  && (fabs(m_elec_eta[slEl])<=anCfg.elecEtaInnerMax || (fabs(m_elec_eta[slEl])>=anCfg.elecEtaOuterMin && fabs(m_elec_eta[slEl])<=anCfg.elecEtaOuterMax))
                   && m_muon_iso[ldEl]<=anCfg.muonIsoMax && m_muon_iso[slEl]<=anCfg.muonIsoMax;
     ;
+
+  // Calculate Z_DelR based on valid muons/electrons.
+    Z_DelR = Z_DelPhi = Z_DelEta = -1;
+    if(validMuons)
+    {
+        Z_DelEta = fabs(m_muon_eta[0]-m_muon_eta[1]);
+        Z_DelPhi = fabs(m_muon_phi[0]-m_muon_phi[1]);
+        Z_DelR   = sqrt(Z_DelEta*Z_DelEta+Z_DelPhi*Z_DelPhi);
+    }
+    else if(validElectrons)
+    {
+        Z_DelEta = fabs(m_elec_eta[0]-m_elec_eta[1]);
+        Z_DelPhi = fabs(m_elec_phi[0]-m_elec_phi[1]);
+        Z_DelR   = sqrt(Z_DelEta*Z_DelEta+Z_DelPhi*Z_DelPhi);
+    }
 
     validZBoson    = m_Z_mass>=anCfg.dilepInvMassMin && m_Z_mass<=anCfg.dilepInvMassMax;
     validMET       = m_MET_et<=anCfg.metMax;
@@ -180,13 +195,10 @@ void EventHandler::evalCriteria()
     }
 
   // Combine a few of the checks into a couple of comprehensive variables.
-    validZeeEvent = (usingSim || eventInJSON) && validElectrons && validZBoson && validMET;
-    validZuuEvent = (usingSim || eventInJSON) && validMuons     && validZBoson && validMET;
+    validZeeEvent = (usingSim || inJSON) && validElectrons && validZBoson && validMET;
+    validZuuEvent = (usingSim || inJSON) && validMuons     && validZBoson && validMET;
     validStdEvent = validZeeEvent || validZuuEvent;
     validZPJEvent = validStdEvent && validJets.size()>0;
-
-// TEST //
-   //cout << "    " << m_muon_pt[ldMu] << ", " << m_muon_pt[slMu] << ", " << m_Z_mass << endl;
 
   // Kick function if not using Sim. Otherwise, check jets for flavor properties
     if(!usingSim) return;

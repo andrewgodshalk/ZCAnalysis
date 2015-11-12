@@ -25,7 +25,7 @@
 class HistogramExtractor {
   public:
     virtual ~HistogramExtractor(){}
-    HistogramExtractor(EventHandler& eh, TDirectory* d, TString o = "") : eHandler(eh), hDir(d), fTimeStamp(fileTimeStamp()), options(o){}
+    HistogramExtractor(EventHandler& eh, TDirectory* d, TString o = "") : evt(eh), hDir(d), fTimeStamp(fileTimeStamp()), options(o){}
 
   // Function that fills histograms based on event criteria
     virtual void fillHistos(){}
@@ -34,7 +34,7 @@ class HistogramExtractor {
     virtual void saveToFile(){}
 
   // Reference to EventHandler where information will be extracted from.
-    EventHandler &eHandler;
+    EventHandler &evt;
 
   // Histogram collection
     TDirectory* hDir;
@@ -43,7 +43,6 @@ class HistogramExtractor {
   // Other run information
     TString fTimeStamp;  // Time program was started, stored for use in file timestamps.
     TString options   ;  // Option strings. Provides additional selection information
-
 };
 
 #endif

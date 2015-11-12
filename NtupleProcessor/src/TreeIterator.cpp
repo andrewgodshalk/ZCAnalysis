@@ -57,7 +57,7 @@ Bool_t TreeIterator::Process(Long64_t entry)
     eHandler.evalCriteria();
 
   // Call each of the HistogramMakers on this entry.
-    //for(HistogramMaker* h : histoMakers.second) log << h->fillHistos(eHandler);
+    for(auto &hPair : hExtractors) hPair.second->fillHistos();
 
 return true;
 }

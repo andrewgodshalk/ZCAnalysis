@@ -26,6 +26,39 @@ ControlPlotExtractor::ControlPlotExtractor(EventHandler& eh, TDirectory* d, TStr
             "      Options: " << options
          << endl;
 
+/*  // Initialize cut flow counter
+    nEvents["Analyzed in PAT"          ] = 0;
+    nEvents["Candidates from Ntupler"  ] = 0;
+    nEvents["w/ 2 valid muons"         ] = 0;
+    nEvents["w/ 2 valid electrons"     ] = 0;
+    nEvents["w/ 2 valid leptons"       ] = 0;
+    nEvents["w/ valid Z from muons"    ] = 0;
+    nEvents["w/ valid Z from electrons"] = 0;
+    nEvents["w/ valid Z"               ] = 0;
+    nEvents["Zuu+j"                    ] = 0;
+    nEvents["Zee+j"                    ] = 0;
+    nEvents["Z+j"                      ] = 0;
+    nEvents["Zuu+HF"                   ] = 0;
+    nEvents["Zee+HF"                   ] = 0;
+    nEvents["Z+HF"                     ] = 0;
+    nEvents["Zee+j w/ minMET"          ] = 0;
+    nEvents["Zuu+j w/ minMET"          ] = 0;
+    nEvents["Z+j w/ minMET"            ] = 0;
+    nEvents["Zee+HF w/ minMET"         ] = 0;
+    nEvents["Zuu+HF w/ minMET"         ] = 0;
+    nEvents["Z+HF w/ minMET"           ] = 0;
+*/
+
+  // Extract options
+    usingSim         = (options.Contains("Sim"       , TString::kIgnoreCase) ? true : false);
+    usingDY          = (options.Contains("DY"        , TString::kIgnoreCase) ? true : false);
+    selectingZee     = (options.Contains("Zee"       , TString::kIgnoreCase) ? true : false);
+    selectingZuu     = (options.Contains("Zuu"       , TString::kIgnoreCase) ? true : false);
+    selectingZl      = (options.Contains("Zl"        , TString::kIgnoreCase) ? true : false);
+    selectingZc      = (options.Contains("Zc"        , TString::kIgnoreCase) ? true : false);
+    selectingZb      = (options.Contains("Zb"        , TString::kIgnoreCase) ? true : false);
+    selectingZtautau = (options.Contains("Ztautau"   , TString::kIgnoreCase) ? true : false);
+
   // Initialize histograms from config file.
     hDir->cd();     // Move to this extractor's output directory to initialize the histograms.
     TString histoName, binStr, minStr, maxStr, histoTitle;
@@ -51,120 +84,33 @@ ControlPlotExtractor::ControlPlotExtractor(EventHandler& eh, TDirectory* d, TStr
 
 void ControlPlotExtractor::fillHistos()
 {
-/*
+  // If event isn't in JSON and isn't a simulation event, move on to the next event.
+    if(!evt.inJSON && !usingSim) return;
 
-  // Initialize cut flow counter
-    nEvents["Analyzed in PAT"          ] = 0;
-    nEvents["Candidates from Ntupler"  ] = 0;
-    nEvents["w/ 2 valid muons"         ] = 0;
-    nEvents["w/ 2 valid electrons"     ] = 0;
-    nEvents["w/ 2 valid leptons"       ] = 0;
-    nEvents["w/ valid Z from muons"    ] = 0;
-    nEvents["w/ valid Z from electrons"] = 0;
-    nEvents["w/ valid Z"               ] = 0;
-    nEvents["Zuu+j"                    ] = 0;
-    nEvents["Zee+j"                    ] = 0;
-    nEvents["Z+j"                      ] = 0;
-    nEvents["Zuu+HF"                   ] = 0;
-    nEvents["Zee+HF"                   ] = 0;
-    nEvents["Z+HF"                     ] = 0;
-    nEvents["Zee+j w/ minMET"          ] = 0;
-    nEvents["Zuu+j w/ minMET"          ] = 0;
-    nEvents["Z+j w/ minMET"            ] = 0;
-    nEvents["Zee+HF w/ minMET"         ] = 0;
-    nEvents["Zuu+HF w/ minMET"         ] = 0;
-    nEvents["Z+HF w/ minMET"           ] = 0;
+  // If you don't have two valid leptons of the desired flavor, kick.
+    if(selectingZuu && !evt.validMuons    ) return;
+    if(selectingZee && !evt.validElectrons) return;
+    //cout << "    ControlPlotExtractor(" << options << ")::fillHistos(): Found event w/ valid leptons." << endl;
 
-//cout << "    Processing DiffXSHistoMaker for output " << fn_output << "...";
-
-  // Check if the event is a valid Z+j event, then if there are HF jets of the desired operating point. Kick if not true.
-    nEventsProcessed++;
-
-  // Kill if event isn't a Z+j event, or isn't of the intended type (Zee or Zuu)
-    if(!e->validZPJEvent)             { cout << "complete. Killed because !validZPJEvent." << endl;   return ""; }
-    if(usingZee && !e->validZeeEvent) { cout << "complete. Killed because !validZeeEvent." << endl;   return ""; }
-    if(usingZuu && !e->validZuuEvent) { cout << "complete. Killed because !validZuuEvent." << endl;   return ""; }
-    nZPJEvents++;
-  // Kill if event isn't a HF of the desired operating point.
-    if(!e->hasHFJets[csvOpPt]) { cout << "complete. No HF Jets." << endl;   return ""; }
-    nZHFEvents++;
-
-    stringstream tempLog("");
-
-  // Set up a pointer to the variable we'd like to fill with.
-    float* tempPt;
-    if(diffVariable == "ZPt"   ) tempPt = &(e->m_Z_pt   );
-    if(diffVariable == "JetPt" ) tempPt =   e->m_jet_pt  ;
-    if(diffVariable == "JetEta") tempPt =   e->m_jet_eta ;
-    const float *variablePt = tempPt;
-
-  // Determine if the jet to use to fill histograms.
-    // If we are working with DY, look for a jet that has both HF-truth (c or b) and a HF tag.
-    // If none is found, fill the light jet template with the leading HF jet.
-    // If not working with DY, we simply use the leading HF-tagged jet.
-
-
-    TString histoToFill = "template";
-    Index i = 0;    // Index of HF-tagged jet used to fill histograms.
-    Index nValidJets = e->validJets.size();
-
+  // If using a DY, check starting conditions to see if a certain type of event is desired.
     if(usingDY)
-    { // Check if the event is a b, c, or light jet event.
-        if(     e->hasBJet) histoToFill += "_bjets";
-        else if(e->hasCJet) histoToFill += "_cjets";
-        else                histoToFill += "_ljets";
-    }
-    for(i=0; i<nValidJets; i++)
-        if(e->HFJets[csvOpPt][i]) // If the jet is heavy flavor...
-            break;                // Call off the search. You've found your leading jet.
-
-  // Modify the index to add to the differential variable based on if diff-variable is based on the leading jet.
-    Index diffFillIndex = (diffVariable == "ZPt" ? 0 : i );
-    if(usingDY) h["template"]->Fill(*(variablePt+diffFillIndex), e->m_jet_msv[i]);
-    h[histoToFill]           ->Fill(*(variablePt+diffFillIndex), e->m_jet_msv[i]);
-
-*/
-/*
-        for(i=(e->hasBJet||e->hasCJet ? 0:nValidJets); i<nValidJets; i++)  // If we already know there are no b or c jets, skip to the end.
-        { // If the jet is heavy flavor...
-            if(e->HFJets[csvOpPt][i])
-            { // If the jet is either b or c, designate the proper histogram to fill and set the proper jet to use.
-                if(e->bMCJets[i]) {histoToFill+="_bjets"; break;}
-                if(e->cMCJets[i]) {histoToFill+="_cjets"; break;}
-            }
-        }
-      // If no HF-truth jets were found, fill the ljet template with a jet found in the following loop.
-        if(i==nValidJets) histoToFill+="_ljets";
+    {   if(selectingZtautau  && !evt.zBosonFromTaus        ) return;
+        else if( selectingZb && !evt.hasBJet               ) return;
+        else if( selectingZc && !evt.hasCJet               ) return;
+        else if( selectingZl && (evt.hasBJet||evt.hasCJet) ) return;
     }
 
-  // If not using DY or no true HF jets were found, fill with the leading HF-tagged jet.
-    if(!usingDY || histoToFill=="template_ljets")
-        for(i=0; i<nValidJets; i++)
-            if(e->HFJets[csvOpPt][i]) // If the jet is heavy flavor...
-                break;                // Call off the search. You've found your leading jet.
+  // Fill raw histograms.
+    cout << "    Filling raw histos (ex. raw_Z_mass = " << evt.m_Z_mass << ")." << endl;
+    cout << h["raw_Z_mass"  ]->Fill(evt.m_Z_mass) << endl;
+    //h["raw_Z_mass"  ]->Fill(evt.m_Z_mass);
+    h["raw_Z_pt"    ]->Fill(evt.m_Z_pt  );
+    h["raw_Z_eta"   ]->Fill(evt.m_Z_eta );
+    h["raw_Z_phi"   ]->Fill(evt.m_Z_phi );
+    h["raw_Z_DelR"  ]->Fill(evt.Z_DelR  );
+    h["raw_Z_DelEta"]->Fill(evt.Z_DelEta);
+    h["raw_Z_DelPhi"]->Fill(evt.Z_DelPhi);
 
-  // Modify the index to add to the differential variable based on if diff-variable is based on the leading jet.
-    Index diffFillIndex = (diffVariable == "ZPt" ? 0 : i );
-    h[histoToFill]->Fill(*(variablePt+diffFillIndex), e->m_jet_msv[i]);
-    if(usingDY) h["template"]->Fill(*(variablePt+diffFillIndex), e->m_jet_msv[i]);
-
-    //FOR TESTING PURPOSES: tempLog << "    Filling: " << histoToFill << " w/ Valid Jet# " << i << " of " << nValidJets << "\n";
-*/
-/*
-  // Fill counters based on filled histograms
-    //cout << "    Filling: " << histoToFill << endl;
-    //if(histoToFill=="template"      )
-    nValidEvents++;
-    if(histoToFill=="template_bjets") nValidBEvents++;
-    if(histoToFill=="template_cjets") nValidCEvents++;
-    if(histoToFill=="template_ljets") nValidLEvents++;
-
-    //cout << histoToFill << endl;
-    //cout << "complete. HF jet logged." << endl;
-
-    //log << tempLog.str();
-    return tempLog.str();
-*/
 }
 
 
@@ -172,6 +118,7 @@ void ControlPlotExtractor::saveToFile()
 {
   // Save each file to directory or overwrite.
     cout << "   ControlPlotExtractor::saveToFile(): TEST: Saving to file: " << hDir->GetPath() << endl;
+    hDir->cd();
     for(const auto& hist : h) hist.second->Write("", TObject::kOverwrite);
 
 }

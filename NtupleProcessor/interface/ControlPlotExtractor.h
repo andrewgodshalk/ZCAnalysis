@@ -41,6 +41,16 @@ public:
     count nValidCEvents   ;
     count nValidLEvents   ;
 
+  // Options
+    bool usingDY         ;
+    bool usingSim        ;
+    bool selectingZee    ;
+    bool selectingZuu    ;
+    bool selectingZl     ;
+    bool selectingZc     ;
+    bool selectingZb     ;
+    bool selectingZtautau;
+
   // Counter for cut flow table.
     std::map<TString, count> nEvents;
 };
