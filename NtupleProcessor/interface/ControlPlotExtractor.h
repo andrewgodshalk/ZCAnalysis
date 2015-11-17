@@ -27,19 +27,14 @@ public:
 
     void fillHistos();       // Fills the class' contained histograms from the passed Entry.
     void saveToFile(); // Saves the histograms and the log to file.
+    void fillLeptonHistograms(TString);
+    void fillMETHistograms   (TString);
+    void fillJetHistograms   (TString);
 
     static ControlPlotConfig cfg;
 
     TString csvOpPt       ;
     TString diffVariable  ;
-
-    count nEventsProcessed;
-    count nZPJEvents      ;
-    count nZHFEvents      ;
-    count nValidEvents    ;
-    count nValidBEvents   ;
-    count nValidCEvents   ;
-    count nValidLEvents   ;
 
   // Options
     bool usingDY         ;

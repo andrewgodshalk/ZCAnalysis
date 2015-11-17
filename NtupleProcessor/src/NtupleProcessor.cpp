@@ -28,11 +28,13 @@ NtupleProcessor::NtupleProcessor(TString ds, TString fnpc, TString fnac, TString
     usingSim = (options.Contains("Sim", TString::kIgnoreCase) ? true : false);
     usingDY  = (options.Contains("DY" , TString::kIgnoreCase) ? true : false);
 
-
   // Open and set up appropriate file & tree
-    TFile *ntupleFile = TFile::Open(runParams.fn_ntuple[dataset.Data()]);
+    ntupleFile = TFile::Open(runParams.fn_ntuple[dataset.Data()]);
     if(!ntupleFile) cout << "NtupleProcessor: ERROR: Unable to open file " << runParams.fn_ntuple[dataset.Data()] << endl;
     TTree *ntuple   = (TTree*) ntupleFile->Get("tree");
+
+  // Extra, kind of slap-dash step to add the PAT processing count to cut table...
+    eHandler.patEventsAnalyzed = ((TH1F*) ntupleFile->Get("Count"))->GetBinContent(1);
 
   // Open output file
     outputFile = TFile::Open(runParams.fn_output, "UPDATE");

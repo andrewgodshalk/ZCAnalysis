@@ -7,9 +7,11 @@
 
 #include <algorithm>
 #include <iostream>
+#include <utility>
 #include <vector>
 #include <TBranch.h>
 #include <TLeaf.h>
+#include <TMath.h>
 #include "../interface/EventHandler.h"
 
 using std::cout;   using std::endl;   using std::vector;   using std::swap;
@@ -19,7 +21,8 @@ EventHandler::EventHandler(TString fnac, TString o) : anCfg(fnac), options(o)
   // Check the option to see if we're working with Simulation or Data
     usingSim = (options.Contains("Sim", TString::kIgnoreCase) ? true : false);
     usingDY  = (options.Contains("DY" , TString::kIgnoreCase) ? true : false);
-
+    patEventsAnalyzed = 0;
+    entriesInNtuple   = 0;
 }
 
 bool EventHandler::mapTree(TTree* tree)
@@ -28,7 +31,9 @@ bool EventHandler::mapTree(TTree* tree)
   // TO DO: Implement check for correct mapping, return result?
   //    - Set up exception handling for negative result.
 
-  TBranch * temp_branch;  // Temporary branch to get at members of struct-branches.
+    entriesInNtuple = tree->GetEntries();
+
+    TBranch * temp_branch;  // Temporary branch to get at members of struct-branches.
 
   // Deactivate all branches, reactivate as necessary.
     tree->SetBranchStatus("*",0);
@@ -36,7 +41,7 @@ bool EventHandler::mapTree(TTree* tree)
         "Vtype"      , "nallMuons"         , "nallElectrons"     , "nallJets"          ,
         "V*"         , "allMuon_pt"        , "allElectron_pt"    , "allJet_pt"         ,
         "zdecayMode" , "allMuon_eta"       , "allElectron_eta"   , "allJet_eta"        ,
-        "EVENT*" , "allMuon_phi"       , "allElectron_phi"   , "allJet_phi"        ,
+        "EVENT*"     , "allMuon_phi"       , "allElectron_phi"   , "allJet_phi"        ,
          "MET*"      , "allMuon_charge"    , "allElectron_charge", "allJet_csv"        ,
                        "allMuon_pfCorrIso" ,                       "allJet_vtxMass"    ,
         "triggerFlags",                                            "allJet_flavour"
@@ -67,11 +72,12 @@ bool EventHandler::mapTree(TTree* tree)
     tree->SetBranchAddress( "allMuon_pfCorrIso" ,  m_muon_iso    );
 
   // Muon variables
-    tree->SetBranchAddress( "nallElectrons"     , &m_nElecs      );
-    tree->SetBranchAddress( "allElectron_pt"    ,  m_elec_pt     );
-    tree->SetBranchAddress( "allElectron_eta"   ,  m_elec_eta    );
-    tree->SetBranchAddress( "allElectron_phi"   ,  m_elec_phi    );
-    tree->SetBranchAddress( "allElectron_charge",  m_elec_charge );
+    tree->SetBranchAddress( "nallElectrons"        , &m_nElecs      );
+    tree->SetBranchAddress( "allElectron_pt"       ,  m_elec_pt     );
+    tree->SetBranchAddress( "allElectron_eta"      ,  m_elec_eta    );
+    tree->SetBranchAddress( "allElectron_phi"      ,  m_elec_phi    );
+    tree->SetBranchAddress( "allElectron_charge"   ,  m_elec_charge );
+    tree->SetBranchAddress( "allElectron_pfCorrIso",  m_elec_iso    );
 
   // Jet variables
     tree->SetBranchAddress( "nallJets"          , &m_nJets       );
@@ -84,8 +90,10 @@ bool EventHandler::mapTree(TTree* tree)
 
   // MET variables
     temp_branch = tree->GetBranch("MET");
-    temp_branch->GetLeaf(   "et"  )->SetAddress(  &m_MET_et      );
-    temp_branch->GetLeaf(   "phi" )->SetAddress(  &m_MET_phi     );
+    temp_branch->GetLeaf( "et"   )->SetAddress( &m_MET_et    );
+    temp_branch->GetLeaf( "phi"  )->SetAddress( &m_MET_phi   );
+    temp_branch->GetLeaf( "sumet")->SetAddress( &m_MET_sumet );
+    temp_branch->GetLeaf( "sig"  )->SetAddress( &m_MET_sig   );
 
   // Trigger variables
     tree->SetBranchAddress( "triggerFlags",         m_triggers    );
@@ -97,78 +105,107 @@ bool EventHandler::mapTree(TTree* tree)
 void EventHandler::evalCriteria()
 { // Evaluates the class' list of event selection criteria
 
+cout << "   EventHandler::evalCriteria(): BEGIN." << endl;
+
+    resetSelectionVariables();
+
   // Check JSON if working with a data event.
     if(usingSim) inJSON = false;       // If using simulation, automatically set the JSON variable to false.
     else         inJSON = m_json==1;   //  Otherwise, go with what value is given by the ntuple.
 
-  // Cycle through muons, electrons, find leading and sub-leading.
-    ldMu = ldEl = 0;
-    slMu = slEl = 1;
-    if(m_nMuons>=2)
+  // Check if event has the required triggers. Kick if not triggered.
+    isElTriggered = triggered(anCfg.elecTriggers);
+    isMuTriggered = triggered(anCfg.muonTriggers);
+    //if(!isElTriggered && !isMuTriggered) return;
+
+  // Check for the proper number or leptons. Kick if neither.
+    if( m_nElecs<2 && m_nMuons<2 ) return;
+
+  // Lepton selection
+    // **************PROBLEM AREA*********************
+    // Not perfect... takes leading leptons. Makes the isolation and kinematic checks. Constructs Z.
+    // Doesn't take into account that a lower-pt lepton might be a Z-daughter.
+    // Need to go back and rework how this information is saved. May be too general.
+    // May want to add some control plot information to the Ntupler/PATTupler.
+    // For now, just finds leptons without intermediate steps.
+    // Also need to implement trigger matching (or see if implemented in previous steps).
+    validMuons.clear();   validElectrons.clear();
+
+  // Perform selection on leptons and store indexes sorted by pt.
+    for(Index i=0; i<m_nMuons; i++)
     {
-        if(m_muon_pt[ldMu]<m_muon_pt[slMu]) { ldMu = 1; slMu = 0; }
-        for(int i=2; i<m_nMuons; i++)
-        {
-            if(     m_muon_pt[i]>=m_muon_pt[ldMu]) {slMu = ldMu; ldMu = i;}
-            else if(m_muon_pt[i]>=m_muon_pt[slMu])  slMu = i;
-        }
+      // Perform selection on this muon. Skip to next if it doesn't meet criteria.
+        if(         m_muon_pt [i] <anCfg.muonPtMin
+            || fabs(m_muon_eta[i])>anCfg.muonEtaMax
+            ||      m_muon_iso[i] >anCfg.muonIsoMax
+          ) continue;
+      // Insert muon in list based on pt.
+        Index lowPtIndex = i;
+        for(int j=0; j<validMuons.size(); j++) if(m_muon_pt[validMuons[j]]<m_muon_pt[lowPtIndex]) swap(validMuons[j], lowPtIndex);
+        validMuons.push_back(lowPtIndex);
     }
-    if(m_nElecs>=2)
+    for(Index i=0; i<m_nElecs; i++)
     {
-        if(m_elec_pt[ldEl]<m_elec_pt[slEl]) { ldEl = 1; slEl = 0; }
-        for(int i=2; i<m_nElecs; i++)
-        {
-            if(     m_elec_pt[i]>=m_elec_pt[ldEl]) {slEl = ldEl; ldEl = i;}
-            else if(m_elec_pt[i]>=m_elec_pt[slEl])  slEl = i;
-        }
+      // Perform selection on this electron.
+        if(    m_elec_pt [i] <anCfg.elecPtMin
+            || (fabs(m_elec_eta[i])>anCfg.elecEtaInnerMax && (fabs(m_elec_eta[i])<anCfg.elecEtaOuterMin || fabs(m_elec_eta[i])>anCfg.elecEtaOuterMax))
+            //|| m_elec_iso[i] >anCfg.elecIsoMax
+          ) continue;
+      // Insert electron in list based on pt.
+        Index lowPtIndex = i;
+        for(int j=0; j<validElectrons.size(); j++) if(m_elec_pt[validElectrons[j]]<m_elec_pt[lowPtIndex]) swap(validElectrons[j], lowPtIndex);
+        validElectrons.push_back(lowPtIndex);
     }
 
-  // Check for valid muons, electrons, Z-boson, and MET.
-    validMuons     = m_nMuons>=2   //  && m_Vtype==0
-                  && (m_muon_charge[ldMu]*m_muon_charge[slMu]==-1 || !anCfg.dilepMuonReqOppSign )
-                  && triggered(anCfg.muonTriggers)
-                  && m_muon_pt [ldMu]>=anCfg.muonPtMin  && fabs(m_muon_eta[ldMu])<=anCfg.muonEtaMax   // Check muon pT and eta.
-                  && m_muon_pt [slMu]>=anCfg.muonPtMin  && fabs(m_muon_eta[slMu])<=anCfg.muonEtaMax
-                  && m_muon_iso[ldMu]<=anCfg.muonIsoMax && m_muon_iso[slMu]<=anCfg.muonIsoMax
+  // Check lepton id, isolation (TO IMPLEMENT. ALREADY DONE IN NTUPLER)
+  //
+
+  // Check for two valid muons, electrons. (Assume 0, 1 are leading and subleading.)
+    hasValidMuons =    validMuons.size() >=2   //  && m_Vtype==0
+                    && (m_muon_charge[validMuons[0]]*m_muon_charge[validMuons[1]]==-1 || !anCfg.dilepMuonReqOppSign )
+                    && isMuTriggered
     ;
-
-    validElectrons = m_nElecs>=2 //&& m_Vtype==1          // Check number of electrons, type of Z event, then if within pT and eta range.
-                  && (m_elec_charge[ldEl]*m_elec_charge[slEl]==-1 || !anCfg.dilepElecReqOppSign )
-                  && triggered(anCfg.elecTriggers)
-                  && m_elec_pt [ldEl]>=anCfg.elecPtMin  && (fabs(m_elec_eta[ldEl])<=anCfg.elecEtaInnerMax || (fabs(m_elec_eta[ldEl])>=anCfg.elecEtaOuterMin && fabs(m_elec_eta[ldEl])<=anCfg.elecEtaOuterMax))
-                  && m_elec_pt [slEl]>=anCfg.elecPtMin  && (fabs(m_elec_eta[slEl])<=anCfg.elecEtaInnerMax || (fabs(m_elec_eta[slEl])>=anCfg.elecEtaOuterMin && fabs(m_elec_eta[slEl])<=anCfg.elecEtaOuterMax))
-                  && m_muon_iso[ldEl]<=anCfg.muonIsoMax && m_muon_iso[slEl]<=anCfg.muonIsoMax;
+    hasValidElectrons =    validElectrons.size()>=2 //&& m_Vtype==1
+                        && (m_elec_charge[validElectrons[0]]*m_elec_charge[validElectrons[1]]==-1 || !anCfg.dilepElecReqOppSign )
+                        && isElTriggered
     ;
 
   // Calculate Z_DelR based on valid muons/electrons.
     Z_DelR = Z_DelPhi = Z_DelEta = -1;
-    if(validMuons)
+    if(hasValidMuons)
     {
-        Z_DelEta = fabs(m_muon_eta[0]-m_muon_eta[1]);
-        Z_DelPhi = fabs(m_muon_phi[0]-m_muon_phi[1]);
+        Z_DelEta = fabs(m_muon_eta[validMuons[0]]-m_muon_eta[validMuons[1]]);
+        Z_DelPhi = fabs(m_muon_phi[validMuons[0]]-m_muon_phi[validMuons[1]]);
+        if(Z_DelPhi > TMath::Pi()) Z_DelPhi -= TMath::Pi();
         Z_DelR   = sqrt(Z_DelEta*Z_DelEta+Z_DelPhi*Z_DelPhi);
     }
-    else if(validElectrons)
+    else if(hasValidElectrons)
     {
-        Z_DelEta = fabs(m_elec_eta[0]-m_elec_eta[1]);
-        Z_DelPhi = fabs(m_elec_phi[0]-m_elec_phi[1]);
+        Z_DelEta = fabs(m_elec_eta[validElectrons[0]]-m_elec_eta[validElectrons[1]]);
+        Z_DelPhi = fabs(m_elec_phi[validElectrons[0]]-m_elec_phi[validElectrons[1]]);
+        if(Z_DelPhi > TMath::Pi()) Z_DelPhi -= TMath::Pi();
         Z_DelR   = sqrt(Z_DelEta*Z_DelEta+Z_DelPhi*Z_DelPhi);
     }
 
-    validZBoson    = m_Z_mass>=anCfg.dilepInvMassMin && m_Z_mass<=anCfg.dilepInvMassMax;
-    validMET       = m_MET_et<=anCfg.metMax;
+    hasValidZBosonMass = m_Z_mass>=anCfg.dilepInvMassMin && m_Z_mass<=anCfg.dilepInvMassMax;
+    hasValidMET        = m_MET_et<=anCfg.metMax;
 
   // Run through list of jets to find valid jets, then check those jets for various features.
-    validJets = vector<Index>(0);
-    for(int i=0; i<m_nJets; i++)
-        if(m_jet_pt[i]>=anCfg.jetPtMin && fabs(m_jet_eta[i])<=anCfg.jetEtaMax)
-        { // Insert jet in proper place in list.
-            Index temp=i;
-            for(int j=0; j<validJets.size(); j++)
-                if(m_jet_pt[validJets[j]]<m_jet_pt[temp]) swap(temp, validJets[j]); //cout << "SWAPED!!" << endl;
-            validJets.push_back(temp);
+    validJets.clear();
+    for(Index i=0; i<m_nJets; i++)
+    {
+      // Perform selection on this Jet. Skip to next if it doesn't meet criteria.
+        if(m_jet_pt[i]<anCfg.jetPtMin || fabs(m_jet_eta[i])>anCfg.jetEtaMax) continue;
+      // Insert jet in list based on pt.
+        Index lowPtIndex = i;
+        for(Index j=0; j<validJets.size(); j++)
+        {
+            cout << "    evalCriteria(): Checking jet at index " << lowPtIndex << " against " << validJets[j] << endl;
+            if(m_jet_pt[validJets[j]]<m_jet_pt[lowPtIndex]) swap(validJets[j], lowPtIndex);
         }
-
+        validJets.push_back(lowPtIndex);
+    }
+/*
   // If there are valid jets, make some vectors to contain their heavy flavor tagging properties.
     if(validJets.size()>0)
     {
@@ -191,7 +228,6 @@ void EventHandler::evalCriteria()
         if(m_jet_csv[evt_i]>=anCfg.stdCSVOpPts["CSVM"] && m_jet_msv[evt_i]>=anCfg.minSVT) { HFJets["CSVM"][vJet_i]=true; hasHFJets["CSVM"] = true; } else continue;
         if(m_jet_csv[evt_i]>=anCfg.stdCSVOpPts["CSVT"] && m_jet_msv[evt_i]>=anCfg.minSVT) { HFJets["CSVT"][vJet_i]=true; hasHFJets["CSVT"] = true; } else continue;
         if(m_jet_csv[evt_i]>=anCfg.stdCSVOpPts["CSVS"] && m_jet_msv[evt_i]>=anCfg.minSVT) { HFJets["CSVS"][vJet_i]=true; hasHFJets["CSVS"] = true; } else continue;
-
     }
 
   // Combine a few of the checks into a couple of comprehensive variables.
@@ -212,11 +248,14 @@ void EventHandler::evalCriteria()
         if(fabs(m_jet_flv[evt_i])==4) { cMCJets[vJet_i]=true; hasCJet = true; }
         lMCJets[vJet_i] = fabs(m_jet_flv[evt_i])!=5 && fabs(m_jet_flv[evt_i])!=4;
     }
-
+*/
   // Kick function if not using DY. Otherwise, check for origin from Z->tautau
     if(!usingDY) return;
     zBosonFromTaus = (m_zdecayMode==3);
+
 }
+
+
 
 
 // Returns whether or not this event has any of the listed triggers.
@@ -224,4 +263,12 @@ bool EventHandler::triggered(vector<int> &triggersToTest)
 {
     for(int i : triggersToTest) if(m_triggers[i]) return true;
     return false;
+}
+
+
+void EventHandler::resetSelectionVariables()
+{
+    inJSON = isElTriggered = isMuTriggered = hasValidElectrons = hasValidMuons
+      = hasValidZBosonMass = zBosonFromTaus = hasValidMET
+      = isZpJEvent = isZHFEvent = hasBJet = hasCJet = false;
 }

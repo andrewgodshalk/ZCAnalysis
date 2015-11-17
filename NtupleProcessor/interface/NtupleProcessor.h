@@ -35,6 +35,7 @@ class NtupleProcessor
     TreeIterator      tIter;
     TString           options;        // Extra options for this processing.
     int               maxEvents;      // Max number of events to run over in this ntuple
+    TFile*            ntupleFile;     // File from which the ntuple is pulled.
     TFile*            outputFile;     // ROOT output file where histograms are stored.
 
     bool usingSim;
