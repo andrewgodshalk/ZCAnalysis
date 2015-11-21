@@ -25,14 +25,26 @@ ControlPlotConfig::ControlPlotConfig(TString fnc)
             "      Config Input File: " << fn_config
          << endl;
 
-  // Read in histogram strings from config file.
-    boost::property_tree::ptree extList = pt.get_child("CONTROL PLOTS");
+    getHistoStringsFromFileHeading("MUON"    );
+    getHistoStringsFromFileHeading("ELECTRON");
+    getHistoStringsFromFileHeading("DILEPTON");
+    getHistoStringsFromFileHeading("MET"     );
+    getHistoStringsFromFileHeading("JET"     );
+
+}
+
+
+void ControlPlotConfig::getHistoStringsFromFileHeading(TString poHeading)
+{ // Read in histogram strings from config file from given heading.
+  // Set up space for the set of split histogram strings within the map, under the given heading, and associate it with a pointer.
+    vector<vector<string> >* h_strings = &(h_histoStrings[poHeading] = vector<vector<string> >());
+  // Find the set for this object within the config file input.
+    boost::property_tree::ptree extList = pt.get_child(poHeading.Data());
+  // Go through the set and map into vectors
     for( const auto& kv : extList)
     {
-        string hName(kv.first);
-        string hData(kv.second.data());
-        h_strings[hName] = vector<std::string>();
-        getListFromString(hData, h_strings[hName]);
+        h_strings->push_back(vector<string>(0));
+        string hData = string(kv.first) + " " + kv.second.data();
+        getListFromString(hData, h_strings->back());
     }
-
 }

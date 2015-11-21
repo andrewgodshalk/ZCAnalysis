@@ -26,12 +26,25 @@ public:
     virtual ~ControlPlotExtractor(){}
 
     void fillHistos();       // Fills the class' contained histograms from the passed Entry.
+
+private:
     void saveToFile(); // Saves the histograms and the log to file.
-    void fillLeptonHistograms(TString);
-    void fillMETHistograms   (TString);
-    void fillJetHistograms   (TString);
+    void makePhysicsObjectHistograms(TString, TString);                             // Makes a set of histograms for all objects using inputs: histogram name prefix, label modification
+    void makePhysicsObjectHistograms(TString, TString, TString, bool split=false);  // Makes a set of histograms using inputs: object type, histogram name prefix, label modification, split by object option.
+    void fillMuonHistograms     (TString, bool split=true);
+    void fillElectronHistograms (TString, bool split=true);
+    void fillDileptonHistograms (TString);  // Fills all histograms for the object that match the given prefix.
+    void fillMETHistograms      (TString);
+    void fillJetHistograms      (TString);
+    void fillAllObjectHistograms(TString);
 
     static ControlPlotConfig cfg;
+
+  // Labels for split histograms
+    static const std::vector<TString> multName ;
+    static const std::vector<TString> multTitle;
+    static const std::vector<TString> HFTags;
+    //static const vector<TString> numLabel = {"_1st", "_2nd", "_3rd", "_4th", "_5th", "_6th", "_7th", "_8th", "_9th"};
 
     TString csvOpPt       ;
     TString diffVariable  ;

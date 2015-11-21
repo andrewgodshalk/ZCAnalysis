@@ -105,7 +105,7 @@ bool EventHandler::mapTree(TTree* tree)
 void EventHandler::evalCriteria()
 { // Evaluates the class' list of event selection criteria
 
-cout << "   EventHandler::evalCriteria(): BEGIN." << endl;
+//cout << "   EventHandler::evalCriteria(): BEGIN." << endl;
 
     resetSelectionVariables();
 
@@ -129,7 +129,6 @@ cout << "   EventHandler::evalCriteria(): BEGIN." << endl;
     // May want to add some control plot information to the Ntupler/PATTupler.
     // For now, just finds leptons without intermediate steps.
     // Also need to implement trigger matching (or see if implemented in previous steps).
-    validMuons.clear();   validElectrons.clear();
 
   // Perform selection on leptons and store indexes sorted by pt.
     for(Index i=0; i<m_nMuons; i++)
@@ -200,12 +199,12 @@ cout << "   EventHandler::evalCriteria(): BEGIN." << endl;
         Index lowPtIndex = i;
         for(Index j=0; j<validJets.size(); j++)
         {
-            cout << "    evalCriteria(): Checking jet at index " << lowPtIndex << " against " << validJets[j] << endl;
+            //cout << "    evalCriteria(): Checking jet at index " << lowPtIndex << " against " << validJets[j] << endl;
             if(m_jet_pt[validJets[j]]<m_jet_pt[lowPtIndex]) swap(validJets[j], lowPtIndex);
         }
         validJets.push_back(lowPtIndex);
     }
-/*
+
   // If there are valid jets, make some vectors to contain their heavy flavor tagging properties.
     if(validJets.size()>0)
     {
@@ -231,10 +230,10 @@ cout << "   EventHandler::evalCriteria(): BEGIN." << endl;
     }
 
   // Combine a few of the checks into a couple of comprehensive variables.
-    validZeeEvent = (usingSim || inJSON) && validElectrons && validZBoson && validMET;
-    validZuuEvent = (usingSim || inJSON) && validMuons     && validZBoson && validMET;
-    validStdEvent = validZeeEvent || validZuuEvent;
-    validZPJEvent = validStdEvent && validJets.size()>0;
+    isZeeEvent = (usingSim || inJSON) && hasValidElectrons && hasValidZBosonMass;
+    isZuuEvent = (usingSim || inJSON) && hasValidMuons     && hasValidZBosonMass;
+    isZllEvent = isZeeEvent || isZuuEvent;
+    isZpJEvent = isZllEvent && validJets.size()>0;
 
   // Kick function if not using Sim. Otherwise, check jets for flavor properties
     if(!usingSim) return;
@@ -248,15 +247,12 @@ cout << "   EventHandler::evalCriteria(): BEGIN." << endl;
         if(fabs(m_jet_flv[evt_i])==4) { cMCJets[vJet_i]=true; hasCJet = true; }
         lMCJets[vJet_i] = fabs(m_jet_flv[evt_i])!=5 && fabs(m_jet_flv[evt_i])!=4;
     }
-*/
+
   // Kick function if not using DY. Otherwise, check for origin from Z->tautau
     if(!usingDY) return;
     zBosonFromTaus = (m_zdecayMode==3);
 
 }
-
-
-
 
 // Returns whether or not this event has any of the listed triggers.
 bool EventHandler::triggered(vector<int> &triggersToTest)
@@ -271,4 +267,8 @@ void EventHandler::resetSelectionVariables()
     inJSON = isElTriggered = isMuTriggered = hasValidElectrons = hasValidMuons
       = hasValidZBosonMass = zBosonFromTaus = hasValidMET
       = isZpJEvent = isZHFEvent = hasBJet = hasCJet = false;
+    validMuons.clear();
+    validElectrons.clear();
+    validJets.clear();
+
 }
