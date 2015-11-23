@@ -211,7 +211,7 @@ void ControlPlotExtractor::makePhysicsObjectHistograms(TString poLabel, TString 
         int i = 0;   bool splitThis = split && info[0]!="_mult";
         do {
             histoName  = prefix + "_" + poLabel + multName[i] + info[0];
-            cout << "    ControlPlotExtractor::ControlPlotExtractor(): Creating histogram " << histoName << " w/ title: " << (multTitle[i]+histoTitle) << endl;
+            //cout << "    ControlPlotExtractor::ControlPlotExtractor(): Creating histogram " << histoName << " w/ title: " << (multTitle[i]+histoTitle) << endl;
             h[histoName] = new TH1F(histoName, multTitle[i]+histoTitle, numBins, binMin, binMax);
             hDir->WriteTObject(h[histoName], 0, "Overwrite");
         } while( splitThis && (i++)<3);
@@ -304,7 +304,7 @@ void ControlPlotExtractor::fillJetHistograms(TString prefix)
     if(!prefix.Contains("hf")) return;
     objsEntered = 0;      // Keeps track of how many objects you've entered for labeling purposes
     TString hfTag = prefix(prefix.Length()-4, 4);   // Retrieve HF tag from prefix. Prefix should have form "pfx_CSVT"
-    cout << hfTag << endl;
+    //cout << hfTag << endl;
     for(int i=0; i<evt.validJets.size(); i++)
     { // Cycle through valid jet listings.
         if(!evt.HFJets[hfTag][i]) continue;     // If this jet doesn't have the appropriate tag, continue.
