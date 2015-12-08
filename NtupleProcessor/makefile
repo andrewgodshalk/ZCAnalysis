@@ -9,7 +9,10 @@ HDRDIR=NtupleProcessor/interface
 SRCDIR=NtupleProcessor/src
 
 
-NtupleProcessor : NtupleProcessor.exe
+NtupleProcessor : createObjDir NtupleProcessor.exe
+
+createObjDir : 
+	mkdir -p NtupleProcessor/obj
 
 NtupleProcessor.exe : $(OBJS)
 	$(CC) $(OBJS) -o NtupleProcessor.exe $(ROOTFLAGS) -lboost_program_options

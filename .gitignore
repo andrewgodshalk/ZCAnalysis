@@ -1,3 +1,5 @@
 #ignore file
 *.exe
 *.o
+ControlPlotMaker/plots/*.png
+ControlPlotMaker/epsplots/*.eps

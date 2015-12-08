@@ -22,7 +22,10 @@ Handles command line arguements.
 #include "../ZCLibrary/timestamp.h"
 #include "../NtupleProcessor/interface/NtupleProcessor.h"
 
-using std::cout;   using std::endl;   using std::vector;   using std::string;
+using std::cout;     using std::endl;
+using std::string;   using std::ifstream;
+using std::vector;
+
 namespace po = boost::program_options;
 
 int main(int argc, char* argv[])
@@ -34,7 +37,7 @@ int main(int argc, char* argv[])
   // Variables needed for Ntuple processor
     string dataset  = "dy";
     string npconfig = "NtupleProcessor/etc/zcNtupleProcConfig_default.ini";
-    string anconfig = "NtupleProcessor/etc/zcAnalysisConfig_default.ini";
+    string anconfig = "ZCLibrary/zcAnalysisConfig_default.ini";
     string options  = "";
     int maxEvents = -1;
 
@@ -81,19 +84,20 @@ int main(int argc, char* argv[])
         return 1;
     }
 
-    // Get config files (use dashed input for custom runs. Standard will have all the extractors set up).
-    if(cmdInput.count("npconfig"))
-    {  // Check if the input file is valid before use.
-        npconfig = cmdInput["npconfig"].as<string>();
-        std::ifstream testFile(npconfig);
-        if(!testFile) {cout << "Invalid npconfig file specified: " << npconfig << endl; return 1;}
-    }
-    if(cmdInput.count("anconfig"))
-    {  // Check if the input file is valid before use.
-        anconfig = cmdInput["anconfig"].as<string>();
-        std::ifstream testFile(anconfig);
-        if(!testFile) {cout << "Invalid anconfig file specified: " << anconfig << endl; return 1;}
-    }
+  // Get config files (use dashed input for custom runs. Standard will have all the extractors set up).
+    // Check if the input file is valid before use.
+    ifstream testFile;
+    if(cmdInput.count("npconfig")) npconfig = cmdInput["npconfig"].as<string>();
+    testFile.open(npconfig);
+    if(!testFile) {testFile.close(); cout << "Invalid npconfig file specified: " << npconfig << endl; return 1;}
+    testFile.close();
+    // Check if the input file is valid before use.
+    if(cmdInput.count("anconfig")) anconfig = cmdInput["anconfig"].as<string>();
+    testFile.open(anconfig);
+    if(!testFile) {testFile.close(); cout << "Invalid anconfig file specified: " << anconfig << endl; return 1;}
+    testFile.close();
+    
+    if(cmdInput.count("options")) options             = cmdInput["options"].as<string>();
 
     // Get maxevents. Specified as -1 if
     maxEvents = ( cmdInput.count("maxevents") ? cmdInput["maxevents"].as<int>() : -1);

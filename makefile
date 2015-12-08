@@ -1,10 +1,10 @@
 # Make file for ZCAnalysis
 
-all : createObjDir NtupleProcessor
+all : NtupleProcessor ControlPlotMaker
 	make -f NtupleProcessor/makefile
-
-createObjDir : 
-	mkdir -p NtupleProcessor/obj
+	make -f ControlPlotMaker/makefile
 
 clean :
 	make clean -f NtupleProcessor/makefile
+	make clean -f ControlPlotMaker/makefile
+	
