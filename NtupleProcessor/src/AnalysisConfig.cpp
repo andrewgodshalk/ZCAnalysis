@@ -41,12 +41,14 @@ AnalysisConfig::AnalysisConfig(TString fnc)
     noSVT  = pt.get<float>("SVT OPERATING POINTS.noSVT" );
 
     stdCSVOpPts["NoHF"] = pt.get<float>("HF TAGGING OPERATING POINTS.NoHF");
+    stdCSVOpPts["SVT" ] = pt.get<float>("HF TAGGING OPERATING POINTS.SVT" );
     stdCSVOpPts["CSVL"] = pt.get<float>("HF TAGGING OPERATING POINTS.CSVL");
     stdCSVOpPts["CSVM"] = pt.get<float>("HF TAGGING OPERATING POINTS.CSVM");
     stdCSVOpPts["CSVT"] = pt.get<float>("HF TAGGING OPERATING POINTS.CSVT");
     stdCSVOpPts["CSVS"] = pt.get<float>("HF TAGGING OPERATING POINTS.CSVS");
 
     flatHFTagSF["NoHF"      ] = pt.get<float>("CSV SCALE FACTORS.NoHF"      );
+    flatHFTagSF["SVT"       ] = pt.get<float>("CSV SCALE FACTORS.SVT"       );
     flatHFTagSF["CSVL"      ] = pt.get<float>("CSV SCALE FACTORS.CSVL"      );
     flatHFTagSF["CSVM"      ] = pt.get<float>("CSV SCALE FACTORS.CSVM"      );
     flatHFTagSF["CSVT"      ] = pt.get<float>("CSV SCALE FACTORS.CSVT"      );

@@ -4,7 +4,7 @@ CC=g++
 CFLAGS=-c -Wall 
 ROOTFLAGS=`root-config --cflags --glibs`
 OBJDIR=NtupleProcessor/obj
-OBJS=$(OBJDIR)/main.o $(OBJDIR)/NtupleProcessor.o $(OBJDIR)/NtupleProcConfig.o $(OBJDIR)/TreeIterator.o $(OBJDIR)/EventHandler.o $(OBJDIR)/ControlPlotExtractor.o $(OBJDIR)/AnalysisConfig.o $(OBJDIR)/ControlPlotConfig.o
+OBJS=$(OBJDIR)/main.o $(OBJDIR)/NtupleProcessor.o $(OBJDIR)/NtupleProcConfig.o $(OBJDIR)/TreeIterator.o $(OBJDIR)/EventHandler.o $(OBJDIR)/ControlPlotExtractor.o $(OBJDIR)/EffPlotExtractor.o $(OBJDIR)/AnalysisConfig.o $(OBJDIR)/ControlPlotConfig.o
 HDRDIR=NtupleProcessor/interface
 SRCDIR=NtupleProcessor/src
 
@@ -20,7 +20,7 @@ NtupleProcessor.exe : $(OBJS)
 $(OBJDIR)/main.o : NtupleProcessor/main.cpp $(HDRDIR)/NtupleProcessor.h $(HDRDIR)/ControlPlotExtractor.h $(HDRDIR)/HistogramExtractor.h $(HDRDIR)/EventHandler.h $(HDRDIR)/AnalysisConfig.h $(HDRDIR)/ControlPlotConfig.h ZCLibrary/ConfigReader.h $(HDRDIR)/NtupleProcConfig.h $(HDRDIR)/TreeIterator.h
 	$(CC) $(CFLAGS) NtupleProcessor/main.cpp -o $(OBJDIR)/main.o $(ROOTFLAGS)
 
-$(OBJDIR)/NtupleProcessor.o : $(SRCDIR)/NtupleProcessor.cpp $(HDRDIR)/NtupleProcessor.h $(HDRDIR)/ControlPlotExtractor.h $(HDRDIR)/HistogramExtractor.h $(HDRDIR)/EventHandler.h $(HDRDIR)/AnalysisConfig.h $(HDRDIR)/ControlPlotConfig.h ZCLibrary/ConfigReader.h $(HDRDIR)/NtupleProcConfig.h $(HDRDIR)/TreeIterator.h
+$(OBJDIR)/NtupleProcessor.o : $(SRCDIR)/NtupleProcessor.cpp $(HDRDIR)/NtupleProcessor.h $(HDRDIR)/ControlPlotExtractor.h $(HDRDIR)/EffPlotExtractor.h $(HDRDIR)/HistogramExtractor.h $(HDRDIR)/EventHandler.h $(HDRDIR)/AnalysisConfig.h $(HDRDIR)/ControlPlotConfig.h ZCLibrary/ConfigReader.h $(HDRDIR)/NtupleProcConfig.h $(HDRDIR)/TreeIterator.h
 	$(CC) $(CFLAGS) $(SRCDIR)/NtupleProcessor.cpp -o $(OBJDIR)/NtupleProcessor.o $(ROOTFLAGS)
 
 $(OBJDIR)/TreeIterator.o : $(SRCDIR)/TreeIterator.cpp $(HDRDIR)/TreeIterator.h $(HDRDIR)/EventHandler.h $(HDRDIR)/AnalysisConfig.h ZCLibrary/ConfigReader.h $(HDRDIR)/HistogramExtractor.h
@@ -31,6 +31,9 @@ $(OBJDIR)/EventHandler.o : $(SRCDIR)/EventHandler.cpp $(HDRDIR)/EventHandler.h $
 
 $(OBJDIR)/ControlPlotExtractor.o : $(SRCDIR)/ControlPlotExtractor.cpp $(HDRDIR)/ControlPlotExtractor.h $(HDRDIR)/HistogramExtractor.h $(HDRDIR)/EventHandler.h $(HDRDIR)/AnalysisConfig.h $(HDRDIR)/ControlPlotConfig.h ZCLibrary/ConfigReader.h
 	$(CC) $(CFLAGS) $(SRCDIR)/ControlPlotExtractor.cpp -o $(OBJDIR)/ControlPlotExtractor.o $(ROOTFLAGS)
+
+$(OBJDIR)/EffPlotExtractor.o : $(SRCDIR)/EffPlotExtractor.cpp $(HDRDIR)/EffPlotExtractor.h $(HDRDIR)/HistogramExtractor.h $(HDRDIR)/EventHandler.h $(HDRDIR)/AnalysisConfig.h
+	$(CC) $(CFLAGS) $(SRCDIR)/EffPlotExtractor.cpp -o $(OBJDIR)/EffPlotExtractor.o $(ROOTFLAGS)
 
 $(OBJDIR)/NtupleProcConfig.o : $(SRCDIR)/NtupleProcConfig.cpp $(HDRDIR)/NtupleProcConfig.h ZCLibrary/ConfigReader.h
 	$(CC) $(CFLAGS) $(SRCDIR)/NtupleProcConfig.cpp -o $(OBJDIR)/NtupleProcConfig.o $(ROOTFLAGS)

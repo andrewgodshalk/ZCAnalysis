@@ -5,7 +5,7 @@
    EventHandler Class
 
  Created : 2015-11-09  godshalk
- Modified: 2015-11-09  godshalk
+ Modified: 2015-02-23  godshalk
 
  Class used to interact with the event handed to it by a TTree iterator.
  Does the bulk work with selection and calculation of secondary variables.
@@ -13,7 +13,6 @@
    and objects.
 
 TO DO
-- Complete class.
 - Add cut table functions, or make a dedicated class to handle this.
 
 ------------------------------------------------------------------------------*/

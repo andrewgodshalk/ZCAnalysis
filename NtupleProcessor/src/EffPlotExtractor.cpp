@@ -22,7 +22,7 @@ using std::endl;           using std::ofstream;   using std::setw;   using std::
 using std::map;
 typedef unsigned int Index;
 
-const vector<TString> EffPlotExtractor::HFTags = {"NoHF", "CSVL", "CSVM", "CSVT", "CSVS"};
+const vector<TString> EffPlotExtractor::HFTags = {"NoHF", "SVT", "CSVL", "CSVM", "CSVT", "CSVS"};
 
 const vector<float> EffPlotExtractor::sf_b_ptmin = {        20,        30,        40,        50,        60,        70,        80,       100,       120,       160,       210,       260,       320,       400,       500,       600 };
 const vector<float> EffPlotExtractor::sf_b_ptmax = {        30,        40,        50,        60,        70,        80,       100,       120,       160,       210,       260,       320,       400,       500,       600,       800 };
@@ -91,19 +91,19 @@ cout << " EffPlotExtractor: CREATED!!" << endl;
         {
             TString fullFlavTitle = normTitle+"_"+flavorTitle;
             h[fullFlavTitle] = (TH1F*)tempHisto->Clone(fullFlavTitle); // Make a histogram to contain results from Z+f events.
-            h[fullFlavTitle]->Sumw2();
+//            h[fullFlavTitle]->Sumw2();
         }
     }
     for(const TString& hfLabel : EffPlotExtractor::HFTags)  // For each HFTag...
     {
         TString genTitle = taggedTitle+"_"+hfLabel;
         h[genTitle] = (TH1F*)tempHisto->Clone(genTitle);   // Make a histogram for all tagged events.
-        h[genTitle]->Sumw2();
+//        h[genTitle]->Sumw2();
         if(usingDY && (selectingZb || selectingZc || selectingZl))
         {   // If using DY and working with a non-TauTau event...
             TString fullTagTitle  = taggedTitle+"_"+flavorTitle+"_"+hfLabel;    // Make a histogram that contains the results from tagged Z+f events.
             h[fullTagTitle ] = (TH1F*)tempHisto->Clone(fullTagTitle );
-            h[fullTagTitle ]->Sumw2();
+//            h[fullTagTitle ]->Sumw2();
         }
     }
     delete tempHisto;
@@ -123,8 +123,8 @@ void EffPlotExtractor::fillHistos()
     if(usingDY)
     {   if( selectingZtautau && !evt.zBosonFromTaus        ) return;
         else if( selectingZb && !evt.hasBJet               ) return;
-        else if( selectingZc && !evt.hasCJet               ) return;
-        else if( selectingZl && (evt.hasBJet||evt.hasCJet) ) return;
+        else if( selectingZc && (evt.hasBJet||!evt.hasCJet)) return;
+        else if( selectingZl && (evt.hasBJet|| evt.hasCJet)) return;
     }
 
   // Check if the event has triggered for the desired decay chain. If not, kill.

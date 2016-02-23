@@ -47,7 +47,7 @@ bool EventHandler::mapTree(TTree* tree)
          "MET*"      , "allMuon_charge"    , "allElectron_charge", "allJet_csv"        ,
                        "allMuon_pfCorrIso" ,                       "allJet_vtxMass"    ,
         "triggerFlags",                                            "allJet_flavour"    ,
-        "weightTrig2012DiEle"  ,
+        "weightTrig2012DiEle",
         "weightTrig2012DiMuon"
     };
     for(TString br : branches_to_reactivate) tree->SetBranchStatus(br.Data(), 1);
@@ -218,6 +218,7 @@ void EventHandler::evalCriteria()
         HFJets["CSVT"] = vector<bool>(validJets.size(), false);   hasHFJets["CSVT"] = false;
         HFJets["CSVM"] = vector<bool>(validJets.size(), false);   hasHFJets["CSVM"] = false;
         HFJets["CSVL"] = vector<bool>(validJets.size(), false);   hasHFJets["CSVL"] = false;
+        HFJets["SVT" ] = vector<bool>(validJets.size(), false);   hasHFJets["SVT" ] = false;
         HFJets["NoHF"] = vector<bool>(validJets.size(), false);   hasHFJets["NoHF"] = false;
     }
 
@@ -229,6 +230,7 @@ void EventHandler::evalCriteria()
         if(m_jet_msv[evt_i] < anCfg.noSVT)               cout << "   csv sub-noSVT: " << m_jet_msv[evt_i] << " < " << anCfg.minSVT              << endl;
 
         if(m_jet_csv[evt_i]>=anCfg.stdCSVOpPts["NoHF"] && m_jet_msv[evt_i]>=anCfg. noSVT) { HFJets["NoHF"][vJet_i]=true; hasHFJets["NoHF"] = true; } else continue;
+        if(m_jet_csv[evt_i]>=anCfg.stdCSVOpPts["SVT" ] && m_jet_msv[evt_i]>=anCfg.minSVT) { HFJets["SVT" ][vJet_i]=true; hasHFJets["SVT" ] = true; } else continue;
         if(m_jet_csv[evt_i]>=anCfg.stdCSVOpPts["CSVL"] && m_jet_msv[evt_i]>=anCfg.minSVT) { HFJets["CSVL"][vJet_i]=true; hasHFJets["CSVL"] = true; } else continue;
         if(m_jet_csv[evt_i]>=anCfg.stdCSVOpPts["CSVM"] && m_jet_msv[evt_i]>=anCfg.minSVT) { HFJets["CSVM"][vJet_i]=true; hasHFJets["CSVM"] = true; } else continue;
         if(m_jet_csv[evt_i]>=anCfg.stdCSVOpPts["CSVT"] && m_jet_msv[evt_i]>=anCfg.minSVT) { HFJets["CSVT"][vJet_i]=true; hasHFJets["CSVT"] = true; } else continue;
@@ -296,5 +298,4 @@ void EventHandler::printJets()
         if(hasCJet) cout << "    Leading CJet = " << validJets[leadCJet] << endl;
     }
     cout << endl;
-
 }

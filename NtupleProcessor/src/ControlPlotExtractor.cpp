@@ -26,7 +26,7 @@ typedef unsigned int Index;
 const vector<TString> ControlPlotExtractor::multName  = {"", "_ld"  , "_sl"      , "_ex"   };
 const vector<TString> ControlPlotExtractor::multTitle = {"", "Lead ", "Sub-lead ", "Extra "};
 
-const vector<TString> ControlPlotExtractor::HFTags    = {"NoHF", "CSVL", "CSVM", "CSVT", "CSVS"};
+const vector<TString> ControlPlotExtractor::HFTags    = {"NoHF", "SVT", "CSVL", "CSVM", "CSVT", "CSVS"};
 
 ControlPlotExtractor::ControlPlotExtractor(EventHandler& eh, TDirectory* d, TString o) : HistogramExtractor(eh, d, o)
 {
@@ -312,6 +312,7 @@ void ControlPlotExtractor::fillJetHistograms(TString prefix)
     if(!prefix.Contains("hf")) return;
     objsEntered = 0;      // Keeps track of how many objects you've entered for labeling purposes
     TString hfTag = prefix(prefix.Length()-4, 4);   // Retrieve HF tag from prefix. Prefix should have form "pfx_CSVT"
+    if(hfTag == "_SVT") hfTag = "SVT";
     //cout << hfTag << endl;
     for(int i=0; i<evt.validJets.size(); i++)
     { // Cycle through valid jet listings.
