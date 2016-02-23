@@ -61,6 +61,9 @@ private:
 
   // Counter for cut flow table.
     std::map<TString, count> nEvents;
+
+    float evtWt;
+    
 };
 
 #endif

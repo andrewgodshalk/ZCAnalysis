@@ -11,6 +11,7 @@ NtupleProcessor.cpp
 #include <TString.h>
 #include "../interface/NtupleProcessor.h"
 #include "../interface/ControlPlotExtractor.h"
+#include "../interface/EffPlotExtractor.h"
 
 using std::cout;   using std::endl;   using std::vector;
 
@@ -99,6 +100,28 @@ void NtupleProcessor::createHistogramExtractorFromString(TString& inputString)
             }
 
             hExtractors[dirName] = new ControlPlotExtractor(eHandler, outDir, options+dsOp);
+        }
+    }
+    if(inputString == "EffPlotExtractor")
+    {
+        TString dirName = "raw_eff_plots/";
+        for(TString dsOp : dsOptions)
+        {
+            dirName = TString("raw_eff_plots/")+dataset+"/"+dsOp;
+            cout << "  NtupleProcessor::createHistogramExtractorFromString: Adding EffPlotExtractor (" << dirName << ")" << endl;
+
+          // Check if desired directory already exists. If not, create it.
+            cout << "    Checking file: " << outputFile->GetName() << endl;
+            TDirectory* outDir = outputFile->GetDirectory(dirName);
+            if(outDir) cout << "     Found directory: " << outDir->GetName() << endl;
+            else {     cout << "     Directory " << dirName << " not found in file. Creating new directory." << endl;
+                outputFile->mkdir(dirName);
+                outDir = outputFile->GetDirectory(dirName);
+                if(outDir) cout << "     Directory created: " << outDir->GetName() << endl;
+                else       cout << "     Directory " << dirName << " still not working. Fix your code." << endl;
+            }
+
+            hExtractors[dirName] = new EffPlotExtractor(eHandler, outDir, options+dsOp);
         }
     }
 }

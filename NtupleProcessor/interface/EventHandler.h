@@ -45,6 +45,7 @@ public:
     void evalCriteria();                          // Evaluates the class' list of event selection criteria
     bool triggered(std::vector<int>&);            // Returns if this event triggered one of the listed triggers.
     void resetSelectionVariables();               // Resets all selection variables to false.
+    void printJets();                             // Test function that prints jets and their properties.
 
   // Running Variables
     TString options;         // Options input with TreeIterator.
@@ -57,6 +58,8 @@ public:
     int   m_Vtype ;     float m_jet_csv[maxNumJets];   float m_muon_charge[maxNumMuons];   float m_elec_charge[maxNumElecs];   bool  m_triggers[54];
     int   m_zdecayMode; float m_jet_msv[maxNumJets];   float m_muon_iso   [maxNumMuons];   float m_elec_iso   [maxNumElecs];   int   m_json        ;
                         float m_jet_flv[maxNumJets];
+    float m_wt_diEle;
+    float m_wt_diMuon;
 
 // Calculated variables
     float Z_DelR, Z_DelPhi, Z_DelEta;
@@ -65,22 +68,23 @@ public:
     bool usingSim; // Simulation events. For plotting sim-truth information.
     bool usingDY ;
 
-    bool inJSON            ;
-    bool isElTriggered     ;
-    bool isMuTriggered     ;
-    bool hasValidElectrons ;
-    bool hasValidMuons     ;
-    bool hasValidZBosonMass;
-    bool isZllEvent        ; // Combination of all above checks
-    bool isZeeEvent        ; //   Don't care about jet checks by themselves
-    bool isZuuEvent        ;
-    bool zIsFromTaus       ;
-    bool hasValidMET       ;
-    bool isZpJEvent        ;
-    bool isZHFEvent        ;
-    bool hasBJet           ;
-    bool hasCJet           ;
-    bool zBosonFromTaus    ;
+    bool inJSON             ;
+    bool isElTriggered      ;
+    bool isMuTriggered      ;
+    bool hasValidElectrons  ;
+    bool hasValidMuons      ;
+    bool hasValidZBosonMass ;
+    bool isZllEvent         ; // Combination of all above checks
+    bool isZeeEvent         ; //   Don't care about jet checks by themselves
+    bool isZuuEvent         ;
+    bool zIsFromTaus        ;
+    bool hasValidMET        ;
+    bool isZpJEvent         ;
+    bool isZHFEvent         ;
+    bool hasBJet            ;
+    bool hasCJet            ;
+    bool zBosonFromTaus     ;
+    Index leadBJet, leadCJet;
 
   // Lepton Selection Variables
     std::vector<Index> validMuons, validElectrons;    // List of the indexes of muon objects, eventually ordered by pt.

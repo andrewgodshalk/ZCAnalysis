@@ -6,6 +6,7 @@
  */
 
 #include <algorithm>
+#include <iomanip>
 #include <iostream>
 #include <utility>
 #include <vector>
@@ -15,6 +16,7 @@
 #include "../interface/EventHandler.h"
 
 using std::cout;   using std::endl;   using std::vector;   using std::swap;
+using std::setw;   using std::setprecision;
 
 EventHandler::EventHandler(TString fnac, TString o) : anCfg(fnac), options(o)
 {
@@ -44,7 +46,9 @@ bool EventHandler::mapTree(TTree* tree)
         "EVENT*"     , "allMuon_phi"       , "allElectron_phi"   , "allJet_phi"        ,
          "MET*"      , "allMuon_charge"    , "allElectron_charge", "allJet_csv"        ,
                        "allMuon_pfCorrIso" ,                       "allJet_vtxMass"    ,
-        "triggerFlags",                                            "allJet_flavour"
+        "triggerFlags",                                            "allJet_flavour"    ,
+        "weightTrig2012DiEle"  ,
+        "weightTrig2012DiMuon"
     };
     for(TString br : branches_to_reactivate) tree->SetBranchStatus(br.Data(), 1);
 
@@ -96,7 +100,9 @@ bool EventHandler::mapTree(TTree* tree)
     temp_branch->GetLeaf( "sig"  )->SetAddress( &m_MET_sig   );
 
   // Trigger variables
-    tree->SetBranchAddress( "triggerFlags",         m_triggers    );
+    tree->SetBranchAddress( "triggerFlags",         m_triggers   );
+    tree->SetBranchAddress( "weightTrig2012DiEle" , &m_wt_diEle  );
+    tree->SetBranchAddress( "weightTrig2012DiMuon", &m_wt_diMuon );
 
     return true;
 }
@@ -235,6 +241,7 @@ void EventHandler::evalCriteria()
     isZllEvent = isZeeEvent || isZuuEvent;
     isZpJEvent = isZllEvent && validJets.size()>0;
 
+
   // Kick function if not using Sim. Otherwise, check jets for flavor properties
     if(!usingSim) return;
 
@@ -243,14 +250,16 @@ void EventHandler::evalCriteria()
     for(Index vJet_i=0, evt_i=0; vJet_i<validJets.size(); vJet_i++)
     {
         evt_i = validJets[vJet_i];  // Set the evt_i to the validJet's index within the EventHandler.
-        if(fabs(m_jet_flv[evt_i])==5) { bMCJets[vJet_i]=true; hasBJet = true; }
-        if(fabs(m_jet_flv[evt_i])==4) { cMCJets[vJet_i]=true; hasCJet = true; }
+        if(fabs(m_jet_flv[evt_i])==5) { bMCJets[vJet_i]=true; if(!hasBJet) leadBJet=vJet_i; hasBJet = true; }
+        if(fabs(m_jet_flv[evt_i])==4) { cMCJets[vJet_i]=true; if(!hasCJet) leadCJet=vJet_i; hasCJet = true; }
         lMCJets[vJet_i] = fabs(m_jet_flv[evt_i])!=5 && fabs(m_jet_flv[evt_i])!=4;
     }
 
   // Kick function if not using DY. Otherwise, check for origin from Z->tautau
     if(!usingDY) return;
     zBosonFromTaus = (m_zdecayMode==3);
+
+//    if(isZpJEvent) printJets();
 
 }
 
@@ -267,8 +276,25 @@ void EventHandler::resetSelectionVariables()
     inJSON = isElTriggered = isMuTriggered = hasValidElectrons = hasValidMuons
       = hasValidZBosonMass = zBosonFromTaus = hasValidMET
       = isZpJEvent = isZHFEvent = hasBJet = hasCJet = false;
+    leadBJet = leadCJet = 200;
     validMuons.clear();
     validElectrons.clear();
     validJets.clear();
+}
+
+
+void EventHandler::printJets()
+{
+    if(!hasBJet && !hasCJet) return;
+    cout << "------------------------------\n"
+            "    Printing Jets..." << endl;
+    for( auto& i : validJets ) cout << "   " << setw(4) << i << setprecision(4) << setw(8) << m_jet_pt[i] << setw(4) << m_jet_flv[i]
+                                    << (m_jet_flv[i] == 4 || m_jet_flv[i] == -4 || m_jet_flv[i] == 5 || m_jet_flv[i] == -5 ? "    <------" : "") << "\n";
+    if(usingDY)
+    {
+        if(hasBJet) cout << "    Leading BJet = " << validJets[leadBJet] << endl;
+        if(hasCJet) cout << "    Leading CJet = " << validJets[leadCJet] << endl;
+    }
+    cout << endl;
 
 }

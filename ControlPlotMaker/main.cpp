@@ -71,7 +71,7 @@ int main(int argc, char* argv[])
     if(cmdInput.count("log"    )) usingLogScale       = cmdInput["log"    ].as<bool  >();
     if(cmdInput.count("flavor" )) splitDYByFlavor     = cmdInput["flavor" ].as<bool  >();
     if(cmdInput.count("tautau" )) splitTauDecayFromDY = cmdInput["tautau" ].as<bool  >();
-    if(cmdInput.count("eps"    )) outputAsEPS         = cmdInput["tautau" ].as<bool  >();
+    if(cmdInput.count("eps"    )) outputAsEPS         = cmdInput["eps"    ].as<bool  >();
 
   // Begin output
     if(cmdInput.count("help"))

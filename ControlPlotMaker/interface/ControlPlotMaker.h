@@ -11,6 +11,8 @@
 
 ------------------------------------------------------------------------------*/
 #include <TH1.h>
+#include <TH1F.h>
+#include <THStack.h>
 #include <TString.h>
 #include <vector>
 #include "../../ZCLibrary/AnalysisConfig.h"
@@ -56,7 +58,8 @@ class ControlPlotMaker
 
     void setDatasetDir(std::string, std::string);      // Sets up sources and histograms styles;
     TH1* createStackHisto(std::string&, TString&);   // Sets up a histogram from file given the proper dataset and histogram name.
-
+    TH1F* createRatioPlot(TH1F*, TH1F*);
+    TH1F* createSimSumPlot(THStack*);
 
 
 

@@ -44,7 +44,7 @@ ControlPlotMaker::ControlPlotMaker(TString fnac, TString fni, TString fno, TStri
     Style_t dsStyleVec[]      = {      0,      0,        1001,              1001,          1001,        3001,       3002,      1001,     1001,     1001,            1001,             1001,            1001,           1001,           1001,            1001,                 1001,                 1001,                  3001 };
     string  dsLegLabel[]      = { "Data", "Data", "Drell-Yan", "DY (Z->#tau#tau", "DY (Z+udsg}",  "DY (Z+c)", "DY (Z+c)",      "ZZ",     "WZ",     "WW", "t#bar{t}(lep)", "t#bar{t}(semi)", "t#bar{t}(had)", "t(s-channel)", "t(t-channel)", "t(tW-channel)", "#bar{t}(s-channel)", "#bar{t}(t-channel)", "#bar{t}(tW-channel)" };
 
-    for(int i=0; i<dsNameVec.size(); i++)
+    for(unsigned int i=0; i<dsNameVec.size(); i++)
     {   dsColor[dsNameVec[i]] = dsColorVec[i];
         dsStyle[dsNameVec[i]] = dsStyleVec[i];
     }
@@ -94,8 +94,8 @@ ControlPlotMaker::ControlPlotMaker(TString fnac, TString fni, TString fno, TStri
             map<string, float> dsIntegral;
             list<string> dsOrder;
             for(auto& ds_h : dsHist) dsIntegral[ds_h.first] = ds_h.second->Integral();
-//            for(auto& ds_n : dsIntegral) cout << "    ControlPlotMaker::ControlPlotMaker(): " << ds_n.first << " has integral of " << ds_n.second << endl;
-//            for(auto& ds : allDatasets)  cout << "    ControlPlotMaker::ControlPlotMaker(): " << ds << " has integral of " << dsIntegral[ds] << " (" << dsHist[ds]->Integral() << ")" << endl;
+            //for(auto& ds_n : dsIntegral) cout << "    ControlPlotMaker::ControlPlotMaker(): " << ds_n.first << " has integral of " << ds_n.second << endl;
+            //for(auto& ds : allDatasets)  cout << "    ControlPlotMaker::ControlPlotMaker(): " << ds << " has integral of " << dsIntegral[ds] << " (" << dsHist[ds]->Integral() << ")" << endl;
             for(auto& ds_n : dsIntegral)
             {
                 if(ds_n.first=="muon" || ds_n.first=="elec" || ds_n.second < 10) continue;
@@ -103,14 +103,25 @@ ControlPlotMaker::ControlPlotMaker(TString fnac, TString fni, TString fno, TStri
                 while(it != dsOrder.end() && ds_n.second > dsIntegral[*it]) it++;
                 dsOrder.insert(it, string(ds_n.first));
             }
-            cout << "    ControlPlotMaker::ControlPlotMaker(): Dataset order: ";
-            for(auto& ds : dsOrder) cout << ds << "(" << dsIntegral[ds] << "), ";
-            cout << endl;
+            //cout << "    ControlPlotMaker::ControlPlotMaker(): Dataset order: ";
+            //for(auto& ds : dsOrder) cout << ds << "(" << dsIntegral[ds] << "), ";
+            //cout << endl;
+
+          // Create histo for ratio plot denominator.
+            TH1F *mcHist = (TH1F*) dsHist["ttlep"]->Clone("totalSim");
+            for(int i=0; i<mcHist->GetNbinsX(); i++)
+            {   mcHist->SetBinContent(0,0);
+                mcHist->SetBinError(0,0);
+            }
 
           // Create a stack for signal and background histograms based on population.
             TString stackName = TString("h_stack_")+histToStack;
             THStack *simStack = new THStack(stackName, stackName);
-            for(auto& ds: dsOrder) simStack->Add(dsHist[ds]);
+            for(auto& ds: dsOrder)
+            {
+                simStack->Add(dsHist[ds]);
+                mcHist  ->Add(dsHist[ds]);
+            }
 
           // Create canvases
             TString cName  = histToStack;
@@ -147,6 +158,7 @@ ControlPlotMaker::ControlPlotMaker(TString fnac, TString fni, TString fno, TStri
           // Set up legend
             TLegend *leg = new TLegend(0.65,0.60,0.95,0.89);
             leg->AddEntry(dataHist, TString(allDatasets[0])+" ("+Form("%.1f",dataHist->Integral())+")", "P");
+            //leg->AddEntry(dataHist, TString(dsLegLabel[0])+" ("+Form("%.1f",dataHist->Integral())+")", "P");
             for(list<string>::reverse_iterator ds = dsOrder.rbegin(); ds!=dsOrder.rend(); ds++)
                 leg->AddEntry(dsHist[*ds], TString(*ds)+" ("+Form("%.1f",dsHist[*ds]->Integral())+")", "F");
             leg->SetBorderSize(0);
@@ -154,6 +166,17 @@ ControlPlotMaker::ControlPlotMaker(TString fnac, TString fni, TString fno, TStri
             leg->Draw();
 
           // Plot the ratio plot.
+            ratioPad->cd();
+            ratioPad->SetLogy(0);   // Set ratio pad to linear scale
+            ratioPad->SetGrid();
+            ratioPad->SetTopMargin(0);
+            //Make MC denominator plot
+ cout << "  Wait for it... ";
+            //TH1F* mcHist    = createSimSumPlot(simStack);
+ cout << "  GOING IN!!";
+
+            TH1F* ratioHist = createRatioPlot((TH1F*) dataHist, mcHist);
+            ratioHist->DrawCopy("ep");
 
           // Save canvas to file.
             outDir->cd();
@@ -174,6 +197,8 @@ ControlPlotMaker::ControlPlotMaker(TString fnac, TString fni, TString fno, TStri
             for(string& ds : allDatasets) dsHist[ds]->Delete();
             dsHist.clear();
             delete simStack;
+            delete mcHist;
+            delete ratioHist;
 //break;
         }
     }
@@ -230,6 +255,56 @@ TH1* ControlPlotMaker::createStackHisto(string& ds, TString& histName)
     }
 
 return h;
+}
+
+TH1F* ControlPlotMaker::createRatioPlot(TH1F* num, TH1F* denom)
+{
+    cout << "  Creating ratio for " << num->GetName() << endl;
+    TH1F * h_ratio = (TH1F*) num->Clone("ratioHist");
+    h_ratio->SetTitle("");
+    h_ratio->GetYaxis()->SetTitle("Data/MC");
+    h_ratio->GetXaxis()->SetTitle("");
+    h_ratio->SetTitleSize(  0.12, "y" );
+    h_ratio->SetTitleOffset(0.30, "y");
+    h_ratio->SetLabelSize(  0.08, "xy");
+    h_ratio->Divide(denom);
+    h_ratio->SetMinimum(0.5);
+    h_ratio->SetMaximum(1.5);
+
+    return h_ratio;
+}
+
+// Creates a histogram that is sum of all
+TH1F* ControlPlotMaker::createSimSumPlot(THStack* simStack)
+{
+cout << " stack name: " << simStack->GetName();
+    TList* histList   = simStack->GetHists()    ;   if(!histList  ) return NULL;
+    TH1F*  sumSimHist = (TH1F*) histList->Last();   if(!sumSimHist) return NULL;
+    sumSimHist = (TH1F*) sumSimHist->Clone("sumSimHist");
+
+  // Clear histogram
+    for(int i=0; i<sumSimHist->GetNbinsX(); i++)
+    {
+        sumSimHist->SetBinContent(0,0);
+        sumSimHist->SetBinError(0,0);
+    }
+  // Add up all histograms
+    TIter next(histList);
+    TH1F* h_temp;
+    while((h_temp = (TH1F*) next())) sumSimHist->Add(h_temp);
+    return sumSimHist;
+
+/*
+   TList *histos = hs->GetHists();
+   TIter next(histos);
+   TH1F *sum = new TH1F("sum","sum of histograms",100,-4,4);
+   TH1F *hist;
+   while ((hist =(TH1F*)next())) {
+      cout << "Adding " << hist->GetName() << endl;
+      sum->Add(hist);
+   }
+    return
+*/
 }
 
 //"muon"     muon
