@@ -3,7 +3,7 @@
   2016-02-17 - Extracts from NtupleExtractor EffPlotExtractor
 
 
-  g++ -o EffPlotAndCalc.exe -lboost_program_options `root-config --cflags --glibs` EffPlotAndCalc.cpp
+  g++ EffPlotAndCalc.cpp -o EffPlotAndCalc.exe -lboost_program_options `root-config --cflags --glibs` 
   ./EffPlotAndCalc.exe
 
 */
@@ -61,7 +61,7 @@ int main()
     TFile *f_output = TFile::Open("zc_eff_comb_plots.root", "RECREATE");
 
 
-    vector<TString> HFTag   = {"NoHF", "CSVL", "CSVM", "CSVT", "CSVS"};
+    vector<TString> HFTag   = {"NoHF", "SVT", "CSVL", "CSVM", "CSVT", "CSVS"};
     vector<TString> channel = {"Zuu", "Zee", "Zll"};
     vector<TString> flavor  = {"Zb", "Zc", "Zl"};
 
