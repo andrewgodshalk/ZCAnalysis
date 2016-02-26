@@ -104,6 +104,7 @@ int main()
             for(TString& flLabel : flavor)
             {
               // Extract Num (raw_eff_plots/dy/Zee_Zf/n_tagged_ZfEvents_CSV#)
+              // Extract Num (raw_eff_plots/dy1j/Zee_Zf/n_tagged_ZfEvents_CSV#)
                 cout << "    Making Num Plot: " << chLabel << " - " << hfLabel << " - " << flLabel << endl;
                 h_num[chLabel][hfLabel][flLabel] = getNumeratorPlot(f_input, chLabel, hfLabel, flLabel);
                 h_num[chLabel][hfLabel][flLabel]->Write();
@@ -198,14 +199,26 @@ TH1F* getDataWeightPlot(TFile* f, TString& channel, TString& hftag)
 
 TH1F* getDenominatorPlot(TFile* f, TString& channel, TString& flavor)
 {  // Extract Den (raw_eff_plots/dy/Zee_Zf/n_ZfEvents)
-    TH1F* h_den;
+    TH1F *h_den, *h_temp;
     TString hName = TString("h_")+flavor+"Den";
-    TString path = "raw_eff_plots/dy/";
-    if(channel == "Zuu") h_den = (TH1F*) f->Get(path+channel+"_"+flavor+"/n_"+flavor+"Events")->Clone(hName);
-    if(channel == "Zee") h_den = (TH1F*) f->Get(path+channel+"_"+flavor+"/n_"+flavor+"Events")->Clone(hName);
+    TString path   = "raw_eff_plots/dy/";
+    TString path1j = "raw_eff_plots/dy1j/";
+    if(channel == "Zuu" || channel == "Zee")
+    {
+        h_den  = (TH1F*) f->Get(path  +channel+"_"+flavor+"/n_"+flavor+"Events")->Clone(hName);
+        h_temp = (TH1F*) f->Get(path1j+channel+"_"+flavor+"/n_"+flavor+"Events")->Clone("h_temp");
+        h_den->Add(h_temp);
+        delete h_temp;
+    }
     if(channel == "Zll")
-    {   h_den        = (TH1F*) f->Get(path+"Zuu_"+flavor+"/n_"+flavor+"Events")->Clone(hName);
-        TH1F* h_temp = (TH1F*) f->Get(path+"Zee_"+flavor+"/n_"+flavor+"Events")->Clone("h_temp");
+    {   h_den  = (TH1F*) f->Get(path+"Zuu_"+flavor+"/n_"+flavor+"Events")->Clone(hName);
+        h_temp = (TH1F*) f->Get(path+"Zee_"+flavor+"/n_"+flavor+"Events")->Clone("h_temp");
+        h_den->Add(h_temp);
+        delete h_temp;
+        h_temp = (TH1F*) f->Get(path1j+"Zuu_"+flavor+"/n_"+flavor+"Events")->Clone("h_temp");
+        h_den->Add(h_temp);
+        delete h_temp;
+        h_temp = (TH1F*) f->Get(path1j+"Zee_"+flavor+"/n_"+flavor+"Events")->Clone("h_temp");
         h_den->Add(h_temp);
         delete h_temp;
     }
@@ -215,14 +228,26 @@ TH1F* getDenominatorPlot(TFile* f, TString& channel, TString& flavor)
 
 TH1F* getNumeratorPlot(TFile* f, TString& channel, TString& hftag, TString& flavor)
 { // Extract Num (raw_eff_plots/dy/Zee_Zf/n_tagged_ZfEvents_CSV#)
-    TH1F* h_num;
-    TString hName = TString("h_")+flavor+"Num";
-    TString path = "raw_eff_plots/dy/";
-    if(channel == "Zuu") h_num = (TH1F*) f->Get(path+channel+"_"+flavor+"/n_tagged_"+flavor+"Events_"+hftag)->Clone(hName);
-    if(channel == "Zee") h_num = (TH1F*) f->Get(path+channel+"_"+flavor+"/n_tagged_"+flavor+"Events_"+hftag)->Clone(hName);
+    TH1F *h_num, *h_temp;
+    TString hName   = TString("h_")+flavor+"Num";
+    TString path   = "raw_eff_plots/dy/";
+    TString path1j = "raw_eff_plots/dy1j/";
+    if(channel == "Zuu" || channel == "Zee")
+    {
+        h_num  = (TH1F*) f->Get(path  +channel+"_"+flavor+"/n_tagged_"+flavor+"Events_"+hftag)->Clone(hName);
+        h_temp = (TH1F*) f->Get(path1j+channel+"_"+flavor+"/n_tagged_"+flavor+"Events_"+hftag)->Clone("h_temp");
+        h_num->Add(h_temp);
+        delete h_temp;
+    }
     if(channel == "Zll")
-    {   h_num        = (TH1F*) f->Get(path+"Zuu_"+flavor+"/n_tagged_"+flavor+"Events_"+hftag)->Clone(hName);
-        TH1F* h_temp = (TH1F*) f->Get(path+"Zee_"+flavor+"/n_tagged_"+flavor+"Events_"+hftag)->Clone("h_temp");
+    {   h_num  = (TH1F*) f->Get(path  +"Zuu_"+flavor+"/n_tagged_"+flavor+"Events_"+hftag)->Clone(hName);
+        h_temp = (TH1F*) f->Get(path  +"Zee_"+flavor+"/n_tagged_"+flavor+"Events_"+hftag)->Clone("h_temp");
+        h_num->Add(h_temp);
+        delete h_temp;
+        h_temp = (TH1F*) f->Get(path1j+"Zuu_"+flavor+"/n_tagged_"+flavor+"Events_"+hftag)->Clone("h_temp");
+        h_num->Add(h_temp);
+        delete h_temp;
+        h_temp = (TH1F*) f->Get(path1j+"Zee_"+flavor+"/n_tagged_"+flavor+"Events_"+hftag)->Clone("h_temp");
         h_num->Add(h_temp);
         delete h_temp;
     }
