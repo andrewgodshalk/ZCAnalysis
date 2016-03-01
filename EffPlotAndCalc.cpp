@@ -55,6 +55,10 @@ int main()
 
     cout << "\n  EffPlotAndCalc.cpp ---- BEGIN \n" << endl;
 
+    float n_num = 0;
+    float n_den = 0;
+    float n_eff = 0;
+
 
   // Open inputs, outputs.
     TFile *f_input  = TFile::Open("zc_eff_raw_plots.root"             );
@@ -84,7 +88,7 @@ int main()
         for(TString& flLabel : flavor)
         {
           // Extract data weight plot.
-            cout << "    Making Denominator Plot: " << chLabel << " - " << flLabel << endl;
+            //cout << "    Making Denominator Plot: " << chLabel << " - " << flLabel << endl;
             h_den[chLabel][flLabel] = getDenominatorPlot(f_input, chLabel, flLabel);
             h_den[chLabel][flLabel]->Write();
         }
@@ -96,7 +100,7 @@ int main()
             d_hf->cd();
 
           // Extract data weight plot.
-            cout << "    Making DtWt Plot: " << chLabel << " - " << hfLabel << endl;
+            //cout << "    Making DtWt Plot: " << chLabel << " - " << hfLabel << endl;
             h_dtwt[chLabel][hfLabel] = getDataWeightPlot(f_input, chLabel, hfLabel);
             h_dtwt[chLabel][hfLabel]->Write();
 
@@ -105,19 +109,25 @@ int main()
             {
               // Extract Num (raw_eff_plots/dy/Zee_Zf/n_tagged_ZfEvents_CSV#)
               // Extract Num (raw_eff_plots/dy1j/Zee_Zf/n_tagged_ZfEvents_CSV#)
-                cout << "    Making Num Plot: " << chLabel << " - " << hfLabel << " - " << flLabel << endl;
+                //cout << "    Making Num Plot: " << chLabel << " - " << hfLabel << " - " << flLabel << endl;
                 h_num[chLabel][hfLabel][flLabel] = getNumeratorPlot(f_input, chLabel, hfLabel, flLabel);
                 h_num[chLabel][hfLabel][flLabel]->Write();
 
               // Make Eff plot (Num & Den)
-                cout << "    Making Eff Plot: " << chLabel << " - " << hfLabel << " - " << flLabel << endl;
+                //cout << "    Making Eff Plot: " << chLabel << " - " << hfLabel << " - " << flLabel << endl;
                 h_eff[chLabel][hfLabel][flLabel] = makeEfficiencyPlot(h_num[chLabel][hfLabel][flLabel], h_den[chLabel][flLabel], flLabel);
                 h_eff[chLabel][hfLabel][flLabel]->Write();
+
+              // Calculate simple efficiency
+                n_num = h_num[chLabel][hfLabel][flLabel]->Integral();
+                n_den = h_den[chLabel][flLabel]         ->Integral();
+                n_eff = n_num/n_den;
 
               // Calculate Weighted Eff (Eff, DWts)
                 efficiency[chLabel][hfLabel][flLabel] = calculateEfficiency(h_eff[chLabel][hfLabel][flLabel], h_dtwt[chLabel][hfLabel]);
                 cout << "    Calculating Eff: " << chLabel << " - " << hfLabel << " - " << flLabel << " ==> "
-                     << efficiency[chLabel][hfLabel][flLabel].first << " +- " << efficiency[chLabel][hfLabel][flLabel].second << endl;
+                     << efficiency[chLabel][hfLabel][flLabel].first << " +- " << efficiency[chLabel][hfLabel][flLabel].second
+                     << " (flat eff = " << n_eff << ")" << endl;
 
             }
           // Make Canvas
@@ -265,8 +275,7 @@ TH1F* getNumeratorPlot(TFile* f, TString& channel, TString& hftag, TString& flav
 TH1F* makeEfficiencyPlot( TH1F* h_num, TH1F* h_den, TString &flavor)
 {
     TString hName = TString("h_")+flavor+"Eff";
-    TH1F* h_eff = (TH1F*) h_num->Clone(hName); //h_eff->Sumw2();
-    h_eff->Sumw2();
+    TH1F* h_eff = (TH1F*) h_num->Clone(hName);
     h_eff->Divide(h_den);
 
   // Set error by bin by bin.
