@@ -50,6 +50,7 @@ EffPlotExtractor::EffPlotExtractor(EventHandler& eh, TDirectory* d, TString o) :
 
 
   // Initialize cut flow counter
+    nEvents["Candidates from Ntupler"    ] = 0;
     nEvents["Analyzed in PAT"            ] = evt.patEventsAnalyzed;       // Taken from "Counts" in ntuple file
     nEvents["Entries Analyzed"           ] = 0;
 //    nEvents["Triggered"                  ] = 0;
@@ -175,7 +176,8 @@ void EffPlotExtractor::saveToFile()
 {
 
 // Last minute counter.
-    nEvents["Candidates from Ntupler"    ] = evt.entriesInNtuple;
+//    nEvents["Candidates from Ntupler"    ] += evt.entriesInNtuple;
+    nEvents["Candidates from Ntupler"    ] = -1;
 
   // Move to this plotter's directory, then save each file to the directory or overwrite.
     cout << "   EffPlotExtractor::saveToFile(): TEST: Saving to file: " << hDir->GetPath() << endl;

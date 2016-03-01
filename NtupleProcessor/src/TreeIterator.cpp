@@ -33,7 +33,9 @@ void TreeIterator::Init(TTree *tree)
     fChain = tree;              // Commented, don't think I need to access tree information outside of this function.
     fChain->SetMakeClass(1);    // ??? Can't seem to get a good answer about what this is.
                                 //    I think it recreates classes stored in the root tree as opposed to just mapping variables from the object.
-    nEntries += tree->GetEntries();
+    nEntries = tree->GetEntries();
+    finalEntry = nEntries-1;
+
 
   // Initialize Event Handler, adding the criteria of each HistoMaker to it's list of criteria.
     eHandler.mapTree(fChain);
@@ -42,6 +44,7 @@ void TreeIterator::Init(TTree *tree)
 
 Bool_t TreeIterator::Notify()
 {
+   Init(fChain);
    return kTRUE;
 }
 
@@ -51,7 +54,7 @@ Bool_t TreeIterator::Process(Long64_t entry)
   // Load current entry
     fChain->GetEntry(entry);
     nEntriesProcessed++;
-    if(entry%100000 == 0) cout << "  #" << entry << endl;
+    if(entry%100000 == 0 || entry==finalEntry) cout << "  #" << entry << endl;
 
   // Evaluate the criteria for this entry
     eHandler.evalCriteria();

@@ -44,6 +44,7 @@ class NtupleProcessor
     std::map<TString, HistogramExtractor*> hExtractors;    // Map of histogram extractors. Key is the output directory within the output file where histograms are stored.
 
     void createHistogramExtractorFromString(TString&);
+    void getInputFileList(TString, std::vector<TString>& );
 
 };
 

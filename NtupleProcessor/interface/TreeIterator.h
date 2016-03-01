@@ -58,6 +58,7 @@ public:
 
   // Counters
     counter nEntries;             // Total number of entries in tree/chain
+    counter finalEntry;           // Index of last entry
     counter nEntriesProcessed;    // Total number of events processed from chain
 
 };

@@ -7,13 +7,14 @@ NtupleProcessor.cpp
 ------------------------------------------------------------------------------*/
 
 #include <iostream>
+#include <fstream>
 #include <TFile.h>
 #include <TString.h>
 #include "../interface/NtupleProcessor.h"
 #include "../interface/ControlPlotExtractor.h"
 #include "../interface/EffPlotExtractor.h"
 
-using std::cout;   using std::endl;   using std::vector;
+using std::cout;   using std::endl;   using std::vector;   using std::ifstream;
 
 NtupleProcessor::NtupleProcessor(TString ds, TString fnpc, TString fnac, TString o, int me)
 :  dataset(ds), runParams(fnpc), eHandler(fnac,o), tIter(eHandler, hExtractors), options(o), maxEvents(me)
@@ -29,24 +30,56 @@ NtupleProcessor::NtupleProcessor(TString ds, TString fnpc, TString fnac, TString
     usingSim = (options.Contains("Sim", TString::kIgnoreCase) ? true : false);
     usingDY  = (options.Contains("DY" , TString::kIgnoreCase) ? true : false);
 
-  // Open and set up appropriate file & tree
-    ntupleFile = TFile::Open(runParams.fn_ntuple[dataset.Data()]);
-    if(!ntupleFile) cout << "NtupleProcessor: ERROR: Unable to open file " << runParams.fn_ntuple[dataset.Data()] << endl;
-    TTree *ntuple   = (TTree*) ntupleFile->Get("tree");
-
-  // Extra, kind of slap-dash step to add the PAT processing count to cut table...
-    eHandler.patEventsAnalyzed = ((TH1F*) ntupleFile->Get("Count"))->GetBinContent(1);
-
   // Open output file
     outputFile = TFile::Open(runParams.fn_output, "UPDATE");
 
   // Create HistogramExtractors from strings from NtupleProcConfig
     for(auto& heStr : runParams.hExtractorStrs) createHistogramExtractorFromString(heStr);
 
-  // Process the ntuple using the given tree iterator.
-    if(maxEvents!=-1) ntuple->Process(&tIter, options, maxEvents);
-    else              ntuple->Process(&tIter, options);
-    cout << endl;
+  //If using muon or elec, listed file lists.
+    if(ds == "elec" || ds == "muon")
+    {
+        vector<TString> inputFileList;
+        getInputFileList(ds+"Files.txt", inputFileList);
+        cout << "  TEST: Input file list below..." << endl;
+        for(TString &fn_ntuple : inputFileList)
+        {
+            cout << "    " << fn_ntuple << endl;
+          // Open and set up appropriate file & tree
+            ntupleFile = TFile::Open(fn_ntuple);
+            if(!ntupleFile) cout << "NtupleProcessor: ERROR: Unable to open file " << fn_ntuple << endl;
+            else cout << "  NtupleProcessor: File open: " << fn_ntuple << endl;
+
+            TTree *ntuple   = (TTree*) ntupleFile->Get("tree");
+            cout << "  NtupleProcessor: Tree open: " << fn_ntuple << endl;
+
+          // Extra, kind of slap-dash step to add the PAT processing count to cut table...
+            //eHandler.patEventsAnalyzed = ((TH1F*) ntupleFile->Get("Count"))->GetBinContent(1);
+
+          // Process the ntuple using the given tree iterator.
+            if(maxEvents!=-1) ntuple->Process(&tIter, options, maxEvents);
+            else              ntuple->Process(&tIter, options);
+            cout << "  NtupleProcessor: End of file proc: " << fn_ntuple << endl;
+        }
+        cout << endl;
+    }
+    else
+    {
+      // Open and set up appropriate file & tree
+        ntupleFile = TFile::Open(runParams.fn_ntuple[dataset.Data()]);
+        if(!ntupleFile) cout << "NtupleProcessor: ERROR: Unable to open file " << runParams.fn_ntuple[dataset.Data()] << endl;
+        TTree *ntuple   = (TTree*) ntupleFile->Get("tree");
+
+      // Extra, kind of slap-dash step to add the PAT processing count to cut table...
+        eHandler.patEventsAnalyzed = ((TH1F*) ntupleFile->Get("Count"))->GetBinContent(1);
+
+      // Process the ntuple using the given tree iterator.
+        if(maxEvents!=-1) ntuple->Process(&tIter, options, maxEvents);
+        else              ntuple->Process(&tIter, options);
+        cout << endl;
+    }
+
+
 
   // When finished, save to file.
     for(auto& he : hExtractors)
@@ -124,4 +157,12 @@ void NtupleProcessor::createHistogramExtractorFromString(TString& inputString)
             hExtractors[dirName] = new EffPlotExtractor(eHandler, outDir, options+dsOp);
         }
     }
+}
+
+
+void NtupleProcessor::getInputFileList(TString fileList, vector<TString>& inputFiles)
+{
+    ifstream fileListFile(fileList.Data());
+    TString fn;
+    while (fileListFile >> fn) inputFiles.push_back(fn);
 }
