@@ -37,8 +37,10 @@ NtupleProcessor::NtupleProcessor(TString ds, TString fnpc, TString fnac, TString
     for(auto& heStr : runParams.hExtractorStrs) createHistogramExtractorFromString(heStr);
 
   //If using muon or elec, listed file lists.
-    if(ds == "elec")
-//    if(ds == "elec" || ds == "muon")
+    TString fileString = runParams.fn_ntuple[dataset.Data()];
+    int fileStrLength = fileString.Length();
+    TString fileSuffix( fileString( fileStrLength-4, 4 ) );
+    if((ds == "elec" || ds == "muon") && fileSuffix == ".txt")
     {
         vector<TString> inputFileList;
         getInputFileList(ds+"Files.txt", inputFileList);
