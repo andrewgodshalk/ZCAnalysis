@@ -56,8 +56,6 @@ private:
     std::map<TString, count> nEvents;
 
     float evtWt;
-    float errorFactor;  // Error factor, for syst error calculations.
-                        //   For none, 0. For error up(down), use error +1(-1).
     float errorType;    // Specifies way to calculate sf systematic error.
                         //   Set to 1 for bin-by-bin up/down. Set to 2 for "conservative" up/down (highest sf_error bin value)
 };

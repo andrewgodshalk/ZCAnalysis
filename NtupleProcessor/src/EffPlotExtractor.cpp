@@ -32,7 +32,6 @@ EffPlotExtractor::EffPlotExtractor(EventHandler& eh, TDirectory* d, TString o) :
     cout << "    EffPlotExtractor: Created.\n"
             "      Options: " << options
          << endl;
-    errorFactor = 1;
     errorType   = 1;
 
   // Assign numbers to SF error arrays.
@@ -42,6 +41,7 @@ EffPlotExtractor::EffPlotExtractor(EventHandler& eh, TDirectory* d, TString o) :
    //pt bin ranges     // {        20,        30,        40,        50,        60,        70,        80,       100,       120,       160,       210,       260,       320,       400,       500,       600 };
                        // {        30,        40,        50,        60,        70,        80,       100,       120,       160,       210,       260,       320,       400,       500,       600,       800 };
     SFb_errors["NoHF"]  = { 1.0      , 1.0      , 1.0      , 1.0      , 1.0      , 1.0      , 1.0      , 1.0      , 1.0      , 1.0      , 1.0      , 1.0      , 1.0      , 1.0      , 1.0      , 1.0       };
+    SFb_errors["SVT" ]  = { 1.0      , 1.0      , 1.0      , 1.0      , 1.0      , 1.0      , 1.0      , 1.0      , 1.0      , 1.0      , 1.0      , 1.0      , 1.0      , 1.0      , 1.0      , 1.0       };
     SFb_errors["CSVL"]  = { 0.0484285, 0.0126178, 0.0120027, 0.0141137, 0.0145441, 0.0131145, 0.0168479, 0.0160836, 0.0126209, 0.0136017, 0.019182 , 0.0198805, 0.0386531, 0.0392831, 0.0481008, 0.0474291 };
     SFb_errors["CSVM"]  = { 0.0554504, 0.0209663, 0.0207019, 0.0230073, 0.0208719, 0.0200453, 0.0264232, 0.0240102, 0.0229375, 0.0184615, 0.0216242, 0.0248119, 0.0465748, 0.0474666, 0.0718173, 0.0717567 };
     SFb_errors["CSVT"]  = { 0.0567059, 0.0266907, 0.0263491, 0.0342831, 0.0303327, 0.024608 , 0.0333786, 0.0317642, 0.031102 , 0.0295603, 0.0474663, 0.0503182, 0.0580424, 0.0575776, 0.0769779, 0.0898199 };
@@ -99,12 +99,12 @@ cout << " EffPlotExtractor: CREATED!!" << endl;
     {
         TString genTitle = taggedTitle+"_"+hfLabel;
         h[genTitle] = (TH1F*)tempHisto->Clone(genTitle);   // Make a histogram for all tagged events.
-//        h[genTitle]->Sumw2();
         if(usingDY && (selectingZb || selectingZc || selectingZl))
         {   // If using DY and working with a non-TauTau event...
             TString fullTagTitle  = taggedTitle+"_"+flavorTitle+"_"+hfLabel;    // Make a histogram that contains the results from tagged Z+f events.
-            h[fullTagTitle ] = (TH1F*)tempHisto->Clone(fullTagTitle );
-//            h[fullTagTitle ]->Sumw2();
+            h[fullTagTitle        ] = (TH1F*)tempHisto->Clone(fullTagTitle         );
+            h[fullTagTitle+"_pErr"] = (TH1F*)tempHisto->Clone(fullTagTitle+"_pErr" );
+            h[fullTagTitle+"_mErr"] = (TH1F*)tempHisto->Clone(fullTagTitle+"_mErr" );
         }
     }
     delete tempHisto;
@@ -151,18 +151,25 @@ void EffPlotExtractor::fillHistos()
         if(usingDY)
         {
             float jet_pt = 0;
-            float sfb_wt = 0;       // 2016-02-18 - jets added to histograms, weighted by HFTag SF from https://twiki.cern.ch/twiki/bin/viewauth/CMS/BtagRecommendation53X
+            float sfb_wt = 0;
+            float sfb_er = 0;       // 2016-02-18 - jets added to histograms, weighted by HFTag SF from https://twiki.cern.ch/twiki/bin/viewauth/CMS/BtagRecommendation53X
             if(selectingZb)
             {
                 jet_pt = evt.m_jet_pt[evt.validJets[evt.leadBJet]];
-                sfb_wt = sf_b_eq(hfLabel, jet_pt);
-                h[TString("n_tagged_ZbEvents_")+hfLabel]->Fill(jet_pt, sfb_wt);
+                sfb_wt = sf_b_eq(   hfLabel, jet_pt);
+                sfb_er = sf_b_error(hfLabel, jet_pt);
+                h[TString("n_tagged_ZbEvents_")+hfLabel        ]->Fill(jet_pt, sfb_wt        );
+                h[TString("n_tagged_ZbEvents_")+hfLabel+"_pErr"]->Fill(jet_pt, sfb_wt+sfb_er );
+                h[TString("n_tagged_ZbEvents_")+hfLabel+"_mErr"]->Fill(jet_pt, sfb_wt-sfb_er );
             }
             if(selectingZc)
             {
                 jet_pt = evt.m_jet_pt[evt.validJets[evt.leadCJet]];
-                sfb_wt = sf_b_eq(hfLabel, jet_pt);
-                h[TString("n_tagged_ZcEvents_")+hfLabel]->Fill(jet_pt, sfb_wt);
+                sfb_wt = sf_b_eq(   hfLabel, jet_pt);
+                sfb_er = sf_b_error(hfLabel, jet_pt);
+                h[TString("n_tagged_ZcEvents_")+hfLabel        ]->Fill(jet_pt, sfb_wt        );
+                h[TString("n_tagged_ZcEvents_")+hfLabel+"_pErr"]->Fill(jet_pt, sfb_wt+sfb_er );
+                h[TString("n_tagged_ZcEvents_")+hfLabel+"_mErr"]->Fill(jet_pt, sfb_wt-sfb_er );
             }
             if(selectingZl)
             {
@@ -197,11 +204,11 @@ float EffPlotExtractor::sf_b_eq(const TString& hfLabel, const float& x)
   // x = jet_pt
 
     if(hfLabel == "CSVT" || hfLabel == "CSVS")
-        return 0.869965*((1.+( 0.0335062  *x))/(1.+( 0.0304598  *x))) + sf_b_error(hfLabel, x);
+        return 0.869965*((1.+( 0.0335062  *x))/(1.+( 0.0304598  *x)));
     if(hfLabel == "CSVM")
-        return 0.726981*((1.+( 0.253238   *x))/(1.+( 0.188389   *x))) + sf_b_error(hfLabel, x);
+        return 0.726981*((1.+( 0.253238   *x))/(1.+( 0.188389   *x)));
     if(hfLabel == "CSVL")
-        return 0.981149*((1.+(-0.000713295*x))/(1.+(-0.000703264*x))) + sf_b_error(hfLabel, x);
+        return 0.981149*((1.+(-0.000713295*x))/(1.+(-0.000703264*x)));
     return 1.0;
 
 }
@@ -209,17 +216,7 @@ float EffPlotExtractor::sf_b_eq(const TString& hfLabel, const float& x)
 float EffPlotExtractor::sf_b_error(const TString& hfLabel, const float& pt)
 {
   // If not worrying about errors, return 0.
-    if(errorFactor == 0) return 0;
-
-  // CRAP SHOOT VALUES
-    if(errorType == 2)  // Largest bin error.
-    {
-        if(hfLabel == "CSVL") return errorFactor*0.0484285;
-        if(hfLabel == "CSVM") return errorFactor*0.0718173;
-        if(hfLabel == "CSVT") return errorFactor*0.0898199;
-        if(hfLabel == "CSVS") return errorFactor*0.0898199;
-        return 0;
-    }
+    if(errorType == 0) return 0;
 
     if(errorType == 1)  // Bin-by-bin error.
     {
@@ -231,7 +228,17 @@ float EffPlotExtractor::sf_b_error(const TString& hfLabel, const float& pt)
         if(i == sf_b_ptmin.size()) return 0;
 
       // Return the error from the appropriate HF tag and pt bin.
-        return errorFactor*SFb_errors[hfLabel][i];
+        return SFb_errors[hfLabel][i];
+    }
+
+  // CRAP SHOOT VALUES
+    if(errorType == 2)  // Largest bin error.
+    {
+        if(hfLabel == "CSVL") return 0.0484285;
+        if(hfLabel == "CSVM") return 0.0718173;
+        if(hfLabel == "CSVT") return 0.0898199;
+        if(hfLabel == "CSVS") return 0.0898199;
+        return 0;
     }
 
 return 0;

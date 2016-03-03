@@ -37,7 +37,8 @@ NtupleProcessor::NtupleProcessor(TString ds, TString fnpc, TString fnac, TString
     for(auto& heStr : runParams.hExtractorStrs) createHistogramExtractorFromString(heStr);
 
   //If using muon or elec, listed file lists.
-    if(ds == "elec" || ds == "muon")
+    if(ds == "elec")
+//    if(ds == "elec" || ds == "muon")
     {
         vector<TString> inputFileList;
         getInputFileList(ds+"Files.txt", inputFileList);
@@ -46,11 +47,15 @@ NtupleProcessor::NtupleProcessor(TString ds, TString fnpc, TString fnac, TString
         {
             cout << "    " << fn_ntuple << endl;
           // Open and set up appropriate file & tree
-            ntupleFile = TFile::Open(fn_ntuple);
-            if(!ntupleFile) cout << "NtupleProcessor: ERROR: Unable to open file " << fn_ntuple << endl;
+            TFile* ntupleFile_i = TFile::Open(fn_ntuple);
+            if(!ntupleFile_i)
+            {
+                cout << "NtupleProcessor: ERROR: Unable to open file " << fn_ntuple << endl;
+                continue;
+            }
             else cout << "  NtupleProcessor: File open: " << fn_ntuple << endl;
 
-            TTree *ntuple   = (TTree*) ntupleFile->Get("tree");
+            TTree *ntuple   = (TTree*) ntupleFile_i->Get("tree");
             cout << "  NtupleProcessor: Tree open: " << fn_ntuple << endl;
 
           // Extra, kind of slap-dash step to add the PAT processing count to cut table...
@@ -60,6 +65,7 @@ NtupleProcessor::NtupleProcessor(TString ds, TString fnpc, TString fnac, TString
             if(maxEvents!=-1) ntuple->Process(&tIter, options, maxEvents);
             else              ntuple->Process(&tIter, options);
             cout << "  NtupleProcessor: End of file proc: " << fn_ntuple << endl;
+            ntupleFile_i->Close();
         }
         cout << endl;
     }

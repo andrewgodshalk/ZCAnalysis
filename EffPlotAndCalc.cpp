@@ -6,6 +6,8 @@
   g++ EffPlotAndCalc.cpp -o EffPlotAndCalc.exe -lboost_program_options `root-config --cflags --glibs` 
   ./EffPlotAndCalc.exe
 
+TO DO - implement an event selection profile *INSTEAD* of having a 4-layer map/vector/whatever.
+
 */
 
 #include <cmath>
@@ -31,12 +33,15 @@ using std::setprecision;
 using std::sqrt;
 using std::stringstream;
 using std::vector;
+using std::max;
 
-TH1F* getDataWeightPlot ( TFile*, TString&, TString&           );
-TH1F* getDenominatorPlot( TFile*, TString&, TString&           );
-TH1F* getNumeratorPlot  ( TFile*, TString&, TString&, TString& );
-TH1F* makeEfficiencyPlot( TH1F*, TH1F*, TString&               );
-pair<float,float> calculateEfficiency(TH1F*, TH1F*);
+enum errorFactor {CENTRAL = 0, MINUS = -1, PLUS = +1};
+
+TH1F* getDataWeightPlot ( TFile*, TString&, TString&                        );
+TH1F* getDenominatorPlot( TFile*, TString&, TString&                        );
+TH1F* getNumeratorPlot  ( TFile*, TString&, TString&, TString&, errorFactor );
+TH1F* makeEfficiencyPlot( TH1F* , TH1F*   , TString&                        );
+pair<float,float> calculateEfficiency(TH1F*, TH1F*                          );
 
 int main()
 {
@@ -68,12 +73,14 @@ int main()
     vector<TString> HFTag   = {"NoHF", "SVT", "CSVL", "CSVM", "CSVT", "CSVS"};
     vector<TString> channel = {"Zuu", "Zee", "Zll"};
     vector<TString> flavor  = {"Zb", "Zc", "Zl"};
+    vector<errorFactor> errorFactorList = {MINUS, CENTRAL, PLUS};
 
-    map<TString, map<TString, TH1F*> >                              h_dtwt    ; // [channel][hftag]
-    map<TString, map<TString, TH1F*> >                              h_den     ; // [channel][flavor]
-    map<TString, map<TString, map<TString, TH1F*> > >               h_num     ; // [channel][hftag][flavor]
-    map<TString, map<TString, map<TString, TH1F*> > >               h_eff     ; // [channel][hftag][flavor]
-    map<TString, map<TString, map<TString, pair<float, float> > > > efficiency; // [channel][hftag][flavor](central value, error)
+    map<TString, map<TString, TH1F*> >                                                 h_dtwt    ; // [channel][hftag]
+    map<TString, map<TString, TH1F*> >                                                 h_den     ; // [channel][flavor]
+    map<TString, map<TString, map<TString, map<errorFactor, TH1F*              > > > > h_num     ; // [channel][hftag][flavor][errfactor]
+    map<TString, map<TString, map<TString, map<errorFactor, TH1F*              > > > > h_eff     ; // [channel][hftag][flavor][errfactor]
+    map<TString, map<TString, map<TString, map<errorFactor, pair<float, float> > > > > efficiency; // [channel][hftag][flavor][errfactor](central value, error)
+    map<TString, map<TString, map<TString, float> > >                                  systErr   ; // [channel][hftag][flavor](error)
 
 
   // For each channel...
@@ -107,35 +114,47 @@ int main()
           // For each flavor (Z+b, Z+c, Z+l)
             for(TString& flLabel : flavor)
             {
-              // Extract Num (raw_eff_plots/dy/Zee_Zf/n_tagged_ZfEvents_CSV#)
-              // Extract Num (raw_eff_plots/dy1j/Zee_Zf/n_tagged_ZfEvents_CSV#)
-                //cout << "    Making Num Plot: " << chLabel << " - " << hfLabel << " - " << flLabel << endl;
-                h_num[chLabel][hfLabel][flLabel] = getNumeratorPlot(f_input, chLabel, hfLabel, flLabel);
-                h_num[chLabel][hfLabel][flLabel]->Write();
+              // For each error factor...
+                for(errorFactor& ef : errorFactorList)
+                {
+                  // Extract Num (raw_eff_plots/dy/Zee_Zf/n_tagged_ZfEvents_CSV#)
+                  // Extract Num (raw_eff_plots/dy1j/Zee_Zf/n_tagged_ZfEvents_CSV#)
+                    //cout << "    Making Num Plot: " << chLabel << " - " << hfLabel << " - " << flLabel << endl;
+                    h_num[chLabel][hfLabel][flLabel][ef] = getNumeratorPlot(f_input, chLabel, hfLabel, flLabel, ef );
+                    h_num[chLabel][hfLabel][flLabel][ef]->Write();
 
-              // Make Eff plot (Num & Den)
-                //cout << "    Making Eff Plot: " << chLabel << " - " << hfLabel << " - " << flLabel << endl;
-                h_eff[chLabel][hfLabel][flLabel] = makeEfficiencyPlot(h_num[chLabel][hfLabel][flLabel], h_den[chLabel][flLabel], flLabel);
-                h_eff[chLabel][hfLabel][flLabel]->Write();
+                  // Make Eff plot (Num & Den)
+                    //cout << "    Making Eff Plot: " << chLabel << " - " << hfLabel << " - " << flLabel << endl;
+                    h_eff[chLabel][hfLabel][flLabel][ef] = makeEfficiencyPlot(h_num[chLabel][hfLabel][flLabel][ef], h_den[chLabel][flLabel], flLabel);
+                    h_eff[chLabel][hfLabel][flLabel][ef]->Write();
 
-              // Calculate simple efficiency
-                n_num = h_num[chLabel][hfLabel][flLabel]->Integral();
-                n_den = h_den[chLabel][flLabel]         ->Integral();
-                n_eff = n_num/n_den;
+                  // Calculate simple efficiency
+                    n_num = h_num[chLabel][hfLabel][flLabel][ef]->Integral();
+                    n_den = h_den[chLabel][flLabel]             ->Integral();
+                    n_eff = n_num/n_den;
 
-              // Calculate Weighted Eff (Eff, DWts)
-                efficiency[chLabel][hfLabel][flLabel] = calculateEfficiency(h_eff[chLabel][hfLabel][flLabel], h_dtwt[chLabel][hfLabel]);
-                cout << "    Calculating Eff: " << chLabel << " - " << hfLabel << " - " << flLabel << " ==> "
-                     << efficiency[chLabel][hfLabel][flLabel].first << " +- " << efficiency[chLabel][hfLabel][flLabel].second
-                     << " (flat eff = " << n_eff << ")" << endl;
+                  // Calculate Weighted Eff (Eff, DWts)
+                    efficiency[chLabel][hfLabel][flLabel][ef] = calculateEfficiency(h_eff[chLabel][hfLabel][flLabel][ef], h_dtwt[chLabel][hfLabel]);
+                    cout << "    Calculating Eff: " << chLabel << " - " << hfLabel << " - " << flLabel << " - "
+                         << (ef != CENTRAL ? (ef != MINUS ? "PLUS   " : "MINUS  " ) : "CENTRAL" ) << " ==> "
+                         << efficiency[chLabel][hfLabel][flLabel][ef].first << " +- " << efficiency[chLabel][hfLabel][flLabel][ef].second
+                         << " (flat eff = " << n_eff << ")" << endl;
+                }
+              // Calculate systematic efficiency.
+                float central = efficiency[chLabel][hfLabel][flLabel][CENTRAL].first;
+                float plus    = efficiency[chLabel][hfLabel][flLabel][PLUS   ].first;
+                float minus   = efficiency[chLabel][hfLabel][flLabel][MINUS  ].first;
+                float systerr = max(central-minus, plus-central);
+                cout << "      Syst err for " << chLabel << "-" << hfLabel << "-" << "flLabel: " << systerr << endl;
+                systErr[chLabel][hfLabel][flLabel] = systerr;
 
             }
           // Make Canvas
             TCanvas *plot = new TCanvas("effPlot", "effPlot");
             //plot->cd();
-            TH1F* h_beff = (TH1F*) h_eff[chLabel][hfLabel]["Zb"]->Clone("h_beff");
-            TH1F* h_ceff = (TH1F*) h_eff[chLabel][hfLabel]["Zc"]->Clone("h_ceff");
-            TH1F* h_leff = (TH1F*) h_eff[chLabel][hfLabel]["Zl"]->Clone("h_leff");
+            TH1F* h_beff = (TH1F*) h_eff[chLabel][hfLabel]["Zb"][CENTRAL]->Clone("h_beff");
+            TH1F* h_ceff = (TH1F*) h_eff[chLabel][hfLabel]["Zc"][CENTRAL]->Clone("h_ceff");
+            TH1F* h_leff = (TH1F*) h_eff[chLabel][hfLabel]["Zl"][CENTRAL]->Clone("h_leff");
 
           // Reset titles so that they are printed properly
             h_beff->SetTitle("Eff. vs. Jet p_{T};Jet p_{T} (GeV);Efficiency");
@@ -158,13 +177,14 @@ int main()
 
           // Create legend labels
             stringstream bLabel, cLabel, lLabel;
-            bLabel << "Z+b    (avg: " << setprecision(3) <<  efficiency[chLabel][hfLabel]["Zb"].first << "#pm" << efficiency[chLabel][hfLabel]["Zb"].second << ")";
-            cLabel << "Z+c    (avg: " << setprecision(3) <<  efficiency[chLabel][hfLabel]["Zc"].first << "#pm" << efficiency[chLabel][hfLabel]["Zc"].second << ")";
-            lLabel << "Z+dusg (avg: " << setprecision(3) <<  efficiency[chLabel][hfLabel]["Zl"].first << "#pm" << efficiency[chLabel][hfLabel]["Zl"].second << ")";
+            bLabel << "Z+b    (avg: " << setprecision(3) <<  efficiency[chLabel][hfLabel]["Zb"][CENTRAL].first << "#pm" << efficiency[chLabel][hfLabel]["Zb"][CENTRAL].second << ")";
+            cLabel << "Z+c    (avg: " << setprecision(3) <<  efficiency[chLabel][hfLabel]["Zc"][CENTRAL].first << "#pm" << efficiency[chLabel][hfLabel]["Zc"][CENTRAL].second << ")";
+            lLabel << "Z+dusg (avg: " << setprecision(3) <<  efficiency[chLabel][hfLabel]["Zl"][CENTRAL].first << "#pm" << efficiency[chLabel][hfLabel]["Zl"][CENTRAL].second << ")";
 
           // The legend continues
             TLegend *leg = new TLegend(0.5,0.15,0.95,0.35);
-            leg->SetHeader(hfLabel+"+SVT Selection Efficiency");
+            if(hfLabel=="SVT") leg->SetHeader(hfLabel+    " Selection Efficiency");
+            else               leg->SetHeader(hfLabel+"+SVT Selection Efficiency");
             leg->AddEntry(h_beff, bLabel.str().c_str(), "L");
             leg->AddEntry(h_ceff, cLabel.str().c_str(), "L");
             leg->AddEntry(h_leff, lLabel.str().c_str(), "L");
@@ -236,38 +256,34 @@ TH1F* getDenominatorPlot(TFile* f, TString& channel, TString& flavor)
     return h_den;
 }
 
-TH1F* getNumeratorPlot(TFile* f, TString& channel, TString& hftag, TString& flavor)
+TH1F* getNumeratorPlot(TFile* f, TString& channel, TString& hftag, TString& flavor, errorFactor errFactor)
 { // Extract Num (raw_eff_plots/dy/Zee_Zf/n_tagged_ZfEvents_CSV#)
     TH1F *h_num, *h_temp;
     TString hName   = TString("h_")+flavor+"Num";
+    hName += (errFactor!=CENTRAL ? ( errFactor!=PLUS ? "_minus" : "_plus") : "" );
     TString path   = "raw_eff_plots/dy/";
     TString path1j = "raw_eff_plots/dy1j/";
+    TString errSuffix = (errFactor!=CENTRAL ? ( errFactor!=PLUS ? "_mErr" : "_pErr") : "" );
     if(channel == "Zuu" || channel == "Zee")
     {
-        h_num  = (TH1F*) f->Get(path  +channel+"_"+flavor+"/n_tagged_"+flavor+"Events_"+hftag)->Clone(hName);
-        h_temp = (TH1F*) f->Get(path1j+channel+"_"+flavor+"/n_tagged_"+flavor+"Events_"+hftag)->Clone("h_temp");
+        h_num  = (TH1F*) f->Get(path  +channel+"_"+flavor+"/n_tagged_"+flavor+"Events_"+hftag+errSuffix)->Clone(hName);
+        h_temp = (TH1F*) f->Get(path1j+channel+"_"+flavor+"/n_tagged_"+flavor+"Events_"+hftag+errSuffix)->Clone("h_temp");
         h_num->Add(h_temp);
         delete h_temp;
     }
     if(channel == "Zll")
-    {   h_num  = (TH1F*) f->Get(path  +"Zuu_"+flavor+"/n_tagged_"+flavor+"Events_"+hftag)->Clone(hName);
-        h_temp = (TH1F*) f->Get(path  +"Zee_"+flavor+"/n_tagged_"+flavor+"Events_"+hftag)->Clone("h_temp");
+    {   h_num  = (TH1F*) f->Get(path  +"Zuu_"+flavor+"/n_tagged_"+flavor+"Events_"+hftag+errSuffix)->Clone(hName);
+        h_temp = (TH1F*) f->Get(path  +"Zee_"+flavor+"/n_tagged_"+flavor+"Events_"+hftag+errSuffix)->Clone("h_temp");
         h_num->Add(h_temp);
         delete h_temp;
-        h_temp = (TH1F*) f->Get(path1j+"Zuu_"+flavor+"/n_tagged_"+flavor+"Events_"+hftag)->Clone("h_temp");
+        h_temp = (TH1F*) f->Get(path1j+"Zuu_"+flavor+"/n_tagged_"+flavor+"Events_"+hftag+errSuffix)->Clone("h_temp");
         h_num->Add(h_temp);
         delete h_temp;
-        h_temp = (TH1F*) f->Get(path1j+"Zee_"+flavor+"/n_tagged_"+flavor+"Events_"+hftag)->Clone("h_temp");
+        h_temp = (TH1F*) f->Get(path1j+"Zee_"+flavor+"/n_tagged_"+flavor+"Events_"+hftag+errSuffix)->Clone("h_temp");
         h_num->Add(h_temp);
         delete h_temp;
     }
     //cout << "   getDataWeightPlot: Extracted histo: " << h_dtwt->GetTitle() << endl;
-  // Scale numerator by CSV Scale factors.
-//    if(hftag == "NoHF") h_num->Scale(1.00);
-//    if(hftag == "CSVS") h_num->Scale(0.90);
-//    if(hftag == "CSVT") h_num->Scale(0.90);
-//    if(hftag == "CSVM") h_num->Scale(0.95);
-//    if(hftag == "CSVL") h_num->Scale(0.98);
 
     return h_num;
 }
