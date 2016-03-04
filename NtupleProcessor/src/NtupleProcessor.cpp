@@ -43,7 +43,7 @@ NtupleProcessor::NtupleProcessor(TString ds, TString fnpc, TString fnac, TString
     if((ds == "elec" || ds == "muon") && fileSuffix == ".txt")
     {
         vector<TString> inputFileList;
-        getInputFileList(ds+"Files.txt", inputFileList);
+        getInputFileList(fileString, inputFileList);
         cout << "  TEST: Input file list below..." << endl;
         for(TString &fn_ntuple : inputFileList)
         {
