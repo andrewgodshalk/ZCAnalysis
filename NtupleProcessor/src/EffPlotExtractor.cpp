@@ -40,8 +40,8 @@ EffPlotExtractor::EffPlotExtractor(EventHandler& eh, TDirectory* d, TString o) :
   // Future - find better way to define and store these in program.
    //pt bin ranges     // {        20,        30,        40,        50,        60,        70,        80,       100,       120,       160,       210,       260,       320,       400,       500,       600 };
                        // {        30,        40,        50,        60,        70,        80,       100,       120,       160,       210,       260,       320,       400,       500,       600,       800 };
-    SFb_errors["NoHF"]  = { 1.0      , 1.0      , 1.0      , 1.0      , 1.0      , 1.0      , 1.0      , 1.0      , 1.0      , 1.0      , 1.0      , 1.0      , 1.0      , 1.0      , 1.0      , 1.0       };
-    SFb_errors["SVT" ]  = { 1.0      , 1.0      , 1.0      , 1.0      , 1.0      , 1.0      , 1.0      , 1.0      , 1.0      , 1.0      , 1.0      , 1.0      , 1.0      , 1.0      , 1.0      , 1.0       };
+    SFb_errors["NoHF"]  = { 0.0      , 0.0      , 0.0      , 0.0      , 0.0      , 0.0      , 0.0      , 0.0      , 0.0      , 0.0      , 0.0      , 0.0      , 0.0      , 0.0      , 0.0      , 0.0       };
+    SFb_errors["SVT" ]  = { 0.0      , 0.0      , 0.0      , 0.0      , 0.0      , 0.0      , 0.0      , 0.0      , 0.0      , 0.0      , 0.0      , 0.0      , 0.0      , 0.0      , 0.0      , 0.0       };
     SFb_errors["CSVL"]  = { 0.0484285, 0.0126178, 0.0120027, 0.0141137, 0.0145441, 0.0131145, 0.0168479, 0.0160836, 0.0126209, 0.0136017, 0.019182 , 0.0198805, 0.0386531, 0.0392831, 0.0481008, 0.0474291 };
     SFb_errors["CSVM"]  = { 0.0554504, 0.0209663, 0.0207019, 0.0230073, 0.0208719, 0.0200453, 0.0264232, 0.0240102, 0.0229375, 0.0184615, 0.0216242, 0.0248119, 0.0465748, 0.0474666, 0.0718173, 0.0717567 };
     SFb_errors["CSVT"]  = { 0.0567059, 0.0266907, 0.0263491, 0.0342831, 0.0303327, 0.024608 , 0.0333786, 0.0317642, 0.031102 , 0.0295603, 0.0474663, 0.0503182, 0.0580424, 0.0575776, 0.0769779, 0.0898199 };
@@ -50,17 +50,17 @@ EffPlotExtractor::EffPlotExtractor(EventHandler& eh, TDirectory* d, TString o) :
 
 
   // Initialize cut flow counter
-    nEvents["Candidates from Ntupler"    ] = 0;
-    nEvents["Analyzed in PAT"            ] = evt.patEventsAnalyzed;       // Taken from "Counts" in ntuple file
+    nEvents["Candidates from Ntupler"    ] = 0;                         // Takes entry count from Ntupler.
+    nEvents["Analyzed in PAT"            ] = evt.patEventsAnalyzed;       // Taken from "Counts" in ntuple file // No longer works due to multi-file integration.
     nEvents["Entries Analyzed"           ] = 0;
 //    nEvents["Triggered"                  ] = 0;
 //    nEvents["Two valid leptons"          ] = 0;
 //    nEvents["Valid Z mass"               ] = 0;
-    nEvents["Valid Z+j Event"            ] = 0;
+//    nEvents["Valid Z+j Event"            ] = 0;  // Counters no longer important
     nEvents["Valid Z+j Event w/ MET cut" ] = 0;
     nJets  ["Valid Jets"                 ] = 0;     // For per-jet efficiency studies
     for(const TString& hfLabel : EffPlotExtractor::HFTags)
-    {   nEvents[TString("Valid Z+HF Event("            )+hfLabel+")"] = 0;
+    {   //nEvents[TString("Valid Z+HF Event("            )+hfLabel+")"] = 0;   Counter no longer important.
         nEvents[TString("Valid Z+HF Event w/ MET cut (")+hfLabel+")"] = 0;
         nJets  [TString("Valid HF Jets ("              )+hfLabel+")"] = 0;
     }
@@ -147,7 +147,7 @@ void EffPlotExtractor::fillHistos()
   // Select for Z events with at least one jet.
     if(!evt.isZpJEvent || !evt.hasValidMET) return;
     nEvents["Valid Z+j Event w/ MET cut"]++;
-    nJets[  "Valid Jets"                ]++;
+    nJets  ["Valid Jets"] += evt.validJets.size();
     if(usingDY)
     {
         if(selectingZb)
@@ -173,6 +173,12 @@ void EffPlotExtractor::fillHistos()
         if(!evt.hasHFJets[hfLabel]) continue;
         nEvents[TString("Valid Z+HF Event w/ MET cut (")+hfLabel+")"]++;
         h[TString("ntEvt_")+hfLabel]->Fill(evt.m_jet_pt[evt.validJets[evt.leadHFJet[hfLabel]]]);
+        for(Index i = 0; i<evt.validJets.size(); i++)       // Cycle over all jets and fill when appropriate.
+            if(evt.HFJets[hfLabel][i])  // If jet is of this HF variety...
+            {
+                nJets[TString("Valid HF Jets (")+hfLabel+")"]++;                    // Increment appropriate counter
+                h[TString("ntJet_")+hfLabel]->Fill(evt.m_jet_pt[evt.validJets[i]]); // Add jet by pt to appropriate histogram.
+            }
         if(usingDY)
         {
             float jet_pt = 0;
@@ -220,13 +226,17 @@ void EffPlotExtractor::fillHistos()
             }
             if(selectingZl)
             {
-                h[TString("nt_ZlEvents_")+hfLabel]->Fill(evt.m_jet_pt[evt.validJets[0]] );
+                h[TString("nt_ZlEvents_")+hfLabel        ]->Fill(evt.m_jet_pt[evt.validJets[0]] );
+                h[TString("nt_ZlEvents_")+hfLabel+"_pErr"]->Fill(evt.m_jet_pt[evt.validJets[0]] );
+                h[TString("nt_ZlEvents_")+hfLabel+"_mErr"]->Fill(evt.m_jet_pt[evt.validJets[0]] );
                 for(Index i = 0; i<evt.validJets.size(); i++)       // Cycle over all jets and fill when appropriate.
                 {
                     if(!evt.lMCJets[i]) continue;
                     nJets[TString("Valid HF Jets (")+hfLabel+")"]++;
                     jet_pt = evt.m_jet_pt[evt.validJets[i]];
-                    h[TString("nt_lJets_")+hfLabel]->Fill(jet_pt);
+                    h[TString("nt_lJets_")+hfLabel        ]->Fill(jet_pt);
+                    h[TString("nt_lJets_")+hfLabel+"_pErr"]->Fill(jet_pt);
+                    h[TString("nt_lJets_")+hfLabel+"_mErr"]->Fill(jet_pt);
                 }
             }
         }
