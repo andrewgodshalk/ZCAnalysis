@@ -229,12 +229,12 @@ void EventHandler::evalCriteria()
         if(m_jet_csv[evt_i] < anCfg.stdCSVOpPts["NoHF"]) cout << "   csv sub-NoHF: "  << m_jet_csv[evt_i] << " < " << anCfg.stdCSVOpPts["NoHF"] << endl;
         if(m_jet_msv[evt_i] < anCfg.noSVT)               cout << "   csv sub-noSVT: " << m_jet_msv[evt_i] << " < " << anCfg.minSVT              << endl;
 
-        if(m_jet_csv[evt_i]>=anCfg.stdCSVOpPts["NoHF"] && m_jet_msv[evt_i]>=anCfg. noSVT) { HFJets["NoHF"][vJet_i]=true; hasHFJets["NoHF"] = true; } else continue;
-        if(m_jet_csv[evt_i]>=anCfg.stdCSVOpPts["SVT" ] && m_jet_msv[evt_i]>=anCfg.minSVT) { HFJets["SVT" ][vJet_i]=true; hasHFJets["SVT" ] = true; } else continue;
-        if(m_jet_csv[evt_i]>=anCfg.stdCSVOpPts["CSVL"] && m_jet_msv[evt_i]>=anCfg.minSVT) { HFJets["CSVL"][vJet_i]=true; hasHFJets["CSVL"] = true; } else continue;
-        if(m_jet_csv[evt_i]>=anCfg.stdCSVOpPts["CSVM"] && m_jet_msv[evt_i]>=anCfg.minSVT) { HFJets["CSVM"][vJet_i]=true; hasHFJets["CSVM"] = true; } else continue;
-        if(m_jet_csv[evt_i]>=anCfg.stdCSVOpPts["CSVT"] && m_jet_msv[evt_i]>=anCfg.minSVT) { HFJets["CSVT"][vJet_i]=true; hasHFJets["CSVT"] = true; } else continue;
-        if(m_jet_csv[evt_i]>=anCfg.stdCSVOpPts["CSVS"] && m_jet_msv[evt_i]>=anCfg.minSVT) { HFJets["CSVS"][vJet_i]=true; hasHFJets["CSVS"] = true; } else continue;
+        if(m_jet_csv[evt_i]>=anCfg.stdCSVOpPts["NoHF"] && m_jet_msv[evt_i]>=anCfg. noSVT) { HFJets["NoHF"][vJet_i]=true; if(!hasHFJets["NoHF"]) leadHFJet["NoHF"]=vJet_i; hasHFJets["NoHF"] = true; } else continue;
+        if(m_jet_csv[evt_i]>=anCfg.stdCSVOpPts["SVT" ] && m_jet_msv[evt_i]>=anCfg.minSVT) { HFJets["SVT" ][vJet_i]=true; if(!hasHFJets["SVT" ]) leadHFJet["SVT" ]=vJet_i; hasHFJets["SVT" ] = true; } else continue;
+        if(m_jet_csv[evt_i]>=anCfg.stdCSVOpPts["CSVL"] && m_jet_msv[evt_i]>=anCfg.minSVT) { HFJets["CSVL"][vJet_i]=true; if(!hasHFJets["CSVL"]) leadHFJet["CSVL"]=vJet_i; hasHFJets["CSVL"] = true; } else continue;
+        if(m_jet_csv[evt_i]>=anCfg.stdCSVOpPts["CSVM"] && m_jet_msv[evt_i]>=anCfg.minSVT) { HFJets["CSVM"][vJet_i]=true; if(!hasHFJets["CSVM"]) leadHFJet["CSVM"]=vJet_i; hasHFJets["CSVM"] = true; } else continue;
+        if(m_jet_csv[evt_i]>=anCfg.stdCSVOpPts["CSVT"] && m_jet_msv[evt_i]>=anCfg.minSVT) { HFJets["CSVT"][vJet_i]=true; if(!hasHFJets["CSVT"]) leadHFJet["CSVT"]=vJet_i; hasHFJets["CSVT"] = true; } else continue;
+        if(m_jet_csv[evt_i]>=anCfg.stdCSVOpPts["CSVS"] && m_jet_msv[evt_i]>=anCfg.minSVT) { HFJets["CSVS"][vJet_i]=true; if(!hasHFJets["CSVS"]) leadHFJet["CSVS"]=vJet_i; hasHFJets["CSVS"] = true; } else continue;
     }
 
   // Combine a few of the checks into a couple of comprehensive variables.

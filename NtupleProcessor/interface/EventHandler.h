@@ -83,7 +83,6 @@ public:
     bool hasBJet            ;
     bool hasCJet            ;
     bool zBosonFromTaus     ;
-    Index leadBJet, leadCJet;
 
   // Lepton Selection Variables
     std::vector<Index> validMuons, validElectrons;    // List of the indexes of muon objects, eventually ordered by pt.
@@ -96,6 +95,8 @@ public:
     std::vector<bool>                       bMCJets;
     std::vector<bool>                       cMCJets;
     std::vector<bool>                       lMCJets;
+    Index leadBJet, leadCJet;
+    std::map<TString, Index> leadHFJet;
 
   // Extra data
     long patEventsAnalyzed;     // Number of events that were processed to make the Ntuple.

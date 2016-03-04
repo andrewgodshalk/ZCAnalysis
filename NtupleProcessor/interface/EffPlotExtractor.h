@@ -54,6 +54,7 @@ private:
 
   // Counter for cut flow table.
     std::map<TString, count> nEvents;
+    std::map<TString, count> nJets;
 
     float evtWt;
     float errorType;    // Specifies way to calculate sf systematic error.
