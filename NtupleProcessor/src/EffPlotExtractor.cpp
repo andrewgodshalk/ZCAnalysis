@@ -3,6 +3,8 @@
  
    Created on: May 19, 2015
        Author: godshalk
+
+       2016-03-04 - TO DO: Add a proper SF on/off option.
  */
 
 #include <algorithm>
@@ -32,7 +34,8 @@ EffPlotExtractor::EffPlotExtractor(EventHandler& eh, TDirectory* d, TString o) :
     cout << "    EffPlotExtractor: Created.\n"
             "      Options: " << options
          << endl;
-    errorType   = 1;
+    errorType   = 0;    // NEED TO ADD PROPER ON/OFF OPTION for these two values.
+    usingSFbEq  = false;
 
   // Assign numbers to SF error arrays.
   // Taken directly from https://twiki.cern.ch/twiki/pub/CMS/BtagRecommendation53X/SFb-pt_payload_Moriond13.txt
@@ -267,6 +270,8 @@ float EffPlotExtractor::sf_b_eq(const TString& hfLabel, const float& x)
 { // Equation taken directly from https://twiki.cern.ch/twiki/pub/CMS/BtagRecommendation53X/SFb-pt_payload_Moriond13.txt
   // Cited from page https://twiki.cern.ch/twiki/bin/viewauth/CMS/BtagRecommendation53X
   // x = jet_pt
+
+    if(!usingSFbEq) return 1.0;
 
     if(hfLabel == "CSVT" || hfLabel == "CSVS")
         return 0.869965*((1.+( 0.0335062  *x))/(1.+( 0.0304598  *x)));

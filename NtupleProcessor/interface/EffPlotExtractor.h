@@ -59,6 +59,7 @@ private:
     float evtWt;
     float errorType;    // Specifies way to calculate sf systematic error.
                         //   Set to 1 for bin-by-bin up/down. Set to 2 for "conservative" up/down (highest sf_error bin value)
+    bool  usingSFbEq;   // Set to try if you'd like to use BTV SF_b equation.
 };
 
 #endif
