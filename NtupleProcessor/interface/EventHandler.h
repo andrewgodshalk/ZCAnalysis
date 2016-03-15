@@ -56,7 +56,7 @@ public:
     float m_Z_phi ;     float m_jet_phi[maxNumJets];   float m_muon_phi   [maxNumMuons];   float m_elec_phi   [maxNumElecs];   float m_MET_sig     ;
     int   m_Vtype ;     float m_jet_csv[maxNumJets];   float m_muon_charge[maxNumMuons];   float m_elec_charge[maxNumElecs];   bool  m_triggers[54];
     int   m_zdecayMode; float m_jet_msv[maxNumJets];   float m_muon_iso   [maxNumMuons];   float m_elec_iso   [maxNumElecs];   int   m_json        ;
-                        float m_jet_flv[maxNumJets];
+                        float m_jet_flv[maxNumJets];                                                                           int   m_event;
     float m_wt_diEle;
     float m_wt_diMuon;
 

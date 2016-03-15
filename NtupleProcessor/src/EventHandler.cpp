@@ -65,7 +65,8 @@ bool EventHandler::mapTree(TTree* tree)
 
   // JSON
     temp_branch = tree->GetBranch("EVENT");
-    temp_branch->GetLeaf( "json" )->SetAddress(   &m_json        );
+    temp_branch->GetLeaf( "json"  )->SetAddress(   &m_json        );
+    temp_branch->GetLeaf( "event" )->SetAddress(   &m_event       );
 
   // Muon variables
     tree->SetBranchAddress( "nallMuons"         , &m_nMuons      );
@@ -118,6 +119,15 @@ void EventHandler::evalCriteria()
   // Check JSON if working with a data event.
     if(usingSim) inJSON = false;       // If using simulation, automatically set the JSON variable to false.
     else         inJSON = m_json==1;   //  Otherwise, go with what value is given by the ntuple.
+
+////////////////////////////////////////////////
+// 2016-03-15 - SPECIAL TEMP FITTING CHECK
+    if(m_event <= 30) return;
+//    if(m_event > 30) return;
+ 
+////////////////////////////////////////////////
+
+
 
   // Check if event has the required triggers. Kick if not triggered.
     isElTriggered = triggered(anCfg.elecTriggers);

@@ -2,9 +2,13 @@
 
   2016-02-17 - Extracts from NtupleExtractor EffPlotExtractor
 
+  2016-03-04 - MODIFIED TO WORK PER JET, NOT PER EVENT.
+              See older versions for per-event.
+              Modify to deal with both.
 
-  g++ EffPlotAndCalc.cpp -o EffPlotAndCalc.exe -lboost_program_options `root-config --cflags --glibs` 
-  ./EffPlotAndCalc.exe
+
+  g++ EffPlotAndCalc.cpp -o EffPlotAndCalc.exe -lboost_program_options `root-config --cflags --glibs`
+  ./JetEffPlotAndCalc.exe
 
 TO DO - implement an event selection profile *INSTEAD* of having a 4-layer map/vector/whatever.
 
@@ -43,20 +47,8 @@ TH1F* getNumeratorPlot  ( TFile*, TString&, TString&, TString&, errorFactor );
 TH1F* makeEfficiencyPlot( TH1F* , TH1F*   , TString&                        );
 pair<float,float> calculateEfficiency(TH1F*, TH1F*                          );
 
-int main()
+int main(int argc, char* argv[])
 {
-//    PSEUDO:
-//    For each channel {Zuu, Zee, Zll}
-//      For each HFTag {NoHF, CSVL, ... , CSVS}
-//        Extract DataWeights (raw_eff_plots/<CHANNEL>/<CHANNEL>/n_tagged_<HFTag>)
-//      For each flavor (Z+b, Z+c, Z+l)
-//        Extract Den (raw_eff_plots/dy/Zee_Zf/n_ZfEvents)
-//      For each HFTag {NoHF, CSVL, ... , CSVS}
-//        For each flavor (Z+b, Z+c, Z+l)
-//          Extract Num (raw_eff_plots/dy/Zee_Zf/n_tagged_ZfEvents_CSV#)
-//          Make Eff plot (Num & Den)
-//          Calculate Weighted Eff (Eff, DWts)
-//        Make Plot
 
     cout << "\n  EffPlotAndCalc.cpp ---- BEGIN \n" << endl;
 
@@ -64,15 +56,25 @@ int main()
     float n_den = 0;
     float n_eff = 0;
 
+  // Retrieve input file suffix from command line (or use default).
+//    TString fn_input  = ( argc > 1 ? argv[1] : "zc_eff_raw_plots"     ".root");
+//    TString fn_output = ( argc > 2 ? argv[2] : "zc_eff_jet_comb_plots"".root");
+    TString    fn_label =  "_"    ;
+    if(argc>1) fn_label += argv[1];
+    else       fn_label =  ""     ;
+
+    TString fn_input  = TString("zc_eff_raw_plots"     )+fn_label+".root";
+    TString fn_output = TString("zc_eff_jet_comb_plots")+fn_label+".root";
 
   // Open inputs, outputs.
-    TFile *f_input  = TFile::Open("zc_eff_raw_plots.root"             );
-    TFile *f_output = TFile::Open("zc_eff_comb_plots.root", "RECREATE");
+    TFile *f_input  = TFile::Open(fn_input             );
+    TFile *f_output = TFile::Open(fn_output, "RECREATE");
 
 
     vector<TString> HFTag   = {"NoHF", "SVT", "CSVL", "CSVM", "CSVT", "CSVS"};
     vector<TString> channel = {"Zuu", "Zee", "Zll"};
     vector<TString> flavor  = {"Zb", "Zc", "Zl"};
+//    vector<TString> flavor  = {"b", "c", "l"};
     vector<errorFactor> errorFactorList = {MINUS, CENTRAL, PLUS};
 
     map<TString, map<TString, TH1F*> >                                                 h_dtwt    ; // [channel][hftag]
@@ -177,14 +179,14 @@ int main()
 
           // Create legend labels
             stringstream bLabel, cLabel, lLabel;
-            bLabel << "Z+b    (avg: " << setprecision(3) <<  efficiency[chLabel][hfLabel]["Zb"][CENTRAL].first << "#pm" << efficiency[chLabel][hfLabel]["Zb"][CENTRAL].second << ")";
-            cLabel << "Z+c    (avg: " << setprecision(3) <<  efficiency[chLabel][hfLabel]["Zc"][CENTRAL].first << "#pm" << efficiency[chLabel][hfLabel]["Zc"][CENTRAL].second << ")";
-            lLabel << "Z+dusg (avg: " << setprecision(3) <<  efficiency[chLabel][hfLabel]["Zl"][CENTRAL].first << "#pm" << efficiency[chLabel][hfLabel]["Zl"][CENTRAL].second << ")";
+            bLabel << "b jets     (avg: " << setprecision(3) <<  efficiency[chLabel][hfLabel]["Zb"][CENTRAL].first << "#pm" << efficiency[chLabel][hfLabel]["Zb"][CENTRAL].second << ")";
+            cLabel << "c jets     (avg: " << setprecision(3) <<  efficiency[chLabel][hfLabel]["Zc"][CENTRAL].first << "#pm" << efficiency[chLabel][hfLabel]["Zc"][CENTRAL].second << ")";
+            lLabel << "light jets (avg: " << setprecision(3) <<  efficiency[chLabel][hfLabel]["Zl"][CENTRAL].first << "#pm" << efficiency[chLabel][hfLabel]["Zl"][CENTRAL].second << ")";
 
           // The legend continues
             TLegend *leg = new TLegend(0.5,0.15,0.95,0.35);
-            if(hfLabel=="SVT") leg->SetHeader(hfLabel+    " Selection Efficiency");
-            else               leg->SetHeader(hfLabel+"+SVT Selection Efficiency");
+            if(hfLabel=="SVT") leg->SetHeader(hfLabel+    " Jet Selection Eff.");
+            else               leg->SetHeader(hfLabel+"+SVT Jet Selection Eff.");
             leg->AddEntry(h_beff, bLabel.str().c_str(), "L");
             leg->AddEntry(h_ceff, cLabel.str().c_str(), "L");
             leg->AddEntry(h_leff, lLabel.str().c_str(), "L");
@@ -215,11 +217,11 @@ TH1F* getDataWeightPlot(TFile* f, TString& channel, TString& hftag)
 {  // Extract DataWeights (raw_eff_plots/<CHANNEL>/<CHANNEL>/n_tagged_<HFTag>)
     TH1F* h_dtwt;
     TString path = "raw_eff_plots/";
-    if(channel == "Zuu") h_dtwt = (TH1F*) f->Get(path+"muon/Zuu/n_tagged_"+hftag)->Clone("h_dtwt");
-    if(channel == "Zee") h_dtwt = (TH1F*) f->Get(path+"elec/Zee/n_tagged_"+hftag)->Clone("h_dtwt");
+    if(channel == "Zuu") h_dtwt = (TH1F*) f->Get(path+"muon/Zuu/ntJet_"+hftag)->Clone("h_dtwt");
+    if(channel == "Zee") h_dtwt = (TH1F*) f->Get(path+"elec/Zee/ntJet_"+hftag)->Clone("h_dtwt");
     if(channel == "Zll")
-    {   h_dtwt       = (TH1F*) f->Get(path+"muon/Zuu/n_tagged_"+hftag)->Clone("h_dtwt");
-        TH1F* h_temp = (TH1F*) f->Get(path+"muon/Zuu/n_tagged_"+hftag)->Clone("h_temp");
+    {   h_dtwt       = (TH1F*) f->Get(path+"muon/Zuu/ntJet_"+hftag)->Clone("h_dtwt");
+        TH1F* h_temp = (TH1F*) f->Get(path+"muon/Zuu/ntJet_"+hftag)->Clone("h_temp");
         h_dtwt->Add(h_temp);
         delete h_temp;
     }
@@ -229,26 +231,27 @@ TH1F* getDataWeightPlot(TFile* f, TString& channel, TString& hftag)
 
 TH1F* getDenominatorPlot(TFile* f, TString& channel, TString& flavor)
 {  // Extract Den (raw_eff_plots/dy/Zee_Zf/n_ZfEvents)
+   // channel = Zee,Zuu,Zll   flavor = Zb, Zc, Zl
     TH1F *h_den, *h_temp;
     TString hName = TString("h_")+flavor+"Den";
     TString path   = "raw_eff_plots/dy/";
     TString path1j = "raw_eff_plots/dy1j/";
     if(channel == "Zuu" || channel == "Zee")
     {
-        h_den  = (TH1F*) f->Get(path  +channel+"_"+flavor+"/n_"+flavor+"Events")->Clone(hName);
-        h_temp = (TH1F*) f->Get(path1j+channel+"_"+flavor+"/n_"+flavor+"Events")->Clone("h_temp");
+        h_den  = (TH1F*) f->Get(path  +channel+"_"+flavor+"/n_"+flavor[1]+"Jets")->Clone(hName);
+        h_temp = (TH1F*) f->Get(path1j+channel+"_"+flavor+"/n_"+flavor[1]+"Jets")->Clone("h_temp");
         h_den->Add(h_temp);
         delete h_temp;
     }
     if(channel == "Zll")
-    {   h_den  = (TH1F*) f->Get(path+"Zuu_"+flavor+"/n_"+flavor+"Events")->Clone(hName);
-        h_temp = (TH1F*) f->Get(path+"Zee_"+flavor+"/n_"+flavor+"Events")->Clone("h_temp");
+    {   h_den  = (TH1F*) f->Get(path+"Zuu_"+flavor+"/n_"+flavor[1]+"Jets")->Clone(hName);
+        h_temp = (TH1F*) f->Get(path+"Zee_"+flavor+"/n_"+flavor[1]+"Jets")->Clone("h_temp");
         h_den->Add(h_temp);
         delete h_temp;
-        h_temp = (TH1F*) f->Get(path1j+"Zuu_"+flavor+"/n_"+flavor+"Events")->Clone("h_temp");
+        h_temp = (TH1F*) f->Get(path1j+"Zuu_"+flavor+"/n_"+flavor[1]+"Jets")->Clone("h_temp");
         h_den->Add(h_temp);
         delete h_temp;
-        h_temp = (TH1F*) f->Get(path1j+"Zee_"+flavor+"/n_"+flavor+"Events")->Clone("h_temp");
+        h_temp = (TH1F*) f->Get(path1j+"Zee_"+flavor+"/n_"+flavor[1]+"Jets")->Clone("h_temp");
         h_den->Add(h_temp);
         delete h_temp;
     }
@@ -259,27 +262,27 @@ TH1F* getDenominatorPlot(TFile* f, TString& channel, TString& flavor)
 TH1F* getNumeratorPlot(TFile* f, TString& channel, TString& hftag, TString& flavor, errorFactor errFactor)
 { // Extract Num (raw_eff_plots/dy/Zee_Zf/n_tagged_ZfEvents_CSV#)
     TH1F *h_num, *h_temp;
-    TString hName   = TString("h_")+flavor+"Num";
+    TString hName   = TString("h_")+flavor[1]+"Num";
     hName += (errFactor!=CENTRAL ? ( errFactor!=PLUS ? "_minus" : "_plus") : "" );
     TString path   = "raw_eff_plots/dy/";
     TString path1j = "raw_eff_plots/dy1j/";
     TString errSuffix = (errFactor!=CENTRAL ? ( errFactor!=PLUS ? "_mErr" : "_pErr") : "" );
     if(channel == "Zuu" || channel == "Zee")
     {
-        h_num  = (TH1F*) f->Get(path  +channel+"_"+flavor+"/n_tagged_"+flavor+"Events_"+hftag+errSuffix)->Clone(hName);
-        h_temp = (TH1F*) f->Get(path1j+channel+"_"+flavor+"/n_tagged_"+flavor+"Events_"+hftag+errSuffix)->Clone("h_temp");
+        h_num  = (TH1F*) f->Get(path  +channel+"_"+flavor+"/nt_"+flavor[1]+"Jets_"+hftag+errSuffix)->Clone(hName);
+        h_temp = (TH1F*) f->Get(path1j+channel+"_"+flavor+"/nt_"+flavor[1]+"Jets_"+hftag+errSuffix)->Clone("h_temp");
         h_num->Add(h_temp);
         delete h_temp;
     }
     if(channel == "Zll")
-    {   h_num  = (TH1F*) f->Get(path  +"Zuu_"+flavor+"/n_tagged_"+flavor+"Events_"+hftag+errSuffix)->Clone(hName);
-        h_temp = (TH1F*) f->Get(path  +"Zee_"+flavor+"/n_tagged_"+flavor+"Events_"+hftag+errSuffix)->Clone("h_temp");
+    {   h_num  = (TH1F*) f->Get(path  +"Zuu_"+flavor+"/nt_"+flavor[1]+"Jets_"+hftag+errSuffix)->Clone(hName);
+        h_temp = (TH1F*) f->Get(path  +"Zee_"+flavor+"/nt_"+flavor[1]+"Jets_"+hftag+errSuffix)->Clone("h_temp");
         h_num->Add(h_temp);
         delete h_temp;
-        h_temp = (TH1F*) f->Get(path1j+"Zuu_"+flavor+"/n_tagged_"+flavor+"Events_"+hftag+errSuffix)->Clone("h_temp");
+        h_temp = (TH1F*) f->Get(path1j+"Zuu_"+flavor+"/nt_"+flavor[1]+"Jets_"+hftag+errSuffix)->Clone("h_temp");
         h_num->Add(h_temp);
         delete h_temp;
-        h_temp = (TH1F*) f->Get(path1j+"Zee_"+flavor+"/n_tagged_"+flavor+"Events_"+hftag+errSuffix)->Clone("h_temp");
+        h_temp = (TH1F*) f->Get(path1j+"Zee_"+flavor+"/nt_"+flavor[1]+"Jets_"+hftag+errSuffix)->Clone("h_temp");
         h_num->Add(h_temp);
         delete h_temp;
     }
@@ -290,7 +293,8 @@ TH1F* getNumeratorPlot(TFile* f, TString& channel, TString& hftag, TString& flav
 
 TH1F* makeEfficiencyPlot( TH1F* h_num, TH1F* h_den, TString &flavor)
 {
-    TString hName = TString("h_")+flavor+"Eff";
+//    TString hName = TString("h_")+flavor[1]+"JetEff";
+    TString hName = TString::Format("h_%cJetEff", flavor[1]);
     TH1F* h_eff = (TH1F*) h_num->Clone(hName);
     h_eff->Divide(h_den);
 
