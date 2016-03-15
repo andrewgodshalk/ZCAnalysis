@@ -96,8 +96,8 @@ int main(int argc, char* argv[])
     testFile.open(anconfig);
     if(!testFile) {testFile.close(); cout << "Invalid anconfig file specified: " << anconfig << endl; return 1;}
     testFile.close();
-    
-    if(cmdInput.count("options")) options             = cmdInput["options"].as<string>();
+
+    if(cmdInput.count("options")) options = cmdInput["options"].as<string>();
 
     // Get maxevents. Specified as -1 if
     maxEvents = ( cmdInput.count("maxevents") ? cmdInput["maxevents"].as<int>() : -1);

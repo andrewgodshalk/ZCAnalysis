@@ -21,8 +21,11 @@ using std::setw;   using std::setprecision;
 EventHandler::EventHandler(TString fnac, TString o) : anCfg(fnac), options(o)
 {
   // Check the option to see if we're working with Simulation or Data
-    usingSim = (options.Contains("Sim", TString::kIgnoreCase) ? true : false);
-    usingDY  = (options.Contains("DY" , TString::kIgnoreCase) ? true : false);
+    usingSim           = (options.Contains("Sim", TString::kIgnoreCase) ? true : false);
+    usingDY            = (options.Contains("DY" , TString::kIgnoreCase) ? true : false);
+    usingTopHalfDY     = (options.Contains("TOPHALF"    , TString::kIgnoreCase) ? true : false);
+    usingBottomHalfDY  = (options.Contains("BOTTOMHALF" , TString::kIgnoreCase) ? true : false);
+
     patEventsAnalyzed = 0;
     entriesInNtuple   = 0;
 }
@@ -113,20 +116,19 @@ void EventHandler::evalCriteria()
 { // Evaluates the class' list of event selection criteria
 
 //cout << "   EventHandler::evalCriteria(): BEGIN." << endl;
+//cout << "    EventHandler::evalCriteria(): TEST: EVENT NUMBER = " << m_event << endl;
 
     resetSelectionVariables();
+
+////////////////////////////////////////////////
+// 2016-03-15 - SPECIAL TEMP FITTING CHECK
+    if(usingTopHalfDY    && m_event <= 30000000) return;
+    if(usingBottomHalfDY && m_event >  30000000) return;
+////////////////////////////////////////////////
 
   // Check JSON if working with a data event.
     if(usingSim) inJSON = false;       // If using simulation, automatically set the JSON variable to false.
     else         inJSON = m_json==1;   //  Otherwise, go with what value is given by the ntuple.
-
-////////////////////////////////////////////////
-// 2016-03-15 - SPECIAL TEMP FITTING CHECK
-    if(m_event <= 30) return;
-//    if(m_event > 30) return;
- 
-////////////////////////////////////////////////
-
 
 
   // Check if event has the required triggers. Kick if not triggered.
