@@ -47,18 +47,24 @@ return output.str();
 }
 
 
+void inflateError(TH1F* h)
+{
+    float fudgeFactor = 1.;
+    for(int i=1; i<=h->GetNbinsX(); i++) h->SetBinError(i, fudgeFactor*h->GetBinError(i));
+}
 
-string templateFitter(TString plotName, TFile* source, int rebin = 2)
+
+
+string templateFitter(TString plotName, TH1F* h_sample, TH1F* h_b, TH1F* h_c, TH1F* h_l, int rebin = 2)
 {
   // Set up the environment
     gStyle->SetOptStat("");     // Gets rid of the stats panel
     //gStyle->SetErrorX(0);       // Removes error bars in the x-direction.
 
-  // Extract histograms from file
-    TH1F *data  = (TH1F*)source->Get("muon");
-    TH1F *btemp = (TH1F*)source->Get("bjets");
-    TH1F *ctemp = (TH1F*)source->Get("cjets");
-    TH1F *ltemp = (TH1F*)source->Get("ljets");
+    TH1F* data  = (TH1F*) h_sample->Clone("data" );
+    TH1F* btemp = (TH1F*) h_b     ->Clone("btemp");
+    TH1F* ctemp = (TH1F*) h_c     ->Clone("ctemp");
+    TH1F* ltemp = (TH1F*) h_l     ->Clone("ltemp");
 
   // Extract integral from each template, then normalize.
     float nData = data ->Integral();  //data ->Scale(1.0/nData);
@@ -71,9 +77,9 @@ string templateFitter(TString plotName, TFile* source, int rebin = 2)
 
   // Rebin the histograms
     data ->Rebin(rebin);
-    btemp->Rebin(rebin);
-    ctemp->Rebin(rebin);
-    ltemp->Rebin(rebin);
+    btemp->Rebin(rebin);  //inflateError(btemp);
+    ctemp->Rebin(rebin);  //inflateError(ctemp);
+    ltemp->Rebin(rebin);  //inflateError(ltemp);
 
   // Pick a color, any color.
     data->SetMarkerColor(kBlack);  data->SetMarkerStyle(20);  data->SetMarkerSize(1);
@@ -86,10 +92,10 @@ string templateFitter(TString plotName, TFile* source, int rebin = 2)
   // Draw individual templates in separate plots
     TCanvas *seperate_plots = new TCanvas(plotName+"_individual",plotName+"_individual");
     seperate_plots->Divide(2,2);
-    seperate_plots->cd(1); gPad->SetLogy(); data ->DrawNormalized("eb");
-    seperate_plots->cd(2); gPad->SetLogy(); btemp->DrawNormalized("hist e");
-    seperate_plots->cd(3); gPad->SetLogy(); ctemp->DrawNormalized("hist e");
-    seperate_plots->cd(4); gPad->SetLogy(); ltemp->DrawNormalized("hist e");
+    seperate_plots->cd(1); data ->DrawNormalized("eb");     //gPad->SetLogy();
+    seperate_plots->cd(2); btemp->DrawNormalized("hist e"); //gPad->SetLogy();
+    seperate_plots->cd(3); ctemp->DrawNormalized("hist e"); //gPad->SetLogy();
+    seperate_plots->cd(4); ltemp->DrawNormalized("hist e"); //gPad->SetLogy();
     seperate_plots->Update();
 
   // Set up slot for fitter variables
@@ -99,9 +105,9 @@ string templateFitter(TString plotName, TFile* source, int rebin = 2)
 
   // Set up your Fraction Fitter
     TFractionFitter *fit = new TFractionFitter(data, temps);
-    fit->Constrain(0, 0.00, 1.00);
-    fit->Constrain(1, 0.00, 0.99);
-    fit->Constrain(2, 0.00, 0.99);
+    fit->Constrain(0, 0.00001, 0.99999);
+    fit->Constrain(1, 0.00001, 0.99999);
+    fit->Constrain(2, 0.00001, 0.99999);
 
   // Extract the number of bins in data, then Set the range of the fit to exclude first bin.
     int nBins = data->GetNbinsX();
@@ -112,6 +118,7 @@ string templateFitter(TString plotName, TFile* source, int rebin = 2)
 // ?????????????????????????? //
     float _FUP = 0.54;        // set UP with 70% C.L. for 2 parameters  
     fit->ErrorAnalysis(_FUP); //
+
 // ?????????????????????????? //
     cout << "fit status:" << status << endl;
 
@@ -146,9 +153,9 @@ string templateFitter(TString plotName, TFile* source, int rebin = 2)
     result->SetLineWidth(3.0);       result->Draw("e");
 
   // Scale templates for plot
-    btemp->Scale(frac[0]*nData/nBjet);
-    ctemp->Scale(frac[1]*nData/nCjet);
-    ltemp->Scale(frac[2]*nData/nLjet);
+    btemp->Scale(frac[0]*nData/btemp->Integral());
+    ctemp->Scale(frac[1]*nData/ctemp->Integral());
+    ltemp->Scale(frac[2]*nData/ltemp->Integral());
 
   // Draw them histos.
     data ->Draw("hist PE sames");
@@ -183,9 +190,9 @@ string templateFitter(TString plotName, TFile* source, int rebin = 2)
     result->Draw("e");
 
   // Create new, filled versions of the templates for the stack
-    TH1F *btempFilled = (TH1F*) btemp->Clone("btemp_filled"); /*btempFilled->SetLineWidth(0);*/ btempFilled->SetFillColor(46);  stackedTemps->Add(btempFilled);
-    TH1F *ctempFilled = (TH1F*) ctemp->Clone("ctemp_filled"); /*ctempFilled->SetLineWidth(0);*/ ctempFilled->SetFillColor(38);  stackedTemps->Add(ctempFilled);
-    TH1F *ltempFilled = (TH1F*) ltemp->Clone("ltemp_filled"); /*ltempFilled->SetLineWidth(0);*/ ltempFilled->SetFillColor(30);  stackedTemps->Add(ltempFilled);
+    TH1F *btempFilled = (TH1F*) btemp->Clone("btemp_filled"); btempFilled->SetFillColor(46);  stackedTemps->Add(btempFilled); //btempFilled->SetLineWidth(0);
+    TH1F *ctempFilled = (TH1F*) ctemp->Clone("ctemp_filled"); ctempFilled->SetFillColor(38);  stackedTemps->Add(ctempFilled); //ctempFilled->SetLineWidth(0);
+    TH1F *ltempFilled = (TH1F*) ltemp->Clone("ltemp_filled"); ltempFilled->SetFillColor(30);  stackedTemps->Add(ltempFilled); //ltempFilled->SetLineWidth(0);
     stackedTemps->Draw("hist E sames");
     data->Draw("hist E sames");  result->Draw("esame");  leg->Draw();
   // Give plot a log axis
@@ -209,5 +216,94 @@ string templateFitter(TString plotName, TFile* source, int rebin = 2)
     delete fit;
     delete temps;
     return log.str();
+}
 
+TH1F* getSampleFromFile(TString fn)
+{
+    TFile* inputFile = TFile::Open(fn);
+
+  // Pointers to file histograms
+    TH1F *h_sample, *hf_sample;  // Pointer to new histogram and histogram in file.
+
+  // Get templates from file
+    inputFile->GetObject("h_sample", hf_sample);
+    cout << hf_sample->GetTitle() << endl;
+
+  // Add templates together to get final templates
+    gROOT->cd();
+    h_sample = (TH1F*) hf_sample->Clone("data");
+    cout << h_sample->GetTitle() << endl;
+
+  // Clean up
+    inputFile->Close();
+    cout << h_sample->GetTitle() << endl;
+    return h_sample;
+}
+
+void getTemplatesFromFile(TString fn, TH1F*& h_b, TH1F*& h_c, TH1F*& h_l)
+{
+    TFile* inputFile = TFile::Open(fn);
+
+  // Pointers to file histograms
+    TH1F *hf_b, *hf_c, *hf_l;
+
+  // Get templates from file
+    inputFile->GetObject("h_b", hf_b);
+    inputFile->GetObject("h_c", hf_c);
+    inputFile->GetObject("h_l", hf_l);
+
+  // Add templates together to get final templates
+    h_b = (TH1F*) hf_b->Clone("btemp");
+    h_c = (TH1F*) hf_c->Clone("ctemp");
+    h_l = (TH1F*) hf_l->Clone("ltemp");
+
+  // Clean up
+    delete hf_b;  delete hf_c;  delete hf_l;
+
+}
+
+
+void getTemplatesFromOldFile(TH1F*& h_b, TH1F*& h_c, TH1F*& h_l)
+{
+    TFile* inputFile = TFile::Open("/home/godshalk/Work/2016-03-15_ZC_closureTestRedux/svt_csvt_lnl.root");
+
+  // Pointers to file histograms
+    TH1F *hf_b, *hf_c, *hf_l;
+
+  // Get templates from file
+    inputFile->GetObject("bjets", hf_b);
+    inputFile->GetObject("cjets", hf_c);
+    inputFile->GetObject("ljets", hf_l);
+
+  // Add templates together to get final templates
+    h_b = (TH1F*) hf_b->Clone("btemp");
+    h_c = (TH1F*) hf_c->Clone("ctemp");
+    h_l = (TH1F*) hf_l->Clone("ltemp");
+
+  // Clean up
+    delete hf_b;  delete hf_c;  delete hf_l;
+
+}
+
+
+TH1F* getSampleFromOldFile()
+{
+    TFile* inputFile = TFile::Open("/home/godshalk/Work/2016-03-15_ZC_closureTestRedux/svt_csvt_lnl_DYCombo-70-20-10.root");
+
+  // Pointers to file histograms
+    TH1F *h_sample, *hf_sample;  // Pointer to new histogram and histogram in file.
+
+  // Get templates from file
+    inputFile->GetObject("muon", hf_sample);
+    cout << hf_sample->GetTitle() << endl;
+
+  // Add templates together to get final templates
+    gROOT->cd();
+    h_sample = (TH1F*) hf_sample->Clone("data");
+    cout << h_sample->GetTitle() << endl;
+
+  // Clean up
+    inputFile->Close();
+    cout << h_sample->GetTitle() << endl;
+    return h_sample;
 }
