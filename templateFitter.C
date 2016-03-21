@@ -115,15 +115,6 @@ string templateFitter(TString plotName, TH1F* h_sample, TH1F* h_b, TH1F* h_c, TH
     fit->Constrain(0, 0.00001, 0.99999);
     fit->Constrain(1, 0.00001, 0.99999);
     fit->Constrain(2, 0.00001, 0.99999);
-    //if     (plotName == "fit_TEMPS_dy_py8_ON_dy_lpc_WITH_RATIOS_45-45-10")
-    //{
-    //    fit->Constrain(2, 0.04671697,  0.05328263);
-    //    log << " BLERG!\n";
-    //}
-    //else if(plotName == "fit_TEMPS_dy_py8_ON_dy_lpc_WITH_RATIOS_60-30-10") fit->Constrain(2, 0.09631067,  0.10368293);
-    //else if(plotName == "fit_TEMPS_dy_py8_ON_dy_lpc_WITH_RATIOS_70-20-10") fit->Constrain(2, 0.09607847,  0.10391653);
-    //else if(plotName == "fit_TEMPS_dy_py8_ON_dy_lpc_WITH_RATIOS_85-10-05") fit->Constrain(2, 0.095511865, 0.104480735);
-    //else fit->Constrain(2, 0.00001, 0.99999);
 
   // Extract the number of bins in data, then Set the range of the fit to exclude first bin.
     int nBins = data->GetNbinsX();

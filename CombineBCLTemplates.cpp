@@ -18,6 +18,8 @@
 ./CombineBCLTemplates.exe templates/zc_analysis_dy_lpc.root
 ./CombineBCLTemplates.exe templates/zc_analysis_dy_lpc_top.root
 ./CombineBCLTemplates.exe templates/zc_analysis_dy_py8.root
+./CombineBCLTemplates.exe templates/zc_analysis_dy_lpc_even.root
+./CombineBCLTemplates.exe templates/zc_analysis_dy_lpc_odd.root
 
 
 */

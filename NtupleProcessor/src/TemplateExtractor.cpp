@@ -50,6 +50,7 @@ TemplateExtractor::TemplateExtractor(EventHandler& eh, TDirectory* d, TString o)
     {
         TString histLabel = tempPrefix+hfLabel;
         h[histLabel] = new TH1F(histLabel, "Jet M_{SV}; M_{SV} (GeV); Events/Bin", 50, 0, 5);
+        h[histLabel]->Sumw2();
         hDir->WriteTObject(h[histLabel], 0, "Overwrite");
     }
 }
