@@ -85,6 +85,8 @@ public:
     bool zBosonFromTaus     ;
     bool usingTopHalfDY     ;
     bool usingBottomHalfDY  ;
+    bool usingEvenEventDY   ;
+    bool usingOddEventDY  ;
 
   // Lepton Selection Variables
     std::vector<Index> validMuons, validElectrons;    // List of the indexes of muon objects, eventually ordered by pt.

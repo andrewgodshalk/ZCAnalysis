@@ -55,8 +55,15 @@ void inflateError(TH1F* h)
 
 
 
-string templateFitter(TString plotName, TH1F* h_sample, TH1F* h_b, TH1F* h_c, TH1F* h_l, int rebin = 2)
+string templateFitter(TString plotName, TH1F* h_sample, TH1F* h_b, TH1F* h_c, TH1F* h_l, int rebin = 1)
 {
+    std::stringstream log("");
+    log << "\n  ==TEMPLATEFITTER== \n"
+            "    " << plotName   << "\n"
+//            "    " << timeStamp() << "\n"
+            "    Rebin: " << rebin << "\n";
+
+
   // Set up the environment
     gStyle->SetOptStat("");     // Gets rid of the stats panel
     //gStyle->SetErrorX(0);       // Removes error bars in the x-direction.
@@ -108,6 +115,15 @@ string templateFitter(TString plotName, TH1F* h_sample, TH1F* h_b, TH1F* h_c, TH
     fit->Constrain(0, 0.00001, 0.99999);
     fit->Constrain(1, 0.00001, 0.99999);
     fit->Constrain(2, 0.00001, 0.99999);
+    //if     (plotName == "fit_TEMPS_dy_py8_ON_dy_lpc_WITH_RATIOS_45-45-10")
+    //{
+    //    fit->Constrain(2, 0.04671697,  0.05328263);
+    //    log << " BLERG!\n";
+    //}
+    //else if(plotName == "fit_TEMPS_dy_py8_ON_dy_lpc_WITH_RATIOS_60-30-10") fit->Constrain(2, 0.09631067,  0.10368293);
+    //else if(plotName == "fit_TEMPS_dy_py8_ON_dy_lpc_WITH_RATIOS_70-20-10") fit->Constrain(2, 0.09607847,  0.10391653);
+    //else if(plotName == "fit_TEMPS_dy_py8_ON_dy_lpc_WITH_RATIOS_85-10-05") fit->Constrain(2, 0.095511865, 0.104480735);
+    //else fit->Constrain(2, 0.00001, 0.99999);
 
   // Extract the number of bins in data, then Set the range of the fit to exclude first bin.
     int nBins = data->GetNbinsX();
@@ -123,12 +139,6 @@ string templateFitter(TString plotName, TH1F* h_sample, TH1F* h_b, TH1F* h_c, TH
     cout << "fit status:" << status << endl;
 
   // Start delivering the goods.
-    std::stringstream log("");
-    log << "\n  ==TEMPLATEFITTER== \n"
-            "    " << plotName   << "\n"
-//            "    " << timeStamp() << "\n"
-            "    Rebin: " << rebin << "\n";
-
   // If the fit returns a non-zero status, fudge the numbers and kill the program.
     if (status != 0) {
         frac[0] = -1.0;  err[0] = 0.0;
@@ -168,10 +178,12 @@ string templateFitter(TString plotName, TH1F* h_sample, TH1F* h_b, TH1F* h_c, TH
     resultPlot->SetLogy();
 
   // Make labels for histogram legend
+    float chi2val = fit->GetChisquare()/fit->GetNDF();
     TString dataLegLabel = TString("Data (") + Form("%.1f",nData) + ")";
     TString bjetLegLabel = TString("Z+b (") + Form("%.3f",frac[0]) + "#pm" + Form("%.3f",err[0]) + ")";
     TString cjetLegLabel = TString("Z+c (") + Form("%.3f",frac[1]) + "#pm" + Form("%.3f",err[1]) + ")";
     TString ljetLegLabel = TString("Z+dusg (") + Form("%.3f",frac[2]) + "#pm" + Form("%.3f",err[2]) + ")";
+    TString  fitLegLabel = TString("Fit (#chi^2/NDOF = ") + Form("%.3f", chi2val) + ")";
 
   // The legend continues
     TLegend *leg = new TLegend(0.63,0.62,0.98,0.88);
@@ -180,7 +192,7 @@ string templateFitter(TString plotName, TH1F* h_sample, TH1F* h_b, TH1F* h_c, TH
     leg->AddEntry(btemp,  bjetLegLabel, "L");
     leg->AddEntry(ctemp,  cjetLegLabel, "L");
     leg->AddEntry(ltemp,  ljetLegLabel, "L");
-    leg->AddEntry(result, "Fit",        "L");
+    leg->AddEntry(result,  fitLegLabel, "L");
     //leg->SetBorderSize(0);  leg->SetFillStyle(0);
     leg->Draw();
 
@@ -198,19 +210,44 @@ string templateFitter(TString plotName, TH1F* h_sample, TH1F* h_b, TH1F* h_c, TH
   // Give plot a log axis
 //    resultPlotStacked->SetLogy();
 
+////////////////////// CONTROL PLOT
+  // Same thing, but with false-scaled templates
+    THStack *stackedTemps_control = new THStack("temp_stack_control", "temp_stack_control");
+    TCanvas *resultPlotStacked_control = new TCanvas(resultPlotName+"Stacked_control", resultPlotName+"Stacked_control");
+    result->Draw("e");
+
+  // Set scale factors
+    float sB, sC, sL;
+    if     (plotName.Contains("85-10-05")) { sB = 0.85; sC = 0.10; sL = 0.05; }
+    else if(plotName.Contains("70-20-10")) { sB = 0.70; sC = 0.20; sL = 0.10; }
+    else if(plotName.Contains("60-30-10")) { sB = 0.60; sC = 0.30; sL = 0.10; }
+    else if(plotName.Contains("45-45-10")) { sB = 0.45; sC = 0.45; sL = 0.10; }
+    else  { sB = 0; sC = 0; sL = 0; }
+
+  // Create new, filled versions of the templates for the stack
+    TH1F *btempFilled_control = (TH1F*) btemp->Clone("btemp_filled_control"); btempFilled_control->Scale(nData*sB/btempFilled_control->Integral()); btempFilled_control->SetFillColor(46);  stackedTemps_control->Add(btempFilled_control); //btempFilled->SetLineWidth(0);
+    TH1F *ctempFilled_control = (TH1F*) ctemp->Clone("ctemp_filled_control"); ctempFilled_control->Scale(nData*sC/ctempFilled_control->Integral()); ctempFilled_control->SetFillColor(38);  stackedTemps_control->Add(ctempFilled_control); //ctempFilled->SetLineWidth(0);
+    TH1F *ltempFilled_control = (TH1F*) ltemp->Clone("ltemp_filled_control"); ltempFilled_control->Scale(nData*sL/ltempFilled_control->Integral()); ltempFilled_control->SetFillColor(30);  stackedTemps_control->Add(ltempFilled_control); //ltempFilled->SetLineWidth(0);
+    stackedTemps_control->Draw("hist E sames");
+    data->Draw("hist E sames");  result->Draw("esame");  leg->Draw();
+
+
   // Output the fractions from each template
     log << "    Fractions: \n"
            "      Z+b: " << frac[0] << "\t +- " << err[0] << "\n"
            "      Z+c: " << frac[1] << "\t +- " << err[1] << "\n"
            "      Z+l: " << frac[2] << "\t +- " << err[2] << "\n"
            "      (Check: Total = " << frac[0]+frac[1]+frac[2] << ")\n"
+           "      Chi2/NDOF = " << chi2val << "\n"
            "\n";
+/////////////////////////////////////////////
 
   // Output plots to file
     TFile plotOutput(TString("fits/") + plotName + ".root", "RECREATE");
     seperate_plots   ->Write();
     resultPlot       ->Write();
     resultPlotStacked->Write();
+    resultPlotStacked_control->Write();
     plotOutput.Close();
 
     delete fit;

@@ -21,10 +21,12 @@ using std::setw;   using std::setprecision;
 EventHandler::EventHandler(TString fnac, TString o) : anCfg(fnac), options(o)
 {
   // Check the option to see if we're working with Simulation or Data
-    usingSim           = (options.Contains("Sim", TString::kIgnoreCase) ? true : false);
-    usingDY            = (options.Contains("DY" , TString::kIgnoreCase) ? true : false);
+    usingSim           = (options.Contains("Sim"        , TString::kIgnoreCase) ? true : false);
+    usingDY            = (options.Contains("DY"         , TString::kIgnoreCase) ? true : false);
     usingTopHalfDY     = (options.Contains("TOPHALF"    , TString::kIgnoreCase) ? true : false);
     usingBottomHalfDY  = (options.Contains("BOTTOMHALF" , TString::kIgnoreCase) ? true : false);
+    usingEvenEventDY   = (options.Contains("EVEN"       , TString::kIgnoreCase) ? true : false);
+    usingOddEventDY    = (options.Contains("ODD"        , TString::kIgnoreCase) ? true : false);
 
     patEventsAnalyzed = 0;
     entriesInNtuple   = 0;
@@ -124,6 +126,8 @@ void EventHandler::evalCriteria()
 // 2016-03-15 - SPECIAL TEMP FITTING CHECK
     if(usingTopHalfDY    && m_event <= 30000000) return;
     if(usingBottomHalfDY && m_event >  30000000) return;
+    if(usingEvenEventDY  && m_event%2 == 1     ) return;
+    if(usingOddEventDY   && m_event%2 == 0     ) return;
 ////////////////////////////////////////////////
 
   // Check JSON if working with a data event.
