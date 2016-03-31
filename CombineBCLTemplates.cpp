@@ -21,6 +21,11 @@
 ./CombineBCLTemplates.exe templates/zc_analysis_dy_lpc_even.root
 ./CombineBCLTemplates.exe templates/zc_analysis_dy_lpc_odd.root
 
+./CombineBCLTemplates.exe templates/zc_analysis_dy1j_sumw2.root
+./CombineBCLTemplates.exe templates/zc_analysis_dy_lpc_sumw2.root
+./CombineBCLTemplates.exe templates/zc_analysis_dy_lpc_even_sumw2.root
+./CombineBCLTemplates.exe templates/zc_analysis_dy_lpc_odd_sumw2.root
+./CombineBCLTemplates.exe templates/zc_analysis_dy_py8_sumw2.root
 
 */
 
@@ -104,10 +109,12 @@ void combineTemplates(  TString inputLabel,
   // Test output
     cout << setprecision(2) << setw(6) << scaleB << " " << setw(6) << scaleC << " " << setw(6) << scaleL << " --> " << outFileName << endl;
 
+    float templateStats = 51152.0;
+
   // Further process scales, scaling to approx. 50,000 events
-    scaleB *= 51152 / h_b->Integral();
-    scaleC *= 51152 / h_c->Integral();
-    scaleL *= 51152 / h_l->Integral();
+    scaleB *= templateStats / h_b->Integral();
+    scaleC *= templateStats / h_c->Integral();
+    scaleL *= templateStats / h_l->Integral();
 
   // Set up output file.
     TFile *outputFile = TFile::Open(outFileName, "RECREATE");
@@ -127,8 +134,10 @@ void combineTemplates(  TString inputLabel,
 
 
 TString getFileLabel(TString fn_input)
-{ // Assuming file has format: templates/zc_analysis_<label>.root
-    int labelSize = fn_input.Length() - 27;
+{ // Assuming file has format: templates/zc_analysis_<label>[_sumw2].root
+  // Add: code to remove sumw2
+    int labelLengthMod = (fn_input.Contains("_sumw2", TString::kIgnoreCase) ? 33 : 27 );
+    int labelSize = fn_input.Length() - labelLengthMod;
     TString fnLabel(fn_input(22, labelSize));
 return fnLabel;
 }

@@ -15,16 +15,16 @@
     int rebin = 1;
 
     // S: py8 B: py6 FULL
-//    TString l_sample    = "dy_py8";
-//    TString l_templates = "dy";
+    TString l_sample    = "dy_py8";
+    TString l_templates = "dy";
 
 //     S: dy_lpc_odd B: dy_lpc_even
 //    TString l_sample    = "dy_lpc_odd";
 //    TString l_templates = "dy_lpc_even";
 
     // S: dy_lpc_even B: dy_lpc_odd
-    TString l_sample    = "dy_lpc_even";
-    TString l_templates = "dy_lpc_odd";
+//    TString l_sample    = "dy_lpc_even";
+//    TString l_templates = "dy_lpc_odd";
 
     // S: py6  B: py6
 //    TString l_sample    = "dy_lpc";

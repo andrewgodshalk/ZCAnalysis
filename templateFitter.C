@@ -201,12 +201,6 @@ string templateFitter(TString plotName, TH1F* h_sample, TH1F* h_b, TH1F* h_c, TH
   // Give plot a log axis
 //    resultPlotStacked->SetLogy();
 
-////////////////////// CONTROL PLOT
-  // Same thing, but with false-scaled templates
-    THStack *stackedTemps_control = new THStack("temp_stack_control", "temp_stack_control");
-    TCanvas *resultPlotStacked_control = new TCanvas(resultPlotName+"Stacked_control", resultPlotName+"Stacked_control");
-    result->Draw("e");
-
   // Set scale factors
     float sB, sC, sL;
     if     (plotName.Contains("85-10-05")) { sB = 0.85; sC = 0.10; sL = 0.05; }
@@ -214,6 +208,21 @@ string templateFitter(TString plotName, TH1F* h_sample, TH1F* h_b, TH1F* h_c, TH
     else if(plotName.Contains("60-30-10")) { sB = 0.60; sC = 0.30; sL = 0.10; }
     else if(plotName.Contains("45-45-10")) { sB = 0.45; sC = 0.45; sL = 0.10; }
     else  { sB = 0; sC = 0; sL = 0; }
+
+  // Create text box w/ ratios for each plot
+//    TLatex ratioLabel(0.65, 0.5, Form("#splitline{(Z+b):(Z+c):(Z+light)}{%2.0f:%2.0f:%2.0f}", sB*100,sC*100,sL*100));
+    TLatex ratioLabel;
+    ratioLabel.SetNDC(kTRUE);
+    ratioLabel.SetTextSize(0.04);
+    ratioLabel.DrawLatex(0.63, 0.57, "(Z+b):(Z+c):(Z+light)");
+    ratioLabel.DrawLatex(0.63, 0.52, Form("%0.0f:%0.0f:%0.0f", sB*100,sC*100,sL*100));
+    ratioLabel.Draw();
+
+////////////////////// CONTROL PLOT
+  // Same thing, but with false-scaled templates
+    THStack *stackedTemps_control = new THStack("temp_stack_control", "temp_stack_control");
+    TCanvas *resultPlotStacked_control = new TCanvas(resultPlotName+"Stacked_control", resultPlotName+"Stacked_control");
+    result->Draw("e");
 
   // Create new, filled versions of the templates for the stack
     TH1F *btempFilled_control = (TH1F*) btemp->Clone("btemp_filled_control"); btempFilled_control->Scale(nData*sB/btempFilled_control->Integral()); btempFilled_control->SetFillColor(46);  stackedTemps_control->Add(btempFilled_control); //btempFilled->SetLineWidth(0);
