@@ -175,9 +175,9 @@ void EventHandler::evalCriteria()
   // Check for the proper number or leptons. Kick if neither.
 //    if( m_nElecs<2 && m_nMuons<2 ) return;
     if( m_nMuons<2 ) return;
-cout << "    EventHandler::evalCriteria(): TEST: SELECTION CHECK: # Muons = " << m_nMuons;
-    if( m_nMuons<2 ) { cout << endl; return;}
-    cout << " --> SELECTED!!" << endl;
+//cout << "    EventHandler::evalCriteria(): TEST: SELECTION CHECK: # Muons = " << m_nMuons;
+//    if( m_nMuons<2 ) { cout << endl; return;}
+//    cout << " --> SELECTED!!" << endl;
 
   // Lepton selection
     // **************PROBLEM AREA*********************
@@ -191,7 +191,7 @@ cout << "    EventHandler::evalCriteria(): TEST: SELECTION CHECK: # Muons = " <<
   // Perform selection on leptons and store indexes sorted by pt.
     for(Index i=0; i<m_nMuons; i++)
     {
-cout << "    EventHandler::evalCriteria(): Muon Props (muon #, pt, eta, iso): = (" << i << ", " << m_muon_pt[i] << ", " << m_muon_eta[i] << ", " << m_muon_iso[i] << ")" << endl;
+//cout << "    EventHandler::evalCriteria(): Muon Props (muon #, pt, eta, iso): = (" << i << ", " << m_muon_pt[i] << ", " << m_muon_eta[i] << ", " << m_muon_iso[i] << ")" << endl;
       // Perform selection on this muon. Skip to next if it doesn't meet criteria.
         if(         m_muon_pt [i] <anCfg.muonPtMin
             || fabs(m_muon_eta[i])>anCfg.muonEtaMax
@@ -202,7 +202,7 @@ cout << "    EventHandler::evalCriteria(): Muon Props (muon #, pt, eta, iso): = 
         for(int j=0; j<validMuons.size(); j++) if(m_muon_pt[validMuons[j]]<m_muon_pt[lowPtIndex]) swap(validMuons[j], lowPtIndex);
         validMuons.push_back(lowPtIndex);
     }
-if(validMuons.size()>=2) cout << "    --> TWO VALID MUONS with vType == " << m_Vtype << ", charges of " << m_muon_charge[0] << "," << m_muon_charge[1] << endl;
+//if(validMuons.size()>=2) cout << "    --> TWO VALID MUONS with vType == " << m_Vtype << ", charges of " << m_muon_charge[0] << "," << m_muon_charge[1] << endl;
 //    for(Index i=0; i<m_nElecs; i++)
 //    {
 //      // Perform selection on this electron.
