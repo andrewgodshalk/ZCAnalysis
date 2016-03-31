@@ -115,7 +115,6 @@ void ControlPlotExtractor::fillHistos()
     //  ) return;
   // Fill Histos based on lepton id information (=== TO DO ===)
     //
-
   // If you don't have two valid leptons of the desired flavor, kick.
     if(selectingZuu && !evt.hasValidMuons    ) return;
     if(selectingZee && !evt.hasValidElectrons) return;

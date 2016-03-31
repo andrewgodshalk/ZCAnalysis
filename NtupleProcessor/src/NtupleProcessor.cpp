@@ -32,7 +32,8 @@ NtupleProcessor::NtupleProcessor(TString ds, TString fnpc, TString fnac, TString
     usingDY  = (options.Contains("DY" , TString::kIgnoreCase) ? true : false);
 
   // Open output file
-    outputFile = TFile::Open(runParams.fn_output, "UPDATE");
+    //outputFile = TFile::Open(runParams.fn_output, "UPDATE");
+    outputFile = TFile::Open(runParams.fn_output, "RECREATE");
 
   // Create HistogramExtractors from strings from NtupleProcConfig
     for(auto& heStr : runParams.hExtractorStrs) createHistogramExtractorFromString(heStr);
@@ -81,6 +82,8 @@ NtupleProcessor::NtupleProcessor(TString ds, TString fnpc, TString fnac, TString
 
       // Extra, kind of slap-dash step to add the PAT processing count to cut table...
         eHandler.patEventsAnalyzed = ((TH1F*) ntupleFile->Get("Count"))->GetBinContent(1);
+        cout << "  COUNT EXTRACTED: " << ((TH1F*) ntupleFile->Get("Count"))->GetBinContent(1) << endl;
+        cout << "  COUNT EXTRACTED: " << eHandler.patEventsAnalyzed << endl;
 
       // Process the ntuple using the given tree iterator.
         if(maxEvents!=-1) ntuple->Process(&tIter, options, maxEvents);
