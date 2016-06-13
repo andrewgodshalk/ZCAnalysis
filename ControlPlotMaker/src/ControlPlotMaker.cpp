@@ -29,7 +29,8 @@ ControlPlotMaker::ControlPlotMaker(TString fnac, TString fni, TString fno, TStri
          << endl;
 
   // Set up lists of datasets
-    bkgdDatasets = {"zz", "wz", "ww", "ttlep", "ttsemi", "tthad", "t_s", "t_t", "t_tw", "tbar_s", "tbar_t", "tbar_tw"};
+    //bkgdDatasets = {"zz", "wz", "ww", "ttlep", "ttsemi", "tthad", "t_s", "t_t", "t_tw", "tbar_s", "tbar_t", "tbar_tw"};
+    bkgdDatasets = {"zz", "wz", "ww", "tt_lep"};
     if(splitTauDecayFromDY) bkgdDatasets.push_back("dy_tautau");
     if(splitDYByFlavor) sigDatasets = {"dy_Zl", "dy_Zc", "dy_Zb"};
     else                sigDatasets = {"dy"};
@@ -39,7 +40,7 @@ ControlPlotMaker::ControlPlotMaker(TString fnac, TString fni, TString fno, TStri
     allDatasets.insert(allDatasets.end(), bkgdDatasets.begin(), bkgdDatasets.end() );
 
   // Set up color and style maps.
-    vector<string> dsNameVec  = { "muon", "elec",        "dy",       "dy_tautau",       "dy_Zl",     "dy_Zc",    "dy_Zb",      "zz",     "wz",     "ww",         "ttlep",         "ttsemi",         "tthad",          "t_s",          "t_t",          "t_tw",             "tbar_s",             "tbar_t",             "tbar_tw" };
+    vector<string> dsNameVec  = { "muon", "elec",        "dy",       "dy_tautau",       "dy_Zl",     "dy_Zc",    "dy_Zb",      "zz",     "wz",     "ww",        "tt_lep",         "ttsemi",         "tthad",          "t_s",          "t_t",          "t_tw",             "tbar_s",             "tbar_t",             "tbar_tw" };
     Color_t dsColorVec[]      = { kBlack, kBlack,      kRed+1,           kYellow,        kRed+1,      kRed+1,     kRed+1,  kGreen-1, kGreen-2, kGreen-3,         kBlue-0,          kBlue-2,         kBlue-3,           kRed,           kRed,       kOrange+3,                 kRed,                 kRed,             kOrange+3 };
     Style_t dsStyleVec[]      = {      0,      0,        1001,              1001,          1001,        3001,       3002,      1001,     1001,     1001,            1001,             1001,            1001,           1001,           1001,            1001,                 1001,                 1001,                  3001 };
     string  dsLegLabel[]      = { "Data", "Data", "Drell-Yan", "DY (Z->#tau#tau", "DY (Z+udsg}",  "DY (Z+c)", "DY (Z+c)",      "ZZ",     "WZ",     "WW", "t#bar{t}(lep)", "t#bar{t}(semi)", "t#bar{t}(had)", "t(s-channel)", "t(t-channel)", "t(tW-channel)", "#bar{t}(s-channel)", "#bar{t}(t-channel)", "#bar{t}(tW-channel)" };
@@ -61,7 +62,8 @@ ControlPlotMaker::ControlPlotMaker(TString fnac, TString fni, TString fno, TStri
 
   // For the Zuu, then Zee plots...
     vector<string> decayChain = {"Zuu", "Zee"}; 
-    for(int ds_i=0; ds_i<2; ds_i++)
+//    for(int ds_i=0; ds_i<2; ds_i++)
+    for(int ds_i=0; ds_i<1; ds_i++)
     {   cout << "  ControlPlotMaker::ControlPlotMaker(): Processing decay chain: " << decayChain[ds_i] << endl;
 
       // Set up output directory in output file
@@ -108,11 +110,13 @@ ControlPlotMaker::ControlPlotMaker(TString fnac, TString fni, TString fno, TStri
             //cout << endl;
 
           // Create histo for ratio plot denominator.
-            TH1F *mcHist = (TH1F*) dsHist["ttlep"]->Clone("totalSim");
-            for(int i=0; i<mcHist->GetNbinsX(); i++)
-            {   mcHist->SetBinContent(0,0);
-                mcHist->SetBinError(0,0);
-            }
+            TH1F* mcHist = new TH1F("totalSim", dsHist["tt_lep"]->GetTitle(), dsHist["tt_lep"]->GetNbinsX(), dsHist["tt_lep"]->GetXaxis()->GetXmin(), dsHist["tt_lep"]->GetXaxis()->GetXmax());
+            mcHist->Sumw2();
+//            TH1F *mcHist = (TH1F*) dsHist["tt_lep"]->Clone("totalSim");
+//            for(int i=0; i<mcHist->GetNbinsX(); i++)
+//            {   mcHist->SetBinContent(0,0);
+//                mcHist->SetBinError(0,0);
+//            }
 
           // Create a stack for signal and background histograms based on population.
             TString stackName = TString("h_stack_")+histToStack;
@@ -199,6 +203,8 @@ ControlPlotMaker::ControlPlotMaker(TString fnac, TString fni, TString fno, TStri
             delete simStack;
             delete mcHist;
             delete ratioHist;
+
+//////////////////UNCOMMENT HERE TO TEST ONLY ONE PLOT
 //break;
         }
     }
@@ -306,21 +312,3 @@ cout << " stack name: " << simStack->GetName();
     return
 */
 }
-
-//"muon"     muon
-//"elec"     elec
-//"dy"       dy
-//"dy_tt"    dy_tt
-//"zz"       zz
-//"wz"       wz
-//"ww"       ww
-//"ttlep"    ttlep
-//"ttsemi"   ttsemi
-//"tthad"    tthad
-//"t_s"      t_s
-//"t_t"      t_t
-//"t_tw"     t_tw
-//"tbar_s"   tbar_s
-//"tbar_t"   tbar_t
-//"tbar_tw"  tbar_tw
-

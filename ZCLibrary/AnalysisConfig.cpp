@@ -22,19 +22,25 @@ AnalysisConfig::AnalysisConfig(TString fnc)
 : ConfigReader(fnc)
 {
   // Open and read in config file
+//    setWeight["dy"     ] = pt.get<float>("DATASET WEIGHTS.dy"     );
+//    setWeight["ww"     ] = pt.get<float>("DATASET WEIGHTS.ww"     );
+//    setWeight["wz"     ] = pt.get<float>("DATASET WEIGHTS.wz"     );
+//    setWeight["zz"     ] = pt.get<float>("DATASET WEIGHTS.zz"     );
+//    setWeight["tthad"  ] = pt.get<float>("DATASET WEIGHTS.tthad"  );
+//    setWeight["ttlep"  ] = pt.get<float>("DATASET WEIGHTS.ttlep"  );
+//    setWeight["ttsemi" ] = pt.get<float>("DATASET WEIGHTS.ttsemi" );
+//    setWeight["t_s"    ] = pt.get<float>("DATASET WEIGHTS.t_s"    );
+//    setWeight["t_t"    ] = pt.get<float>("DATASET WEIGHTS.t_t"    );
+//    setWeight["t_tw"   ] = pt.get<float>("DATASET WEIGHTS.t_tw"   );
+//    setWeight["tbar_s" ] = pt.get<float>("DATASET WEIGHTS.tbar_s" );
+//    setWeight["tbar_t" ] = pt.get<float>("DATASET WEIGHTS.tbar_t" );
+//    setWeight["tbar_tw"] = pt.get<float>("DATASET WEIGHTS.tbar_tw");
+
     setWeight["dy"     ] = pt.get<float>("DATASET WEIGHTS.dy"     );
     setWeight["ww"     ] = pt.get<float>("DATASET WEIGHTS.ww"     );
     setWeight["wz"     ] = pt.get<float>("DATASET WEIGHTS.wz"     );
     setWeight["zz"     ] = pt.get<float>("DATASET WEIGHTS.zz"     );
-    setWeight["tthad"  ] = pt.get<float>("DATASET WEIGHTS.tthad"  );
-    setWeight["ttlep"  ] = pt.get<float>("DATASET WEIGHTS.ttlep"  );
-    setWeight["ttsemi" ] = pt.get<float>("DATASET WEIGHTS.ttsemi" );
-    setWeight["t_s"    ] = pt.get<float>("DATASET WEIGHTS.t_s"    );
-    setWeight["t_t"    ] = pt.get<float>("DATASET WEIGHTS.t_t"    );
-    setWeight["t_tw"   ] = pt.get<float>("DATASET WEIGHTS.t_tw"   );
-    setWeight["tbar_s" ] = pt.get<float>("DATASET WEIGHTS.tbar_s" );
-    setWeight["tbar_t" ] = pt.get<float>("DATASET WEIGHTS.tbar_t" );
-    setWeight["tbar_tw"] = pt.get<float>("DATASET WEIGHTS.tbar_tw");
+    setWeight["tt_lep" ] = pt.get<float>("DATASET WEIGHTS.tt_lep" );
 
     minSVT = pt.get<float>("SVT OPERATING POINTS.minSVT");
     noSVT  = pt.get<float>("SVT OPERATING POINTS.noSVT" );

@@ -164,7 +164,7 @@ void EventHandler::evalCriteria()
   // Check JSON if working with a data event.
     if(usingSim) inJSON = false;       // If using simulation, automatically set the JSON variable to false.
     else         inJSON = m_json==1 || !anCfg.jsonSelect;   //  Otherwise, go with what value is given by the ntuple or set to true if not checking.
-
+    cout << m_json << " ";
 
   // Check if event has the required triggers. Kick if not triggered.
 //    isElTriggered = triggered(anCfg.elecTriggers);
@@ -195,7 +195,7 @@ void EventHandler::evalCriteria()
       // Perform selection on this muon. Skip to next if it doesn't meet criteria.
         if(         m_muon_pt [i] <anCfg.muonPtMin
             || fabs(m_muon_eta[i])>anCfg.muonEtaMax
-//            ||      m_muon_iso[i] >anCfg.muonIsoMax
+            ||      m_muon_iso[i] >anCfg.muonIsoMax
           ) continue;
       // Insert muon in list based on pt.
         Index lowPtIndex = i;
@@ -236,7 +236,7 @@ void EventHandler::evalCriteria()
     {
         Z_DelEta = fabs(m_muon_eta[validMuons[0]]-m_muon_eta[validMuons[1]]);
         Z_DelPhi = fabs(m_muon_phi[validMuons[0]]-m_muon_phi[validMuons[1]]);
-        if(Z_DelPhi > TMath::Pi()) Z_DelPhi -= TMath::Pi();
+        if(Z_DelPhi > TMath::Pi()) Z_DelPhi = 2.0*TMath::Pi() - Z_DelPhi;
         Z_DelR   = sqrt(Z_DelEta*Z_DelEta+Z_DelPhi*Z_DelPhi);
     }
 //    else if(hasValidElectrons)
