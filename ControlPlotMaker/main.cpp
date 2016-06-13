@@ -39,7 +39,7 @@ int main(int argc, char* argv[])
     bool   usingLogScale       = true;
     bool   splitDYByFlavor     = true;
     bool   splitTauDecayFromDY = true;
-    bool   outputAsEPS         = true;
+    bool   outputAsEPS         = false;
 
   // Process command line input.
     // Set up options

@@ -61,10 +61,6 @@ class ControlPlotMaker
     TH1F* createRatioPlot(TH1F*, TH1F*);
     TH1F* createSimSumPlot(THStack*);
 
-
-
-
-
 };
 
 #endif
