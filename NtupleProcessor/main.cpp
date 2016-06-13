@@ -43,11 +43,11 @@ int main(int argc, char* argv[])
 
   // Set up list of valid datsets
     vector<string> datasetNames = {
-            "muon", "elec", "dy", "dy1j",
-            "ww", "wz", "zz",
-            "ttlep", "ttsemi", "tthad",
-            "t_s", "t_t", "t_tw",
-            "tbar_s", "tbar_t", "tbar_tw"
+      "dy1j_1of7","dy1j_2of7","dy1j_3of7","dy1j_4of7","dy1j_5of7","dy1j_6of7","dy1j_7of7","dy",
+      "st_s","st_t_4f_lep","st_t_5f_lep","stbar_t_4f_lep","stbar_t_5f_lep","stbar_tw_5f_nohad","stbar_tw_5f","st_tw_5f_nohad","st_tw_5f",
+      "elec_c","elec_d_1of8","elec_d_2of8","elec_d_3of8","elec_d_4of8","elec_d_5of8","elec_d_6of8","elec_d_7of8","elec_d_8of8",
+      "muon_c","muon_d_1of6","muon_d_2of6","muon_d_3of6","muon_d_4of6","muon_d_5of6","muon_d_6of6",
+      "tt_lep_1of2","tt_lep_2of2","tt_1of5","tt_2of5","tt_3of5","tt_4of5","tt_5of5","ww","wzz","wz","zz" 
     };
 
   // Process command line input.
@@ -78,7 +78,7 @@ int main(int argc, char* argv[])
         || std::find(datasetNames.begin(), datasetNames.end(), (dataset=cmdInput["dataset"].as<string>()))==datasetNames.end()    // .. or an improper dataset is specified...
       )
     { // KICK
-        cout << "No valid dataset specied. Please use one of the following options: ";
+        cout << "No valid dataset specified. Please use one of the following options: ";
         for(auto& dsNm : datasetNames) cout << dsNm << ", ";
         cout << endl;
         return 1;

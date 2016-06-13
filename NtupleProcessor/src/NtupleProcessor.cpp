@@ -33,7 +33,8 @@ NtupleProcessor::NtupleProcessor(TString ds, TString fnpc, TString fnac, TString
 
   // Open output file
     //outputFile = TFile::Open(runParams.fn_output, "UPDATE");
-    outputFile = TFile::Open(runParams.fn_output, "RECREATE");
+    //outputFile = TFile::Open(runParams.fn_output, "RECREATE");
+    outputFile = TFile::Open(TString("zc_out_")+ds+".root", "RECREATE");
 
   // Create HistogramExtractors from strings from NtupleProcConfig
     for(auto& heStr : runParams.hExtractorStrs) createHistogramExtractorFromString(heStr);
@@ -130,7 +131,13 @@ void NtupleProcessor::createHistogramExtractorFromString(TString& inputString)
         TString dirName = "control_plots/";
         for(TString dsOp : dsOptions)
         {
-            dirName = TString("control_plots/")+dataset+"/"+dsOp;
+            TString datasetLabel = dataset;
+            if(dataset(0,4) == "dy1j"  ) datasetLabel = "dy1j"  ;
+            if(dataset(0,4) == "muon"  ) datasetLabel = "muon"  ;
+            if(dataset(0,4) == "elec"  ) datasetLabel = "elec"  ;
+            if(dataset(0,3) == "tt_"   ) datasetLabel = "tt_"   ;
+            if(dataset(0,6) == "tt_lep") datasetLabel = "tt_lep";
+            dirName = TString("control_plots/")+datasetLabel+"/"+dsOp;
             cout << "  NtupleProcessor::createHistogramExtractorFromString: Adding ControlPlotExtractor (" << dirName << ")" << endl;
 
           // Check if desired directory already exists. If not, create it.
@@ -152,7 +159,13 @@ void NtupleProcessor::createHistogramExtractorFromString(TString& inputString)
         TString dirName = "raw_eff_plots/";
         for(TString dsOp : dsOptions)
         {
-            dirName = TString("raw_eff_plots/")+dataset+"/"+dsOp;
+            TString datasetLabel = dataset;
+            if(dataset(0,4) == "dy1j"  ) datasetLabel == "dy1j"  ;
+            if(dataset(0,4) == "muon"  ) datasetLabel == "muon"  ;
+            if(dataset(0,4) == "elec"  ) datasetLabel == "elec"  ;
+	    if(dataset(0,3) == "tt_"   ) datasetLabel == "tt_"   ;
+            if(dataset(0,6) == "tt_lep") datasetLabel == "tt_lep";
+            dirName = TString("raw_eff_plots/")+datasetLabel+"/"+dsOp;
             cout << "  NtupleProcessor::createHistogramExtractorFromString: Adding EffPlotExtractor (" << dirName << ")" << endl;
 
           // Check if desired directory already exists. If not, create it.
