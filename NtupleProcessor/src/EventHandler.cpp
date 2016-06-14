@@ -122,7 +122,7 @@ bool EventHandler::mapTree(TTree* tree)
     tree->SetBranchAddress( "Jet_phi"        ,  m_jet_phi     );
     tree->SetBranchAddress( "Jet_btagCSV"    ,  m_jet_csv     );
     tree->SetBranchAddress( "Jet_vtxMass"    ,  m_jet_msv     );
-    tree->SetBranchAddress( "Jet_id"         ,  m_jet_flv     );
+    tree->SetBranchAddress( "Jet_mcFlavour"  ,  m_jet_flv     );
 
   // MET variables
 //    temp_branch = tree->GetBranch("MET");
