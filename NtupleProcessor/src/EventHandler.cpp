@@ -54,20 +54,19 @@ bool EventHandler::mapTree(TTree* tree)
 //        "triggerFlags",                                            "allJet_flavour"    ,
 //        "weightTrig2012DiEle",
 //        "weightTrig2012DiMuon"
-"Vtype" , "nvLeptons"          , "nJet"       , "met_pt"   ,
-"V_mass", "vLeptons_pt"        , "Jet_pt"     , "met_phi"  ,
-"V_pt"  , "vLeptons_eta"       , "Jet_eta"    , "met_sumEt",
-"V_eta" , "vLeptons_phi"       , "Jet_phi"    ,
-"V_phi" , "vLeptons_charge"    , "Jet_btagCSV",
-"json"  , "vLeptons_pfRelIso04", "Jet_vtxMass",
-"evt"   ,                        "Jet_id",
-"htJet30"    ,
-"mhtJet30"   ,
-"mhtPhiJet30",
-"Jet_
-
+        "Vtype" , "nvLeptons"          , "nJet"       , "met_pt"   ,
+        "V_mass", "vLeptons_pt"        , "Jet_pt"     , "met_phi"  ,
+        "V_pt"  , "vLeptons_eta"       , "Jet_eta"    , "met_sumEt",
+        "V_eta" , "vLeptons_phi"       , "Jet_phi"    ,
+        "V_phi" , "vLeptons_charge"    , "Jet_btagCSV",
+        "json"  , "vLeptons_pfRelIso04", "Jet_vtxMass",
+        "evt"   ,                        "Jet_mcFlavour",
+        "htJet30"    ,
+        "mhtJet30"   ,
+        "mhtPhiJet30"
     };
-    for(TString br : branches_to_reactivate) tree->SetBranchStatus(br.Data(), 1);
+
+ for(TString br : branches_to_reactivate) tree->SetBranchStatus(br.Data(), 1);
 
   // Z variables
     m_zdecayMode = 0;
@@ -127,7 +126,8 @@ bool EventHandler::mapTree(TTree* tree)
     tree->SetBranchAddress( "Jet_phi"        ,  m_jet_phi     );
     tree->SetBranchAddress( "Jet_btagCSV"    ,  m_jet_csv     );
     tree->SetBranchAddress( "Jet_vtxMass"    ,  m_jet_msv     );
-    tree->SetBranchAddress( "Jet_id"         ,  m_jet_flv     );
+    tree->SetBranchAddress( "Jet_mcFlavour"  ,  m_jet_flv     );
+//    tree->SetBranchAddress( "Jet_id"         ,  m_jet_flv     );
 
   // MET variables
 //    temp_branch = tree->GetBranch("MET");
