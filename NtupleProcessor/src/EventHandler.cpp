@@ -60,7 +60,12 @@ bool EventHandler::mapTree(TTree* tree)
 "V_eta" , "vLeptons_phi"       , "Jet_phi"    ,
 "V_phi" , "vLeptons_charge"    , "Jet_btagCSV",
 "json"  , "vLeptons_pfRelIso04", "Jet_vtxMass",
-"evt"   ,                        "Jet_id"
+"evt"   ,                        "Jet_id",
+"htJet30"    ,
+"mhtJet30"   ,
+"mhtPhiJet30",
+"Jet_
+
     };
     for(TString br : branches_to_reactivate) tree->SetBranchStatus(br.Data(), 1);
 
@@ -131,9 +136,13 @@ bool EventHandler::mapTree(TTree* tree)
 //    temp_branch->GetLeaf( "sumet")->SetAddress( &m_MET_sumet );
 //    temp_branch->GetLeaf( "sig"  )->SetAddress( &m_MET_sig   );
 //    temp_branch = tree->GetBranch("MET");
-    tree->SetBranchAddress( "met_pt"   , &m_MET_et    );
-    tree->SetBranchAddress( "met_phi"  , &m_MET_phi   );
-    tree->SetBranchAddress( "met_sumEt", &m_MET_sumet );
+    tree->SetBranchAddress( "met_pt"     , &m_MET_et    );
+    tree->SetBranchAddress( "met_phi"    , &m_MET_phi   );
+    tree->SetBranchAddress( "met_sumEt"  , &m_MET_sumet );
+    tree->SetBranchAddress( "htJet30"    , &m_ht        );
+    tree->SetBranchAddress( "mhtJet30"   , &m_mht_phi   );
+    tree->SetBranchAddress( "mhtPhiJet30", &m_mht       );
+
 //    temp_branch->GetLeaf( "met_rawPt"  )->SetAddress( &m_MET_sig   );
 
   // Trigger variables
