@@ -54,15 +54,19 @@ bool EventHandler::mapTree(TTree* tree)
 //        "triggerFlags",                                            "allJet_flavour"    ,
 //        "weightTrig2012DiEle",
 //        "weightTrig2012DiMuon"
-"Vtype" , "nvLeptons"          , "nJet"       , "met_pt"   ,
-"V_mass", "vLeptons_pt"        , "Jet_pt"     , "met_phi"  ,
-"V_pt"  , "vLeptons_eta"       , "Jet_eta"    , "met_sumEt",
-"V_eta" , "vLeptons_phi"       , "Jet_phi"    ,
-"V_phi" , "vLeptons_charge"    , "Jet_btagCSV",
-"json"  , "vLeptons_pfRelIso04", "Jet_vtxMass",
-"evt"   ,                        "Jet_id"
+        "Vtype" , "nvLeptons"          , "nJet"       , "met_pt"   ,
+        "V_mass", "vLeptons_pt"        , "Jet_pt"     , "met_phi"  ,
+        "V_pt"  , "vLeptons_eta"       , "Jet_eta"    , "met_sumEt",
+        "V_eta" , "vLeptons_phi"       , "Jet_phi"    ,
+        "V_phi" , "vLeptons_charge"    , "Jet_btagCSV",
+        "json"  , "vLeptons_pfRelIso04", "Jet_vtxMass",
+        "evt"   ,                        "Jet_mcFlavour",
+        "htJet30"    ,
+        "mhtJet30"   ,
+        "mhtPhiJet30"
     };
-    for(TString br : branches_to_reactivate) tree->SetBranchStatus(br.Data(), 1);
+
+ for(TString br : branches_to_reactivate) tree->SetBranchStatus(br.Data(), 1);
 
   // Z variables
     m_zdecayMode = 0;
@@ -123,6 +127,7 @@ bool EventHandler::mapTree(TTree* tree)
     tree->SetBranchAddress( "Jet_btagCSV"    ,  m_jet_csv     );
     tree->SetBranchAddress( "Jet_vtxMass"    ,  m_jet_msv     );
     tree->SetBranchAddress( "Jet_mcFlavour"  ,  m_jet_flv     );
+//    tree->SetBranchAddress( "Jet_id"         ,  m_jet_flv     );
 
   // MET variables
 //    temp_branch = tree->GetBranch("MET");
@@ -131,9 +136,13 @@ bool EventHandler::mapTree(TTree* tree)
 //    temp_branch->GetLeaf( "sumet")->SetAddress( &m_MET_sumet );
 //    temp_branch->GetLeaf( "sig"  )->SetAddress( &m_MET_sig   );
 //    temp_branch = tree->GetBranch("MET");
-    tree->SetBranchAddress( "met_pt"   , &m_MET_et    );
-    tree->SetBranchAddress( "met_phi"  , &m_MET_phi   );
-    tree->SetBranchAddress( "met_sumEt", &m_MET_sumet );
+    tree->SetBranchAddress( "met_pt"     , &m_MET_et    );
+    tree->SetBranchAddress( "met_phi"    , &m_MET_phi   );
+    tree->SetBranchAddress( "met_sumEt"  , &m_MET_sumet );
+    tree->SetBranchAddress( "htJet30"    , &m_ht        );
+    tree->SetBranchAddress( "mhtJet30"   , &m_mht_phi   );
+    tree->SetBranchAddress( "mhtPhiJet30", &m_mht       );
+
 //    temp_branch->GetLeaf( "met_rawPt"  )->SetAddress( &m_MET_sig   );
 
   // Trigger variables
