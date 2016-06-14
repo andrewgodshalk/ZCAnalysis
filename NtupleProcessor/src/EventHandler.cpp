@@ -173,7 +173,7 @@ void EventHandler::evalCriteria()
   // Check JSON if working with a data event.
     if(usingSim) inJSON = false;       // If using simulation, automatically set the JSON variable to false.
     else         inJSON = m_json==1 || !anCfg.jsonSelect;   //  Otherwise, go with what value is given by the ntuple or set to true if not checking.
-    cout << m_json << " ";
+    //cout << m_json << " ";
 
   // Check if event has the required triggers. Kick if not triggered.
 //    isElTriggered = triggered(anCfg.elecTriggers);
