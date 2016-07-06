@@ -62,6 +62,9 @@ public:
     float m_mht_phi;
     float m_wt_diEle;
     float m_wt_diMuon;
+    int   m_trig_dimuon1;
+    int   m_trig_dimuon2;
+    int   m_trig_dielec1;
 
 // Calculated variables
     float Z_DelR, Z_DelPhi, Z_DelEta;

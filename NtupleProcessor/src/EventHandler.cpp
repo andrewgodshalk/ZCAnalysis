@@ -63,7 +63,10 @@ bool EventHandler::mapTree(TTree* tree)
         "evt"   ,                        "Jet_mcFlavour",
         "htJet30"    ,
         "mhtJet30"   ,
-        "mhtPhiJet30"
+        "mhtPhiJet30",
+        "HLT_BIT_HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_v",
+        "HLT_BIT_HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_v",
+        "HLT_BIT_HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v"
     };
 
  for(TString br : branches_to_reactivate) tree->SetBranchStatus(br.Data(), 1);
@@ -149,7 +152,9 @@ bool EventHandler::mapTree(TTree* tree)
 //    tree->SetBranchAddress( "triggerFlags",         m_triggers   );
 //    tree->SetBranchAddress( "weightTrig2012DiEle" , &m_wt_diEle  );
 //    tree->SetBranchAddress( "weightTrig2012DiMuon", &m_wt_diMuon );
-
+    tree->SetBranchAddress("HLT_BIT_HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_v"      , &m_trig_dimuon1);
+    tree->SetBranchAddress("HLT_BIT_HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_v"    , &m_trig_dimuon2);
+    tree->SetBranchAddress("HLT_BIT_HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v", &m_trig_dielec1);
     return true;
 }
 
@@ -178,7 +183,8 @@ void EventHandler::evalCriteria()
   // Check if event has the required triggers. Kick if not triggered.
 //    isElTriggered = triggered(anCfg.elecTriggers);
 //    isMuTriggered = triggered(anCfg.muonTriggers);
-    isMuTriggered = true;
+    isMuTriggered = (m_trig_dimuon1 || m_trig_dimuon2);
+//cout << "   TRIGGER TEST: trig1: " << m_trig_dimuon1 << "  trig2: " << m_trig_dimuon2 << endl;
     //if(!isElTriggered && !isMuTriggered) return;
 
   // Check for the proper number or leptons. Kick if neither.
@@ -231,7 +237,7 @@ void EventHandler::evalCriteria()
   // Check for two valid muons, electrons. (Assume 0, 1 are leading and subleading.)
     hasValidMuons =    validMuons.size() >=2   //  && m_Vtype==0
                     && (m_muon_charge[validMuons[0]]*m_muon_charge[validMuons[1]]==-1 || !anCfg.dilepMuonReqOppSign )
-                    //&& isMuTriggered
+                    && isMuTriggered
                     && m_Vtype==0
     ;
 //    hasValidElectrons =    validElectrons.size()>=2 //&& m_Vtype==1
