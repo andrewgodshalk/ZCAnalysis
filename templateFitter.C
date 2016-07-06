@@ -60,24 +60,30 @@ string templateFitter(TString plotName, TH1F* h_sample, TH1F* h_b, TH1F* h_c, TH
     std::stringstream log("");
     log << "\n  ==TEMPLATEFITTER== \n"
             "    " << plotName   << "\n"
-//            "    " << timeStamp() << "\n"
+            "    " << timeStamp() << "\n"
             "    Rebin: " << rebin << "\n";
-
 
   // Set up the environment
     gStyle->SetOptStat("");     // Gets rid of the stats panel
     //gStyle->SetErrorX(0);       // Removes error bars in the x-direction.
 
     TH1F* data  = (TH1F*) h_sample->Clone("data" );
-    TH1F* btemp = (TH1F*) h_b     ->Clone("btemp");
-    TH1F* ctemp = (TH1F*) h_c     ->Clone("ctemp");
-    TH1F* ltemp = (TH1F*) h_l     ->Clone("ltemp");
+    TH1F* btemp = (TH1F*) h_b     ->Clone("btemp_for_fit");
+    TH1F* ctemp = (TH1F*) h_c     ->Clone("ctemp_for_fit");
+    TH1F* ltemp = (TH1F*) h_l     ->Clone("ltemp_for_fit");
 
   // Extract integral from each template, then normalize.
     float nData = data ->Integral();  //data ->Scale(1.0/nData);
     float nBjet = btemp->Integral();  //btemp->Scale(1.0/nBjet);
     float nCjet = ctemp->Integral();  //ctemp->Scale(1.0/nCjet);
     float nLjet = ltemp->Integral();  //ltemp->Scale(1.0/nLjet);
+    int   nBins = data->GetNbinsX();
+//    h_b  ->Scale(0.7*nData/nBjet);
+//    h_c  ->Scale(0.2*nData/nCjet);
+//    h_l  ->Scale(0.1*nData/nLjet);
+//    btemp->Scale(0.7*nData/nBjet);
+//    ctemp->Scale(0.2*nData/nCjet);
+//    ltemp->Scale(0.1*nData/nLjet);
 
   // Reset titles so that they are printed properly
     data->SetTitle("M_{SV};M_{SV};");
@@ -87,6 +93,11 @@ string templateFitter(TString plotName, TH1F* h_sample, TH1F* h_b, TH1F* h_c, TH
     btemp->Rebin(rebin);  //inflateError(btemp);
     ctemp->Rebin(rebin);  //inflateError(ctemp);
     ltemp->Rebin(rebin);  //inflateError(ltemp);
+
+  // Scale templates to data based on approximate fractions.
+    //btemp->Scale(0.7*nData/nBjet);
+    //ctemp->Scale(0.2*nData/nCjet);
+    //ltemp->Scale(0.1*nData/nLjet);
 
   // Pick a color, any color.
     data->SetMarkerColor(kBlack);  data->SetMarkerStyle(20);  data->SetMarkerSize(1);
@@ -110,14 +121,32 @@ string templateFitter(TString plotName, TH1F* h_sample, TH1F* h_b, TH1F* h_c, TH
     TObjArray *temps = new TObjArray(3);  // Array for template histograms
     temps->Add(btemp); temps->Add(ctemp); temps->Add(ltemp);
 
+///// TEST ////////
+    log << endl << btemp->GetBinContent(7) << "  " << btemp->GetBinError(7) << endl << endl;
+
+  // TEST loop over all bins in one temp,
+//    for(int i=1; i<=nBins; i++)
+//    {
+//        float binVal = btemp->GetBinContent(i);
+//        float newVal = gRandom->Poisson(binVal);
+//        btemp->SetBinContent(i,      newVal );
+//        btemp->SetBinError(  i, sqrt(newVal));
+//    }
+
+//////////////////////////////////
+
+
+
   // Set up your Fraction Fitter
     TFractionFitter *fit = new TFractionFitter(data, temps);
     fit->Constrain(0, 0.00001, 0.99999);
     fit->Constrain(1, 0.00001, 0.99999);
     fit->Constrain(2, 0.00001, 0.99999);
+    for(int i=0; i<=nBins+1; i++)  // Exclude bins w/ negative values in data-bkgd from fitting.
+        if(data->GetBinContent(i)<0)
+            fit->ExcludeBin(i);
 
-  // Extract the number of bins in data, then Set the range of the fit to exclude first bin.
-    int nBins = data->GetNbinsX();
+  // Extract the number of bins in data, then Set the range of the fit to exclude first and last (underflow and overflow) bins.
     fit->SetRangeX(1,nBins);
 
   // DO THE DEED!!
@@ -127,6 +156,8 @@ string templateFitter(TString plotName, TH1F* h_sample, TH1F* h_b, TH1F* h_c, TH
     fit->ErrorAnalysis(_FUP); //
 
 // ?????????????????????????? //
+
+
     cout << "fit status:" << status << endl;
 
   // Start delivering the goods.
@@ -146,6 +177,11 @@ string templateFitter(TString plotName, TH1F* h_sample, TH1F* h_b, TH1F* h_c, TH
   // Extract fit results
     for(int i=0; i<3; i++) fit->GetResult(i, frac[i], err[i]);
     TH1F* result = (TH1F*) fit->GetPlot();
+
+    float chi2val = fit->GetChisquare()/fit->GetNDF();
+    float chi2    = fit->GetChisquare();
+    float ndof    = fit->GetNDF();
+
 
   // Draw something pretty
     TString resultPlotName = plotName + "_result";
@@ -169,7 +205,6 @@ string templateFitter(TString plotName, TH1F* h_sample, TH1F* h_b, TH1F* h_c, TH
     resultPlot->SetLogy();
 
   // Make labels for histogram legend
-    float chi2val = fit->GetChisquare()/fit->GetNDF();
     TString dataLegLabel = TString("Data (") + Form("%.1f",nData) + ")";
     TString bjetLegLabel = TString("Z+b (") + Form("%.3f",frac[0]) + "#pm" + Form("%.3f",err[0]) + ")";
     TString cjetLegLabel = TString("Z+c (") + Form("%.3f",frac[1]) + "#pm" + Form("%.3f",err[1]) + ")";
@@ -238,6 +273,8 @@ string templateFitter(TString plotName, TH1F* h_sample, TH1F* h_b, TH1F* h_c, TH
            "      Z+c: " << frac[1] << "\t +- " << err[1] << "\n"
            "      Z+l: " << frac[2] << "\t +- " << err[2] << "\n"
            "      (Check: Total = " << frac[0]+frac[1]+frac[2] << ")\n"
+           "      Chi2 =      " << chi2 << "\n"
+           "      NDOF =      " << ndof << "\n"
            "      Chi2/NDOF = " << chi2val << "\n"
            "\n";
 /////////////////////////////////////////////
@@ -247,13 +284,98 @@ string templateFitter(TString plotName, TH1F* h_sample, TH1F* h_b, TH1F* h_c, TH
     seperate_plots   ->Write();
     resultPlot       ->Write();
     resultPlotStacked->Write();
-    resultPlotStacked_control->Write();
+//    resultPlotStacked_control->Write();
+    h_sample->Write();
+    h_b->Write();
+    h_c->Write();
+    h_l->Write();
+    btemp->Write();
+    ctemp->Write();
+    ltemp->Write();
+
     plotOutput.Close();
 
     delete fit;
     delete temps;
     return log.str();
 }
+
+
+void getTemplatesFromRunIIFile(TString fn, TH1F*& h_b, TH1F*& h_c, TH1F*& h_l)
+{
+    TFile* inputFile = TFile::Open(fn);
+
+  // Pointers to file histograms
+    TH1F *hf_dy_b  , *hf_dy_c  , *hf_dy_l  ;  // dy temps
+    TH1F *hf_dy1j_b, *hf_dy1j_c, *hf_dy1j_l;  // dy1j temps
+
+  // Get templates from file
+    inputFile->GetObject("control_plots/dy"  "/Zuu_Zb/zhfmet_CSVT_hfjet_ld_msv", hf_dy_b  );
+    inputFile->GetObject("control_plots/dy"  "/Zuu_Zc/zhfmet_CSVT_hfjet_ld_msv", hf_dy_c  );
+    inputFile->GetObject("control_plots/dy"  "/Zuu_Zl/zhfmet_CSVT_hfjet_ld_msv", hf_dy_l  );
+    inputFile->GetObject("control_plots/dy1j""/Zuu_Zb/zhfmet_CSVT_hfjet_ld_msv", hf_dy1j_b);
+    inputFile->GetObject("control_plots/dy1j""/Zuu_Zc/zhfmet_CSVT_hfjet_ld_msv", hf_dy1j_c);
+    inputFile->GetObject("control_plots/dy1j""/Zuu_Zl/zhfmet_CSVT_hfjet_ld_msv", hf_dy1j_l);
+
+  // Add templates together to get final templates
+    h_b = (TH1F*) hf_dy_b->Clone("btemp");   h_b->Add(hf_dy1j_b);
+    h_c = (TH1F*) hf_dy_c->Clone("ctemp");   h_c->Add(hf_dy1j_c);
+    h_l = (TH1F*) hf_dy_l->Clone("ltemp");   h_l->Add(hf_dy1j_l);
+
+  // Clean up
+    delete hf_dy_b  ;  delete hf_dy_c  ;  delete hf_dy_l  ;
+    delete hf_dy1j_b;  delete hf_dy1j_c;  delete hf_dy1j_l;
+
+}
+
+
+TH1F* getRunIISampleFromFile(TString fn)
+{
+    TFile* inputFile = TFile::Open(fn);
+
+  // Pointers to file histograms
+    TH1F *h_sample; // Pointer to final sample histogram.
+    TH1F *h_data ;  // Data histogram to fit.
+    TH1F *h_ttlep;  // Backgrounds to subtract.
+    TH1F *h_ww   ;
+    TH1F *h_wz   ;
+    TH1F *h_zz   ;
+
+  // Get templates from file
+    inputFile->GetObject("control_plots/muon"  "/Zuu/zhfmet_CSVT_hfjet_ld_msv", h_data );   h_data ->Sumw2();
+    inputFile->GetObject("control_plots/tt_lep""/Zuu/zhfmet_CSVT_hfjet_ld_msv", h_ttlep);   h_ttlep->Sumw2();
+    inputFile->GetObject("control_plots/ww"    "/Zuu/zhfmet_CSVT_hfjet_ld_msv", h_ww   );   h_ww   ->Sumw2();
+    inputFile->GetObject("control_plots/wz"    "/Zuu/zhfmet_CSVT_hfjet_ld_msv", h_wz   );   h_wz   ->Sumw2();
+    inputFile->GetObject("control_plots/zz"    "/Zuu/zhfmet_CSVT_hfjet_ld_msv", h_zz   );   h_zz   ->Sumw2();
+    cout << h_data->GetTitle() << endl;
+
+  // Scale backgrounds and subtract from sample
+    gROOT->cd();
+    h_sample = (TH1F*) h_data->Clone("data_m_bkgd");  h_sample->Sumw2();
+    cout << h_sample->GetTitle() << endl;
+
+    h_ttlep->Scale(0.0485392103);   h_sample->Add(h_ttlep, -1.0);
+    h_ww   ->Scale(0.3310214179);   h_sample->Add(h_ww   , -1.0);
+    h_wz   ->Scale(0.1347394468);   h_sample->Add(h_wz   , -1.0);
+    h_zz   ->Scale(0.0388934253);   h_sample->Add(h_zz   , -1.0);
+
+  // Look for bins w/ values < 0.
+//    int nBins = h_sample->GetNbinsX();
+//    for(int i=0; i<=nBins+1; i++)
+//        if(h_sample->GetBinContent(i)<0)
+//            h_sample->SetBinContent(i, 0.0);
+
+  // Clean up
+    inputFile->Close();
+    cout << h_sample->GetTitle() << endl;
+    return h_sample;
+}
+
+
+
+
+
+
 
 TH1F* getSampleFromFile(TString fn)
 {
