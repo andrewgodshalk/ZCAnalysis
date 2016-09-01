@@ -62,8 +62,7 @@ ControlPlotMaker::ControlPlotMaker(TString fnac, TString fni, TString fno, TStri
 
   // For the Zuu, then Zee plots...
     vector<string> decayChain = {"Zuu", "Zee"}; 
-//    for(int ds_i=0; ds_i<2; ds_i++)
-    for(int ds_i=0; ds_i<1; ds_i++)
+    for(int ds_i=0; ds_i<2; ds_i++)
     {   cout << "  ControlPlotMaker::ControlPlotMaker(): Processing decay chain: " << decayChain[ds_i] << endl;
 
       // Set up output directory in output file
@@ -87,8 +86,11 @@ ControlPlotMaker::ControlPlotMaker(TString fnac, TString fni, TString fno, TStri
         while((hist=(TH1*)nextHist()))
         {
             TString histToStack = hist->GetName();
-//if(histToStack!="zpjmet_dilepton_mass") continue;
-            cout << "    ControlPlotMaker::ControlPlotMaker(): Processing histo: " << hist->GetName() << endl;
+
+if(histToStack!="zpjmet_dilepton_mass") continue;
+
+
+       cout << "    ControlPlotMaker::ControlPlotMaker(): Processing histo: " << hist->GetName() << endl;
           // Iterate through each dataset and:
             for(string& ds : allDatasets) dsHist[ds] = createStackHisto(ds, histToStack);
 
@@ -96,8 +98,8 @@ ControlPlotMaker::ControlPlotMaker(TString fnac, TString fni, TString fno, TStri
             map<string, float> dsIntegral;
             list<string> dsOrder;
             for(auto& ds_h : dsHist) dsIntegral[ds_h.first] = ds_h.second->Integral();
-            //for(auto& ds_n : dsIntegral) cout << "    ControlPlotMaker::ControlPlotMaker(): " << ds_n.first << " has integral of " << ds_n.second << endl;
-            //for(auto& ds : allDatasets)  cout << "    ControlPlotMaker::ControlPlotMaker(): " << ds << " has integral of " << dsIntegral[ds] << " (" << dsHist[ds]->Integral() << ")" << endl;
+            for(auto& ds_n : dsIntegral) cout << "    ControlPlotMaker::ControlPlotMaker(): " << ds_n.first << " has integral of " << ds_n.second << endl;
+            for(auto& ds : allDatasets)  cout << "    ControlPlotMaker::ControlPlotMaker(): " << ds << " has integral of " << dsIntegral[ds] << " (" << dsHist[ds]->Integral() << ")" << endl;
             for(auto& ds_n : dsIntegral)
             {
                 if(ds_n.first=="muon" || ds_n.first=="elec" || ds_n.second < 10) continue;
@@ -175,9 +177,9 @@ ControlPlotMaker::ControlPlotMaker(TString fnac, TString fni, TString fno, TStri
             ratioPad->SetGrid();
             ratioPad->SetTopMargin(0);
             //Make MC denominator plot
- cout << "  Wait for it... ";
+// cout << "  Wait for it... ";
             //TH1F* mcHist    = createSimSumPlot(simStack);
- cout << "  GOING IN!!";
+// cout << "  GOING IN!!";
 
             TH1F* ratioHist = createRatioPlot((TH1F*) dataHist, mcHist);
             ratioHist->DrawCopy("ep");
