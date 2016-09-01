@@ -3,3 +3,5 @@
 *.o
 ControlPlotMaker/plots/*.png
 ControlPlotMaker/epsplots/*.eps
+condor_testing/zcntupler_*
+*.root

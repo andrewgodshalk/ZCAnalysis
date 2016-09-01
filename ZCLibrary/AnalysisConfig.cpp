@@ -148,4 +148,5 @@ void AnalysisConfig::processBinString(vector<pair<float,float> >& binSet, string
 void AnalysisConfig::processTriggerString(vector<int>& trigSet, string& inputString)
 {
     getListFromString<int>(inputString, trigSet);
+    //getListFromString<string>(inputString, trigSet);
 }

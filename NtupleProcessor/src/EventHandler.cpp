@@ -30,6 +30,8 @@ EventHandler::EventHandler(TString fnac, TString o) : anCfg(fnac), options(o)
 
     patEventsAnalyzed = 0;
     entriesInNtuple   = 0;
+
+    evtWeight = 1.0;
 }
 
 bool EventHandler::mapTree(TTree* tree)
@@ -63,7 +65,11 @@ bool EventHandler::mapTree(TTree* tree)
         "evt"   ,                        "Jet_mcFlavour",
         "htJet30"    ,
         "mhtJet30"   ,
-        "mhtPhiJet30"
+        "mhtPhiJet30",
+        "HLT_BIT_HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_v",
+        "HLT_BIT_HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_v",
+        "HLT_BIT_HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v",
+        "nPVs"
     };
 
  for(TString br : branches_to_reactivate) tree->SetBranchStatus(br.Data(), 1);
@@ -87,8 +93,9 @@ bool EventHandler::mapTree(TTree* tree)
 //    temp_branch = tree->GetBranch("EVENT");
 //    temp_branch->GetLeaf( "json"  )->SetAddress(   &m_json        );
 //    temp_branch->GetLeaf( "event" )->SetAddress(   &m_event       );
-    tree->SetBranchAddress( "json", &m_json        );
-    tree->SetBranchAddress( "evt" , &m_event       );
+    tree->SetBranchAddress( "json", &m_json );
+    tree->SetBranchAddress( "evt" , &m_event);
+    tree->SetBranchAddress( "nPVs", &m_nPVs );
 
   // Muon variables
 //    tree->SetBranchAddress( "nallMuons"         , &m_nMuons      );
@@ -97,12 +104,12 @@ bool EventHandler::mapTree(TTree* tree)
 //    tree->SetBranchAddress( "allMuon_phi"       ,  m_muon_phi    );
 //    tree->SetBranchAddress( "allMuon_charge"    ,  m_muon_charge );
 //    tree->SetBranchAddress( "allMuon_pfCorrIso" ,  m_muon_iso    );
-    tree->SetBranchAddress( "nvLeptons"           , &m_nMuons      );
-    tree->SetBranchAddress( "vLeptons_pt"         ,  m_muon_pt     );
-    tree->SetBranchAddress( "vLeptons_eta"        ,  m_muon_eta    );
-    tree->SetBranchAddress( "vLeptons_phi"        ,  m_muon_phi    );
-    tree->SetBranchAddress( "vLeptons_charge"     ,  m_muon_charge );
-    tree->SetBranchAddress( "vLeptons_pfRelIso04" ,  m_muon_iso    );
+    tree->SetBranchAddress( "nvLeptons"           , &m_nLeps      );
+    tree->SetBranchAddress( "vLeptons_pt"         ,  m_lep_pt     );
+    tree->SetBranchAddress( "vLeptons_eta"        ,  m_lep_eta    );
+    tree->SetBranchAddress( "vLeptons_phi"        ,  m_lep_phi    );
+    tree->SetBranchAddress( "vLeptons_charge"     ,  m_lep_charge );
+    tree->SetBranchAddress( "vLeptons_pfRelIso04" ,  m_lep_iso    );
 
   // Muon variables
 //    tree->SetBranchAddress( "nallElectrons"        , &m_nElecs      );
@@ -149,7 +156,9 @@ bool EventHandler::mapTree(TTree* tree)
 //    tree->SetBranchAddress( "triggerFlags",         m_triggers   );
 //    tree->SetBranchAddress( "weightTrig2012DiEle" , &m_wt_diEle  );
 //    tree->SetBranchAddress( "weightTrig2012DiMuon", &m_wt_diMuon );
-
+    tree->SetBranchAddress("HLT_BIT_HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_v"      , &m_trig_dimuon1);
+    tree->SetBranchAddress("HLT_BIT_HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_v"    , &m_trig_dimuon2);
+    tree->SetBranchAddress("HLT_BIT_HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v", &m_trig_dielec1);
     return true;
 }
 
@@ -170,6 +179,12 @@ void EventHandler::evalCriteria()
     if(usingOddEventDY   && m_event%2 == 0     ) return;
 ////////////////////////////////////////////////
 
+  // Calculate the event weight.
+    if(usingSim)
+    {
+        evtWeight *= calculatePUReweight(m_nPVs);
+    }
+
   // Check JSON if working with a data event.
     if(usingSim) inJSON = false;       // If using simulation, automatically set the JSON variable to false.
     else         inJSON = m_json==1 || !anCfg.jsonSelect;   //  Otherwise, go with what value is given by the ntuple or set to true if not checking.
@@ -178,12 +193,14 @@ void EventHandler::evalCriteria()
   // Check if event has the required triggers. Kick if not triggered.
 //    isElTriggered = triggered(anCfg.elecTriggers);
 //    isMuTriggered = triggered(anCfg.muonTriggers);
-    isMuTriggered = true;
-    //if(!isElTriggered && !isMuTriggered) return;
+    isElTriggered = m_trig_dielec1;
+    isMuTriggered = (m_trig_dimuon1 || m_trig_dimuon2);
+//cout << "   TRIGGER TEST: trig1: " << m_trig_dimuon1 << "  trig2: " << m_trig_dimuon2 << endl;
+    if(!isElTriggered && !isMuTriggered) return;
 
   // Check for the proper number or leptons. Kick if neither.
 //    if( m_nElecs<2 && m_nMuons<2 ) return;
-    if( m_nMuons<2 ) return;
+    if( m_nLeps<2 ) return;
 //cout << "    EventHandler::evalCriteria(): TEST: SELECTION CHECK: # Muons = " << m_nMuons;
 //    if( m_nMuons<2 ) { cout << endl; return;}
 //    cout << " --> SELECTED!!" << endl;
@@ -198,53 +215,71 @@ void EventHandler::evalCriteria()
     // Also need to implement trigger matching (or see if implemented in previous steps).
 
   // Perform selection on leptons and store indexes sorted by pt.
-    for(Index i=0; i<m_nMuons; i++)
+    if(m_Vtype==0)
     {
-//cout << "    EventHandler::evalCriteria(): Muon Props (muon #, pt, eta, iso): = (" << i << ", " << m_muon_pt[i] << ", " << m_muon_eta[i] << ", " << m_muon_iso[i] << ")" << endl;
-      // Perform selection on this muon. Skip to next if it doesn't meet criteria.
-        if(         m_muon_pt [i] <anCfg.muonPtMin
-            || fabs(m_muon_eta[i])>anCfg.muonEtaMax
-            ||      m_muon_iso[i] >anCfg.muonIsoMax
-          ) continue;
-      // Insert muon in list based on pt.
-        Index lowPtIndex = i;
-        for(int j=0; j<validMuons.size(); j++) if(m_muon_pt[validMuons[j]]<m_muon_pt[lowPtIndex]) swap(validMuons[j], lowPtIndex);
-        validMuons.push_back(lowPtIndex);
+        for(Index i=0; i<m_nLeps; i++)
+        {
+            //cout << "    EventHandler::evalCriteria(): Muon Props (muon #, pt, eta, iso): = (" << i << ", " << m_muon_pt[i] << ", " << m_muon_eta[i] << ", " << m_muon_iso[i] << ")" << endl;
+          // Perform selection on this muon. Skip to next if it doesn't meet criteria.
+            if(         m_lep_pt [i] <anCfg.muonPtMin
+                || fabs(m_lep_eta[i])>anCfg.muonEtaMax
+                ||      m_lep_iso[i] >anCfg.muonIsoMax
+              ) continue;
+          // Insert muon in list based on pt.
+            Index lowPtIndex = i;
+            for(int j=0; j<validLeptons.size(); j++) if(m_lep_pt[validLeptons[j]]<m_lep_pt[lowPtIndex]) swap(validLeptons[j], lowPtIndex);
+            validLeptons.push_back(lowPtIndex);
+        }
+        //if(validMuons.size()>=2) cout << "    --> TWO VALID MUONS with vType == " << m_Vtype << ", charges of " << m_muon_charge[0] << "," << m_muon_charge[1] << endl;
     }
-//if(validMuons.size()>=2) cout << "    --> TWO VALID MUONS with vType == " << m_Vtype << ", charges of " << m_muon_charge[0] << "," << m_muon_charge[1] << endl;
-//    for(Index i=0; i<m_nElecs; i++)
-//    {
-//      // Perform selection on this electron.
-//        if(    m_elec_pt [i] <anCfg.elecPtMin
-//            || (fabs(m_elec_eta[i])>anCfg.elecEtaInnerMax && (fabs(m_elec_eta[i])<anCfg.elecEtaOuterMin || fabs(m_elec_eta[i])>anCfg.elecEtaOuterMax))
-//            //|| m_elec_iso[i] >anCfg.elecIsoMax
-//          ) continue;
-//      // Insert electron in list based on pt.
-//        Index lowPtIndex = i;
-//        for(int j=0; j<validElectrons.size(); j++) if(m_elec_pt[validElectrons[j]]<m_elec_pt[lowPtIndex]) swap(validElectrons[j], lowPtIndex);
-//        validElectrons.push_back(lowPtIndex);
-//    }
+    else if(m_Vtype==1)
+    {
+        for(Index i=0; i<m_nLeps; i++)
+        {
+//cout << "    EventHandler::evalCriteria(): ELEC Props (elec #, pt, eta, iso): = (" << i << ", " << m_lep_pt[i] << ", " << m_lep_eta[i] << ", " << m_lep_iso[i] << ")" << endl;
+          // Perform selection on this electron.
+            if(    m_lep_pt [i] < anCfg.elecPtMin
+                || (fabs(m_lep_eta[i])>anCfg.elecEtaInnerMax && (fabs(m_lep_eta[i])<anCfg.elecEtaOuterMin || fabs(m_lep_eta[i])>anCfg.elecEtaOuterMax))
+                //|| m_lep_iso[i] >anCfg.elecIsoMax
+              ) continue;
+          // Insert electron in list based on pt.
+            Index lowPtIndex = i;
+            for(int j=0; j<validLeptons.size(); j++) if(m_lep_pt[validLeptons[j]]<m_lep_pt[lowPtIndex]) swap(validLeptons[j], lowPtIndex);
+            validLeptons.push_back(lowPtIndex);
+        }
+    }
+
 
   // Check lepton id, isolation (TO IMPLEMENT. ALREADY DONE IN NTUPLER)
   //
 
   // Check for two valid muons, electrons. (Assume 0, 1 are leading and subleading.)
-    hasValidMuons =    validMuons.size() >=2   //  && m_Vtype==0
-                    && (m_muon_charge[validMuons[0]]*m_muon_charge[validMuons[1]]==-1 || !anCfg.dilepMuonReqOppSign )
-                    //&& isMuTriggered
-                    && m_Vtype==0
-    ;
+//    hasValidMuons =    validMuons.size() >=2   //  && m_Vtype==0
+//                    && (m_muon_charge[validMuons[0]]*m_muon_charge[validMuons[1]]==-1 || !anCfg.dilepMuonReqOppSign )
+//                    && isMuTriggered
+//                    && m_Vtype==0
+//    ;
 //    hasValidElectrons =    validElectrons.size()>=2 //&& m_Vtype==1
 //                        && (m_elec_charge[validElectrons[0]]*m_elec_charge[validElectrons[1]]==-1 || !anCfg.dilepElecReqOppSign )
 //                        && isElTriggered
 //    ;
+    hasValidMuons =    m_Vtype==0
+                    && isMuTriggered
+                    && validLeptons.size() >=2
+                    && (m_lep_charge[validLeptons[0]]*m_lep_charge[validLeptons[1]]==-1 || !anCfg.dilepMuonReqOppSign )
+    ;
+    hasValidElectrons =    m_Vtype==1
+                        && isElTriggered
+                        && validLeptons.size() >=2
+                        && (m_lep_charge[validLeptons[0]]*m_lep_charge[validLeptons[1]]==-1 || !anCfg.dilepElecReqOppSign )
+    ;
 
   // Calculate Z_DelR based on valid muons/electrons.
     Z_DelR = Z_DelPhi = Z_DelEta = -1;
-    if(hasValidMuons)
+    if(hasValidMuons || hasValidElectrons)
     {
-        Z_DelEta = fabs(m_muon_eta[validMuons[0]]-m_muon_eta[validMuons[1]]);
-        Z_DelPhi = fabs(m_muon_phi[validMuons[0]]-m_muon_phi[validMuons[1]]);
+        Z_DelEta = fabs(m_lep_eta[validLeptons[0]]-m_lep_eta[validLeptons[1]]);
+        Z_DelPhi = fabs(m_lep_phi[validLeptons[0]]-m_lep_phi[validLeptons[1]]);
         if(Z_DelPhi > TMath::Pi()) Z_DelPhi = 2.0*TMath::Pi() - Z_DelPhi;
         Z_DelR   = sqrt(Z_DelEta*Z_DelEta+Z_DelPhi*Z_DelPhi);
     }
@@ -343,9 +378,11 @@ void EventHandler::resetSelectionVariables()
       = hasValidZBosonMass = zBosonFromTaus = hasValidMET
       = isZpJEvent = isZHFEvent = hasBJet = hasCJet = false;
     leadBJet = leadCJet = 200;
-    validMuons.clear();
-    validElectrons.clear();
+//    validMuons.clear();
+//    validElectrons.clear();
+    validLeptons.clear();
     validJets.clear();
+    evtWeight = 1.0;
 }
 
 
@@ -362,4 +399,12 @@ void EventHandler::printJets()
         if(hasCJet) cout << "    Leading CJet = " << validJets[leadCJet] << endl;
     }
     cout << endl;
+}
+
+
+float EventHandler::calculatePUReweight(int i)  // Taking an input of the number of primary vertices (PV) in an event, calculated the reweighting factor for that event.
+{
+    if(i<0 || i>51) return 1;
+    return data2[i]/mc2[i];
+    // Use modded up/down arrays for up/down error calculation.
 }
