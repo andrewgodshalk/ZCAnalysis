@@ -1,6 +1,8 @@
 // templateFitter()
 // Fits templates to data, extracts the fraction of b/c/l from fit, and shows a plot.
 
+// 2016-09-01 - Modified to work with templates from different channels.
+
 #include <string>
 #include <sstream>
 
@@ -246,12 +248,12 @@ string templateFitter(TString plotName, TH1F* h_sample, TH1F* h_b, TH1F* h_c, TH
 
   // Create text box w/ ratios for each plot
 //    TLatex ratioLabel(0.65, 0.5, Form("#splitline{(Z+b):(Z+c):(Z+light)}{%2.0f:%2.0f:%2.0f}", sB*100,sC*100,sL*100));
-    TLatex ratioLabel;
-    ratioLabel.SetNDC(kTRUE);
-    ratioLabel.SetTextSize(0.04);
-    ratioLabel.DrawLatex(0.63, 0.57, "(Z+b):(Z+c):(Z+light)");
-    ratioLabel.DrawLatex(0.63, 0.52, Form("%0.0f:%0.0f:%0.0f", sB*100,sC*100,sL*100));
-    ratioLabel.Draw();
+    //TLatex ratioLabel;
+    //ratioLabel.SetNDC(kTRUE);
+    //ratioLabel.SetTextSize(0.04);
+    //ratioLabel.DrawLatex(0.63, 0.57, "(Z+b):(Z+c):(Z+light)");
+    //ratioLabel.DrawLatex(0.63, 0.52, Form("%0.0f:%0.0f:%0.0f", sB*100,sC*100,sL*100));
+    //ratioLabel.Draw();
 
 ////////////////////// CONTROL PLOT
   // Same thing, but with false-scaled templates
@@ -301,79 +303,119 @@ string templateFitter(TString plotName, TH1F* h_sample, TH1F* h_b, TH1F* h_c, TH
 }
 
 
-void getTemplatesFromRunIIFile(TString fn, TH1F*& h_b, TH1F*& h_c, TH1F*& h_l)
+void getTemplatesFromRunIIFile(TString fn, TH1F*& h_b, TH1F*& h_c, TH1F*& h_l, TString channel)
 {
+    void getTemplatesFromRunIIFile(TString, TH1F*&, TH1F*&, TH1F*&, TString);
     TFile* inputFile = TFile::Open(fn);
 
   // Pointers to file histograms
-    TH1F *hf_dy_b  , *hf_dy_c  , *hf_dy_l  ;  // dy temps
-    TH1F *hf_dy1j_b, *hf_dy1j_c, *hf_dy1j_l;  // dy1j temps
+    TH1F *hf_b1, *hf_c1, *hf_l1;  // Zuu or dy temps
+    TH1F *hf_b2, *hf_c2, *hf_l2;  // Zee or dy1j temps
 
-  // Get templates from file
-    inputFile->GetObject("control_plots/dy"  "/Zuu_Zb/zhfmet_CSVT_hfjet_ld_msv", hf_dy_b  );
-    inputFile->GetObject("control_plots/dy"  "/Zuu_Zc/zhfmet_CSVT_hfjet_ld_msv", hf_dy_c  );
-    inputFile->GetObject("control_plots/dy"  "/Zuu_Zl/zhfmet_CSVT_hfjet_ld_msv", hf_dy_l  );
-    inputFile->GetObject("control_plots/dy1j""/Zuu_Zb/zhfmet_CSVT_hfjet_ld_msv", hf_dy1j_b);
-    inputFile->GetObject("control_plots/dy1j""/Zuu_Zc/zhfmet_CSVT_hfjet_ld_msv", hf_dy1j_c);
-    inputFile->GetObject("control_plots/dy1j""/Zuu_Zl/zhfmet_CSVT_hfjet_ld_msv", hf_dy1j_l);
+  // If using combined channel, get templates for Zuu and Zee separately, then combine
+    if(channel == "Zll")
+    {
+      // Get templates for Zuu and Zee
+        getTemplatesFromRunIIFile(fn, hf_b1, hf_c1, hf_l1, "Zuu");
+        getTemplatesFromRunIIFile(fn, hf_b2, hf_c2, hf_l2, "Zee");
+    }
+    else
+    {
+      // Get templates from file for the specified channel
+        inputFile->GetObject("control_plots/dy"  "/"+channel+"_Zb/zhfmet_CSVT_hfjet_ld_msv", hf_b1);
+        inputFile->GetObject("control_plots/dy"  "/"+channel+"_Zc/zhfmet_CSVT_hfjet_ld_msv", hf_c1);
+        inputFile->GetObject("control_plots/dy"  "/"+channel+"_Zl/zhfmet_CSVT_hfjet_ld_msv", hf_l1);
+        inputFile->GetObject("control_plots/dy1j""/"+channel+"_Zb/zhfmet_CSVT_hfjet_ld_msv", hf_b2);
+        inputFile->GetObject("control_plots/dy1j""/"+channel+"_Zc/zhfmet_CSVT_hfjet_ld_msv", hf_c2);
+        inputFile->GetObject("control_plots/dy1j""/"+channel+"_Zl/zhfmet_CSVT_hfjet_ld_msv", hf_l2);
+    }
 
   // Add templates together to get final templates
-    h_b = (TH1F*) hf_dy_b->Clone("btemp");   h_b->Add(hf_dy1j_b);
-    h_c = (TH1F*) hf_dy_c->Clone("ctemp");   h_c->Add(hf_dy1j_c);
-    h_l = (TH1F*) hf_dy_l->Clone("ltemp");   h_l->Add(hf_dy1j_l);
+    h_b = (TH1F*) hf_b1->Clone("btemp");   h_b->Add(hf_b2);
+    h_c = (TH1F*) hf_c1->Clone("ctemp");   h_c->Add(hf_c2);
+    h_l = (TH1F*) hf_l1->Clone("ltemp");   h_l->Add(hf_l2);
 
   // Clean up
-    delete hf_dy_b  ;  delete hf_dy_c  ;  delete hf_dy_l  ;
-    delete hf_dy1j_b;  delete hf_dy1j_c;  delete hf_dy1j_l;
+    delete hf_b1;  delete hf_c1;  delete hf_l1;
+    delete hf_b2;  delete hf_c2;  delete hf_l2;
 
 }
 
-
-TH1F* getRunIISampleFromFile(TString fn)
+TH1F* getRunIISampleFromFile(TString fn, TString channel)
 {
-    TFile* inputFile = TFile::Open(fn);
+    TH1F* getRunIISampleFromFile(TString, TString);
 
   // Pointers to file histograms
     TH1F *h_sample; // Pointer to final sample histogram.
-    TH1F *h_data ;  // Data histogram to fit.
-    TH1F *h_ttlep;  // Backgrounds to subtract.
-    TH1F *h_ww   ;
-    TH1F *h_wz   ;
-    TH1F *h_zz   ;
 
-  // Get templates from file
-    inputFile->GetObject("control_plots/muon"  "/Zuu/zhfmet_CSVT_hfjet_ld_msv", h_data );   h_data ->Sumw2();
-    inputFile->GetObject("control_plots/tt_lep""/Zuu/zhfmet_CSVT_hfjet_ld_msv", h_ttlep);   h_ttlep->Sumw2();
-    inputFile->GetObject("control_plots/ww"    "/Zuu/zhfmet_CSVT_hfjet_ld_msv", h_ww   );   h_ww   ->Sumw2();
-    inputFile->GetObject("control_plots/wz"    "/Zuu/zhfmet_CSVT_hfjet_ld_msv", h_wz   );   h_wz   ->Sumw2();
-    inputFile->GetObject("control_plots/zz"    "/Zuu/zhfmet_CSVT_hfjet_ld_msv", h_zz   );   h_zz   ->Sumw2();
-    cout << h_data->GetTitle() << endl;
+  // If looking for the combined channel, get Zuu and Zll and returned combined
+    if(channel == "Zll")
+    {
+      // Get Zuu and Zll histograms
+        TH1F *h_zuu = getRunIISampleFromFile(fn, "Zuu");
+        TH1F *h_zee = getRunIISampleFromFile(fn, "Zee");
+        h_sample = (TH1F*) h_zuu->Clone("data_m_bkgd_"+channel);
+        h_sample->Add(h_zee);
+//        h_sample->Sumw2();
+    }
 
-  // Scale backgrounds and subtract from sample
-    gROOT->cd();
-    h_sample = (TH1F*) h_data->Clone("data_m_bkgd");  h_sample->Sumw2();
-    cout << h_sample->GetTitle() << endl;
+  // If looking for an individual channel, get the appropriate data histogram and subtract its bkgd contributions.
+    else
+    {
+      // Set the appropriate dataset name based on channel
+        TString setname;
+        if(channel=="Zuu") setname = "muon";
+        if(channel=="Zee") setname = "elec";
+        TFile* inputFile = TFile::Open(fn);
+        TH1F *h_data ;  // Data histogram to fit.
+        TH1F *h_ttlep;  // Backgrounds to subtract.
+        TH1F *h_ww   ;
+        TH1F *h_wz   ;
+        TH1F *h_zz   ;
 
-    h_ttlep->Scale(0.0485392103);   h_sample->Add(h_ttlep, -1.0);
-    h_ww   ->Scale(0.3310214179);   h_sample->Add(h_ww   , -1.0);
-    h_wz   ->Scale(0.1347394468);   h_sample->Add(h_wz   , -1.0);
-    h_zz   ->Scale(0.0388934253);   h_sample->Add(h_zz   , -1.0);
+      // Get templates from file
+        inputFile->GetObject("control_plots/"+setname+"/"+channel+"/zhfmet_CSVT_hfjet_ld_msv", h_data );   h_data ->Sumw2();
+        inputFile->GetObject("control_plots/tt_lep"   "/"+channel+"/zhfmet_CSVT_hfjet_ld_msv", h_ttlep);   h_ttlep->Sumw2();
+        inputFile->GetObject("control_plots/ww"       "/"+channel+"/zhfmet_CSVT_hfjet_ld_msv", h_ww   );   h_ww   ->Sumw2();
+        inputFile->GetObject("control_plots/wz"       "/"+channel+"/zhfmet_CSVT_hfjet_ld_msv", h_wz   );   h_wz   ->Sumw2();
+        inputFile->GetObject("control_plots/zz"       "/"+channel+"/zhfmet_CSVT_hfjet_ld_msv", h_zz   );   h_zz   ->Sumw2();
+        cout << h_data->GetTitle() << endl;
 
-  // Look for bins w/ values < 0.
-//    int nBins = h_sample->GetNbinsX();
-//    for(int i=0; i<=nBins+1; i++)
-//        if(h_sample->GetBinContent(i)<0)
-//            h_sample->SetBinContent(i, 0.0);
 
-  // Clean up
-    inputFile->Close();
-    cout << h_sample->GetTitle() << endl;
+      // Scale backgrounds and subtract from sample
+        gROOT->cd();
+        h_sample = (TH1F*) h_data->Clone("data_m_bkgd_"+channel);  h_sample->Sumw2();
+
+        h_ttlep->Scale(0.0485392103);   h_sample->Add(h_ttlep, -1.0);
+        h_ww   ->Scale(0.3310214179);   h_sample->Add(h_ww   , -1.0);
+        h_wz   ->Scale(0.1347394468);   h_sample->Add(h_wz   , -1.0);
+        h_zz   ->Scale(0.0388934253);   h_sample->Add(h_zz   , -1.0);
+
+        cout << "TEST: Plot numbers dump for channel " << channel << "\n"
+             << "        ttlep: Entries=" << setw(8) << h_ttlep ->GetEntries() << ", Integral=" << setw(8) << h_ttlep ->Integral() << "\n"
+             << "           ww: Entries=" << setw(8) << h_ww    ->GetEntries() << ", Integral=" << setw(8) << h_ww    ->Integral() << "\n"
+             << "           wz: Entries=" << setw(8) << h_wz    ->GetEntries() << ", Integral=" << setw(8) << h_wz    ->Integral() << "\n"
+             << "           zz: Entries=" << setw(8) << h_zz    ->GetEntries() << ", Integral=" << setw(8) << h_zz    ->Integral() << "\n"
+             << "         data: Entries=" << setw(8) << h_data  ->GetEntries() << ", Integral=" << setw(8) << h_data  ->Integral() << "\n"
+             << "  data_m_bkgd: Entries=" << setw(8) << h_sample->GetEntries() << ", Integral=" << setw(8) << h_sample->Integral() << "\n"
+             << endl;
+
+
+      // Clean up
+        delete h_data ;   delete h_ttlep;
+        delete h_ww   ;   delete h_wz   ;   delete h_zz;
+        inputFile->Close();
+}
+
+    //cout << h_sample->GetTitle() << endl;
     return h_sample;
 }
 
 
 
 
+/*  OLD FUNCTIONS
+ *
 
 
 
@@ -466,3 +508,4 @@ TH1F* getSampleFromOldFile()
     cout << h_sample->GetTitle() << endl;
     return h_sample;
 }
+*/
