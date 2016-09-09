@@ -1,6 +1,7 @@
 # Make file for ZCAnalysis/NtupleProcessor package
 
-CC=g++
+#CC=g++
+CC=g++-4.9
 CFLAGS=-c -Wall 
 ROOTFLAGS=`root-config --cflags --glibs`
 OBJDIR=NtupleProcessor/obj

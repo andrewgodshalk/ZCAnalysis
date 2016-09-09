@@ -5,7 +5,7 @@
    NtupleProcConfig Class
 
  Created : 2015-09-15  godshalk
- Modified: 2015-10-28  godshalk
+ Modified: 2016-09-08  godshalk
 
  Class designed to contain and provide standard variables for NtupleProcessor
  and EntryHandler classes.
@@ -36,6 +36,8 @@ class NtupleProcConfig : public ConfigReader
     int         maxNumElecs     =  100      ;
 
     std::vector<TString> hExtractorStrs; // List of histogram extracters requested by config.
+
+    //std::map<TString, LeptonSFData> lepSFs;  // List of lepton scale factor storage objects, input from json files.
 
 };
 

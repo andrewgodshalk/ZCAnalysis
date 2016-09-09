@@ -2,8 +2,9 @@
 NtupleProcConfig.cpp
 
  Created : 2015-09-15  godshalk
- Modified: 2015-11-09  godshalk
+ Modified: 2016-09-08  godshalk
 
+ 2016-09-09 - Added LeptonSF classes, which input Lepton SFs from json files.
 ------------------------------------------------------------------------------*/
 
 #include <iostream>
@@ -80,5 +81,7 @@ NtupleProcConfig::NtupleProcConfig(TString fnc)
   // Extract HistogramExtractors
     boost::property_tree::ptree extList = pt.get_child("HISTOGRAM EXTRACTORS");
     for( const auto& kv : extList) hExtractorStrs.push_back(kv.second.data());
+
+    //lepSF
 
 }

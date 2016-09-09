@@ -7,6 +7,7 @@ ControlPlotMaker.cpp
 ------------------------------------------------------------------------------*/
 
 #include <algorithm>
+#include <iomanip>
 #include <iostream>
 #include <list>
 #include <TCanvas.h>
@@ -18,7 +19,8 @@ ControlPlotMaker.cpp
 
 using std::cout;   using std::string;
 using std::endl;   using std::vector;
-using std::map;    using std::list;
+using std::map ;   using std::list  ;
+using std::setw;
 
 ControlPlotMaker::ControlPlotMaker(TString fnac, TString fni, TString fno, TString o, bool log, bool flv, bool tau, bool eps)
  : anCfg(fnac), fnInput(fni), fnOutput(fno), options(o), usingLogScale(log), splitDYByFlavor(flv), splitTauDecayFromDY(tau), outputAsEPS(eps), usingLegStats(true)
@@ -87,8 +89,7 @@ ControlPlotMaker::ControlPlotMaker(TString fnac, TString fni, TString fno, TStri
         {
             TString histToStack = hist->GetName();
 
-if(histToStack!="zpjmet_dilepton_mass") continue;
-
+//if(histToStack!="zhfmet_CSVT_hfjet_ld_msv") continue;
 
        cout << "    ControlPlotMaker::ControlPlotMaker(): Processing histo: " << hist->GetName() << endl;
           // Iterate through each dataset and:
@@ -98,8 +99,9 @@ if(histToStack!="zpjmet_dilepton_mass") continue;
             map<string, float> dsIntegral;
             list<string> dsOrder;
             for(auto& ds_h : dsHist) dsIntegral[ds_h.first] = ds_h.second->Integral();
-            for(auto& ds_n : dsIntegral) cout << "    ControlPlotMaker::ControlPlotMaker(): " << ds_n.first << " has integral of " << ds_n.second << endl;
-            for(auto& ds : allDatasets)  cout << "    ControlPlotMaker::ControlPlotMaker(): " << ds << " has integral of " << dsIntegral[ds] << " (" << dsHist[ds]->Integral() << ")" << endl;
+//            for(auto& ds_n : dsIntegral) cout << "    ControlPlotMaker::ControlPlotMaker(): " << ds_n.first << " has integral of " << ds_n.second << endl;
+//            for(auto& ds : allDatasets)  cout << "    ControlPlotMaker::ControlPlotMaker(): " << setw(12) << ds << " has integral of " << dsIntegral[ds] << " (" << dsHist[ds]->Integral() << "," << dsHist[ds]->GetEntries() << ")" << endl;
+//            for(auto& ds : allDatasets)  cout << "  " << setw(12) << ds << setw(10) << dsIntegral[ds] << setw(10) << dsHist[ds]->Integral() << setw(10) << dsHist[ds]->GetEntries() << endl;
             for(auto& ds_n : dsIntegral)
             {
                 if(ds_n.first=="muon" || ds_n.first=="elec" || ds_n.second < 10) continue;
@@ -236,12 +238,16 @@ void ControlPlotMaker::setDatasetDir(string ds, string decayChain)
     cout << "    - Retrieved directory: " <<  dsDirectory[ds]->GetTitle() << endl;
 }
 
+
 TH1* ControlPlotMaker::createStackHisto(string& ds, TString& histName)
 { // Sets up a histogram from file given the proper dataset and histogram name.
   // Create a clone to the appropriate histogram,
     TH1* h = (TH1*)(dsDirectory[ds]->Get(histName)->Clone(ds+"_"+histName));
-  // Set color/fill/etc
-  // Scale each clone by set weight if ds is a sim set.
+
+  // If hist is at the zhf level, rebin to make it a bit more reasonable.
+    if(histName(0,3)=="zhf" && !histName.Contains("mult")) h->Rebin(3);
+
+  // Set color/fill/etc. Scale each clone by set weight if ds is a sim set.
     if(ds=="muon" || ds=="elec")
     {
         h->SetMarkerStyle(8);
@@ -256,14 +262,15 @@ TH1* ControlPlotMaker::createStackHisto(string& ds, TString& histName)
         if(ds=="dy_tautau" || ds=="dy_Zl" || ds=="dy_Zc" || ds=="dy_Zb" ) h->Scale(anCfg.setWeight["dy"]);
         else                                                              h->Scale(anCfg.setWeight[ ds ]);
       // Set scale factor for tagging.
-        if(histName.Contains("CSVL")) h->Scale(anCfg.flatHFTagSF["CSVL"]);
-        if(histName.Contains("CSVM")) h->Scale(anCfg.flatHFTagSF["CSVM"]);
-        if(histName.Contains("CSVT")) h->Scale(anCfg.flatHFTagSF["CSVT"]);
-        if(histName.Contains("CSVS")) h->Scale(anCfg.flatHFTagSF["CSVS"]);
+//        if(histName.Contains("CSVL")) h->Scale(anCfg.flatHFTagSF["CSVL"]);
+//        if(histName.Contains("CSVM")) h->Scale(anCfg.flatHFTagSF["CSVM"]);
+//        if(histName.Contains("CSVT")) h->Scale(anCfg.flatHFTagSF["CSVT"]);
+//        if(histName.Contains("CSVS")) h->Scale(anCfg.flatHFTagSF["CSVS"]);
     }
 
 return h;
 }
+
 
 TH1F* ControlPlotMaker::createRatioPlot(TH1F* num, TH1F* denom)
 {

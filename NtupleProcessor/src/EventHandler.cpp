@@ -14,6 +14,7 @@
 #include <TLeaf.h>
 #include <TMath.h>
 #include "../interface/EventHandler.h"
+//#include "../interface/LeptonSF.h"
 
 using std::cout;   using std::endl;   using std::vector;   using std::swap;
 using std::setw;   using std::setprecision;
@@ -182,7 +183,7 @@ void EventHandler::evalCriteria()
   // Calculate the event weight.
     if(usingSim)
     {
-        evtWeight *= calculatePUReweight(m_nPVs);
+//        evtWeight *= calculatePUReweight(m_nPVs);
     }
 
   // Check JSON if working with a data event.
@@ -283,13 +284,13 @@ void EventHandler::evalCriteria()
         if(Z_DelPhi > TMath::Pi()) Z_DelPhi = 2.0*TMath::Pi() - Z_DelPhi;
         Z_DelR   = sqrt(Z_DelEta*Z_DelEta+Z_DelPhi*Z_DelPhi);
     }
-//    else if(hasValidElectrons)
+
+  // Calculate
+//    if(usingSim)
 //    {
-//        Z_DelEta = fabs(m_elec_eta[validElectrons[0]]-m_elec_eta[validElectrons[1]]);
-//        Z_DelPhi = fabs(m_elec_phi[validElectrons[0]]-m_elec_phi[validElectrons[1]]);
-//        if(Z_DelPhi > TMath::Pi()) Z_DelPhi -= TMath::Pi();
-//        Z_DelR   = sqrt(Z_DelEta*Z_DelEta+Z_DelPhi*Z_DelPhi);
+//        evtWeight *=
 //    }
+
 
     hasValidZBosonMass = m_Z_mass>=anCfg.dilepInvMassMin && m_Z_mass<=anCfg.dilepInvMassMax;
     hasValidMET        = m_MET_et<=anCfg.metMax;
