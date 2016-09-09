@@ -25,23 +25,29 @@
 ------------------------------------------------------------------------------*/
 
 #include <string>
+#include <utility>
 #include <boost/property_tree/ptree.hpp>
 
 class LeptonSFData
 {
   public:
-    LeptonSFData(std::string, std::string, std::string);  // Primary constructor.
+    LeptonSFData(std::string, std::string, std::string, bool efcb = true);  // Primary constructor.
    ~LeptonSFData(){}
 
-   bool loadJSONFromFile(std::string);   // Attempts to SFs from file into a property tree.
+    bool loadJSONFromFile(std::string);                // Attempts to SFs from file into a property tree.
+    std::pair<double, double> getSF(double, double);   // Get the lepton scale factor based on its pt and eta.
 
   private:
-    boost::property_tree::ptree sfPropTree;    // Boost property tree containing contents of SF JSON file.
+    std::pair<float, float> getRangeFromKey(const std::string&);
+        // Returns pair of numbers indicating a range from a string formatted like so: "label:[NUM,NUM]"
+
+    boost::property_tree::ptree sfPropTree_;    // Boost property tree containing contents of SF JSON file.
 
     std::string jsonFileName_ ;
     std::string leptonType_   ;
     std::string binningPref_  ;
 
+    bool extrapolateFromClosestBin_;
     bool populated_;
 };
 

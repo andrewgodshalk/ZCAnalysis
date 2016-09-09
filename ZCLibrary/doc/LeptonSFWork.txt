@@ -1,0 +1,55 @@
+Created 2016-09-09
+Updated 2016-09-09
+
+Muon:
+  see https://twiki.cern.ch/twiki/bin/viewauth/CMS/MuonReferenceEffsRun2
+
+Muon TRK Eff: Consistent w/ 1. (see https://twiki.cern.ch/twiki/bin/view/CMS/MuonReferenceEffsRun2#Tracking_efficiency_provided_by)
+
+Muon ID:
+	File: MuonID_Z_RunCD_Reco76X_Feb15.json
+	Type: MC_NUM_TightID_DEN_genTracks_PAR_pt_spliteta_bin1
+	Pref: abseta_pt_ratio
+  Type above not present in VHbb file, using instead: MC_NUM_TightIDandIPCut_DEN_genTracks_PAR_pt_spliteta_bin1
+
+Muon Iso:
+	File: MuonIso_Z_RunCD_Reco76X_Feb15.json
+	Type: MC_NUM_TightRelIso_DEN_TightID_PAR_pt_spliteta_bin1
+	Pref: abseta_pt_ratio
+
+Muon Trig:
+	File: SingleMuonTrigger_Z_RunCD_Reco76X_Feb15.json
+	Type:  runC_IsoMu20_OR_IsoTkMu20_PtEtaBins           (runC)
+	  *OR* runD_IsoMu20_OR_IsoTkMu20_HLTv4p2_PtEtaBins   (runD, run<257933)
+	  *OR* runD_IsoMu20_OR_IsoTkMu20_HLTv4p3_PtEtaBins   (runD, run>=257933)
+	Pref: abseta_pt_ratio
+
+Triggers used:
+        "HLT_BIT_HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_v",
+        "HLT_BIT_HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_v",
+(Used IsoMu20. Lowest pt trigger available)
+
+Systematic errors: Additional 1% for ID + 0.5% for Isolation, + 0.5% for single muon triggers to be applyied on top of statistical errors from files
+- Should cancel out in ratio.
+
+TO DO:
+- Find percentages of muon selection resulting from datasets runC / runD<257933 / runD>=257933
+- Average scale factors based on these percentages into a BRAND NEW JSON MESS!!
+
+------------------
+
+Electron:
+Some notes found at: https://twiki.cern.ch/twiki/bin/view/CMS/CutBasedElectronIdentificationRun2
+Specifics on scale factors found in presentation given by Arun Kumar (see VHbbUtils page https://twiki.cern.ch/twiki/bin/viewauth/CMS/VHiggsBBCodeUtils)
+Triggers used:
+        "HLT_BIT_HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v",
+
+For now: 
+CutBasedID_TightWP.json
+
+Then try:
+ScaleFactor_GsfElectronToRECO_passingTrigWP80.json
+ScaleFactor_HLT_Ele23_WPLoose_Gsf_v.json
+
+
+

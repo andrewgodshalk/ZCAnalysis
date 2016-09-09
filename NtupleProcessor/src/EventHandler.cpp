@@ -8,16 +8,16 @@
 #include <algorithm>
 #include <iomanip>
 #include <iostream>
+#include <string>
 #include <utility>
 #include <vector>
 #include <TBranch.h>
 #include <TLeaf.h>
 #include <TMath.h>
 #include "../interface/EventHandler.h"
-//#include "../interface/LeptonSF.h"
 
 using std::cout;   using std::endl;   using std::vector;   using std::swap;
-using std::setw;   using std::setprecision;
+using std::setw;   using std::setprecision;   using std::string;
 
 EventHandler::EventHandler(TString fnac, TString o) : anCfg(fnac), options(o)
 {
@@ -285,11 +285,23 @@ void EventHandler::evalCriteria()
         Z_DelR   = sqrt(Z_DelEta*Z_DelEta+Z_DelPhi*Z_DelPhi);
     }
 
-  // Calculate
-//    if(usingSim)
-//    {
-//        evtWeight *=
-//    }
+  // Calculate Event Weight
+    if(usingSim)
+    {
+        string lType="";
+        if( hasValidElectrons) lType="elec";
+        if( hasValidMuons    ) lType="muon";
+        if( lType!="" )
+        {
+            evtWeight *= anCfg.lepSFs[lType+"_sf_id"  ].getSF(m_lep_pt[validLeptons[0]],m_lep_eta[validLeptons[0]]).first;
+            evtWeight *= anCfg.lepSFs[lType+"_sf_id"  ].getSF(m_lep_pt[validLeptons[1]],m_lep_eta[validLeptons[1]]).first;
+            evtWeight *= anCfg.lepSFs[lType+"_sf_iso" ].getSF(m_lep_pt[validLeptons[0]],m_lep_eta[validLeptons[0]]).first;
+            evtWeight *= anCfg.lepSFs[lType+"_sf_iso" ].getSF(m_lep_pt[validLeptons[1]],m_lep_eta[validLeptons[1]]).first;
+            evtWeight *= anCfg.lepSFs[lType+"_sf_trig"].getSF(m_lep_pt[validLeptons[0]],m_lep_eta[validLeptons[0]]).first;
+            evtWeight *= anCfg.lepSFs[lType+"_sf_trig"].getSF(m_lep_pt[validLeptons[1]],m_lep_eta[validLeptons[1]]).first;
+            //cout << "     SF TEST!! " << lType << ", " << evtWeight << endl;
+        }
+    }
 
 
     hasValidZBosonMass = m_Z_mass>=anCfg.dilepInvMassMin && m_Z_mass<=anCfg.dilepInvMassMax;

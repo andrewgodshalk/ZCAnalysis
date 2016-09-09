@@ -5,8 +5,8 @@ CFLAGS=-c -Wall
 ROOTFLAGS=`root-config --cflags --glibs`
 OBJDIR=obj
 OBJS=$(OBJDIR)/main.o $(OBJDIR)/LeptonSFData.o
-HDRDIR=.
-SRCDIR=.
+HDRDIR=../../interface
+SRCDIR=../../src
 
 leptonSF_test : createObjDir leptonSF_test.exe
 
@@ -23,4 +23,4 @@ $(OBJDIR)/LeptonSFData.o : $(SRCDIR)/LeptonSFData.cpp $(HDRDIR)/LeptonSFData.h
 	$(CC) $(CFLAGS) $(SRCDIR)/LeptonSFData.cpp -o $(OBJDIR)/LeptonSFData.o $(ROOTFLAGS)
 
 clean :
-	rm $(OBJS) LeptonSFData.exe
+	rm $(OBJS) leptonSF_test.exe

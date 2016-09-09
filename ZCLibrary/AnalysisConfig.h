@@ -20,6 +20,7 @@
 #include <vector>
 #include <TString.h>
 #include "../ZCLibrary/ConfigReader.h"
+#include "../ZCLibrary/LeptonSFData.h"
 
 class AnalysisConfig : public ConfigReader
 {
@@ -56,6 +57,8 @@ class AnalysisConfig : public ConfigReader
     std::vector<std::pair<float,float> > jetPtBins              ;
     std::vector<std::pair<float,float> > jetEtaBins             ;
     std::vector<std::pair<float,float> > dileptonPtBins         ;
+
+    std::map<std::string, LeptonSFData> lepSFs;  // List of lepton scale factor storage objects, input from json files.
 
   private: 
     void processBinString(std::vector<std::pair<float,float> >&, std::string&);  // For processing input string of bin variables. Outputs set of pairs with integrated pair first.

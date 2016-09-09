@@ -82,6 +82,4 @@ NtupleProcConfig::NtupleProcConfig(TString fnc)
     boost::property_tree::ptree extList = pt.get_child("HISTOGRAM EXTRACTORS");
     for( const auto& kv : extList) hExtractorStrs.push_back(kv.second.data());
 
-    //lepSF
-
 }

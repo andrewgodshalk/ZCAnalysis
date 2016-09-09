@@ -37,8 +37,6 @@ class NtupleProcConfig : public ConfigReader
 
     std::vector<TString> hExtractorStrs; // List of histogram extracters requested by config.
 
-    //std::map<TString, LeptonSFData> lepSFs;  // List of lepton scale factor storage objects, input from json files.
-
 };
 
 
