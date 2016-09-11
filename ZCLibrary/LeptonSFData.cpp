@@ -13,6 +13,7 @@ LeptonSFData.cpp
 #include "LeptonSFData.h"                        // Class header
 #include <algorithm>                             // STL
 #include <iostream>
+#include "json_parser_read.hpp"   // Boost libs
 #include <boost/property_tree/json_parser.hpp>   // Boost libs
 
 using std::cout;   using std::cerr;     using std::pair;

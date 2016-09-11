@@ -2,6 +2,7 @@
 
 CC=g++
 #CC=g++-4.9
+#CFLAGS=-std=c++14 -c -Wall 
 CFLAGS=-c -Wall 
 ROOTFLAGS=`root-config --cflags --glibs`
 OBJDIR=NtupleProcessor/obj
@@ -47,7 +48,7 @@ $(OBJDIR)/AnalysisConfig.o : $(LIBDIR)/AnalysisConfig.cpp $(LIBDIR)/AnalysisConf
 	$(CC) $(CFLAGS) $(LIBDIR)/AnalysisConfig.cpp -o $(OBJDIR)/AnalysisConfig.o $(ROOTFLAGS)
 
 $(OBJDIR)/LeptonSFData.o : $(LIBDIR)/LeptonSFData.h $(LIBDIR)/LeptonSFData.cpp
-	$(CC) $(CFLAGS) $(LIBDIR)/LeptonSFData.cpp -o $(OBJDIR)/LeptonSFData.o $(ROOTFLAGS)
+	$(CC) $(CFLAGS) $(LIBDIR)/LeptonSFData.cpp -o $(OBJDIR)/LeptonSFData.o $(ROOTFLAGS) -lboost_program_options
 
 $(OBJDIR)/ControlPlotConfig.o : $(SRCDIR)/ControlPlotConfig.cpp $(HDRDIR)/ControlPlotConfig.h $(LIBDIR)/ConfigReader.h
 	$(CC) $(CFLAGS) $(SRCDIR)/ControlPlotConfig.cpp -o $(OBJDIR)/ControlPlotConfig.o $(ROOTFLAGS)
