@@ -2,18 +2,23 @@
 LeptonSFData.cpp
 
  Created : 2016-09-08  godshalk
- Modified: 2016-09-09  godshalk
+ Modified: 2016-09-11  godshalk
 
  TO DO: Make a function to search tree for the correct bin range. Used twice,
    for pt and eta.
    - Have function return NULL if no extrapolation, iterator (or bin?) otherwise?
 
+2016-09-11 - 
+  Added an include for json_parser_read header file, included in the ZCLibrary
+  directory. LPC boost libraries are out of date and contain a bug that prevents
+  the read-in of json files. Header is a bandaid that needs to be uncommented 
+  when compiling on LPC.
 ------------------------------------------------------------------------------*/
 
 #include "LeptonSFData.h"                        // Class header
 #include <algorithm>                             // STL
 #include <iostream>
-#include "json_parser_read.hpp"   // Boost libs
+//#include "json_parser_read.hpp"   // Boost libs
 #include <boost/property_tree/json_parser.hpp>   // Boost libs
 
 using std::cout;   using std::cerr;     using std::pair;
