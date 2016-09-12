@@ -4,10 +4,9 @@ CC=g++
 CFLAGS=-c -Wall 
 ROOTFLAGS=`root-config --cflags --glibs`
 
-#all : NtupleProcessor #ControlPlotMaker EffPlotAndCalc CombineBCLTemplates
-all : NtupleProcessor
+all : NtupleProcessor ControlPlotMaker EffPlotAndCalc CombineBCLTemplates
 	make -f NtupleProcessor/makefile
-#	make -f ControlPlotMaker/makefile
+	make -f ControlPlotMaker/makefile
 
 EffPlotAndCalc :
 	$(CC) EffPlotAndCalc.cpp -o EffPlotAndCalc.exe $(ROOTFLAGS) -lboost_program_options
