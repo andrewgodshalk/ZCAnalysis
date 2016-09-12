@@ -11,3 +11,7 @@ To compile all code:
 ```
 make all
 ```
+
+```
+tar czv --file=zcfiles.tgz --files-from=files_to_tar.txt
+```
