@@ -63,7 +63,7 @@ bool EventHandler::mapTree(TTree* tree)
         "V_eta" , "vLeptons_phi"       , "Jet_phi"    ,
         "V_phi" , "vLeptons_charge"    , "Jet_btagCSV",
         "json"  , "vLeptons_pfRelIso04", "Jet_vtxMass",
-        "evt"   ,                        "Jet_mcFlavour",
+        "evt"   ,
         "htJet30"    ,
         "mhtJet30"   ,
         "mhtPhiJet30",
@@ -72,6 +72,7 @@ bool EventHandler::mapTree(TTree* tree)
         "HLT_BIT_HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v",
         "nPVs"
     };
+    if(usingSim) branches_to_reactivate.push_back("Jet_mcFlavour");
 
  for(TString br : branches_to_reactivate) tree->SetBranchStatus(br.Data(), 1);
 
@@ -134,6 +135,7 @@ bool EventHandler::mapTree(TTree* tree)
     tree->SetBranchAddress( "Jet_phi"        ,  m_jet_phi     );
     tree->SetBranchAddress( "Jet_btagCSV"    ,  m_jet_csv     );
     tree->SetBranchAddress( "Jet_vtxMass"    ,  m_jet_msv     );
+if(usingSim)
     tree->SetBranchAddress( "Jet_mcFlavour"  ,  m_jet_flv     );
 //    tree->SetBranchAddress( "Jet_id"         ,  m_jet_flv     );
 
