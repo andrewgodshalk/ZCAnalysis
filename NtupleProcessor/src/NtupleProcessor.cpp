@@ -111,8 +111,8 @@ void NtupleProcessor::createHistogramExtractorFromString(TString& inputString)
     vector<TString> dsOptions;
 
     // For each sim set, split by Zuu and Zee
-    if(dataset=="muon" || usingSim) dsOptions.push_back("Zuu");
-    if(dataset=="elec" || usingSim) dsOptions.push_back("Zee");
+    if(dataset.Contains("muon") || usingSim) dsOptions.push_back("Zuu");
+    if(dataset.Contains("elec") || usingSim) dsOptions.push_back("Zee");
     // For DY, split by {Zuu, Zee}x{Total, Ztautau, Z+l, Z+c, Z+b}
     if(usingDY)
     {
