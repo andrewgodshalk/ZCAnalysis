@@ -28,6 +28,8 @@
 #include <utility>
 //#include "json_parser_read.hpp"
 #include <boost/property_tree/ptree.hpp>
+#include <TFile.h>
+#include <TH2D.h>
 
 class LeptonSFData
 {
@@ -45,12 +47,25 @@ class LeptonSFData
 
     boost::property_tree::ptree sfPropTree_;    // Boost property tree containing contents of SF JSON file.
 
-    std::string jsonFileName_ ;
-    std::string leptonType_   ;
-    std::string binningPref_  ;
+    std::string sfFileName_ ;
+    std::string leptonType_ ;
+    std::string binningPref_;
 
     bool extrapolateFromClosestBin_;
-    bool populated_;
+    bool jsonTreePopulated_;
+    bool loadFromJSONSuccessful_;
+    bool loadFromROOTSuccessful_;
+
+    // Max bins. Only valid when working with ROOT file.
+    int   histEtaMaxBin_;        // Max bin of histogram eta axis.
+    int   histPtMaxBin_ ;        // Max bin of histogram pt axis.
+
+  // Root objects.
+    // RECEIVING SEG FAULTS IF THEY AREN'T ADDED AT END OF CLASS DEF. SOMETHING TO LOOK INTO, MAYBE?
+    TFile* f_sfFile_ = 0;                       // ROOT file containing SF.
+    TH2D* h_sfHisto_ = 0;                       // 2D histogram containing sf.
+
+
 };
 
 #endif

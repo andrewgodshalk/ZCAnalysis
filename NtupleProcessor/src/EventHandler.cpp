@@ -295,15 +295,15 @@ void EventHandler::evalCriteria()
         if( hasValidMuons    ) lType="muon";
         if( lType!="" )
         {
-//            evtWeight *= anCfg.lepSFs[lType+"_sf_trk" ].getSF(m_lep_pt[validLeptons[0]],m_lep_eta[validLeptons[0]]).first;
-//            evtWeight *= anCfg.lepSFs[lType+"_sf_trk" ].getSF(m_lep_pt[validLeptons[1]],m_lep_eta[validLeptons[1]]).first;
-//            evtWeight *= anCfg.lepSFs[lType+"_sf_id"  ].getSF(m_lep_pt[validLeptons[0]],m_lep_eta[validLeptons[0]]).first;
-//            evtWeight *= anCfg.lepSFs[lType+"_sf_id"  ].getSF(m_lep_pt[validLeptons[1]],m_lep_eta[validLeptons[1]]).first;
-//            evtWeight *= anCfg.lepSFs[lType+"_sf_iso" ].getSF(m_lep_pt[validLeptons[0]],m_lep_eta[validLeptons[0]]).first;
-//            evtWeight *= anCfg.lepSFs[lType+"_sf_iso" ].getSF(m_lep_pt[validLeptons[1]],m_lep_eta[validLeptons[1]]).first;
-//            evtWeight *= anCfg.lepSFs[lType+"_sf_trig"].getSF(m_lep_pt[validLeptons[0]],m_lep_eta[validLeptons[0]]).first;
-//            evtWeight *= anCfg.lepSFs[lType+"_sf_trig"].getSF(m_lep_pt[validLeptons[1]],m_lep_eta[validLeptons[1]]).first;
-//            cout << "     SF TEST!! " << lType << ", " << evtWeight << endl;
+            evtWeight *= anCfg.lepSFs[lType+"_sf_trk" ].getSF(m_lep_pt[validLeptons[0]],m_lep_eta[validLeptons[0]]).first;
+            evtWeight *= anCfg.lepSFs[lType+"_sf_trk" ].getSF(m_lep_pt[validLeptons[1]],m_lep_eta[validLeptons[1]]).first;
+            evtWeight *= anCfg.lepSFs[lType+"_sf_id"  ].getSF(m_lep_pt[validLeptons[0]],m_lep_eta[validLeptons[0]]).first;
+            evtWeight *= anCfg.lepSFs[lType+"_sf_id"  ].getSF(m_lep_pt[validLeptons[1]],m_lep_eta[validLeptons[1]]).first;
+            evtWeight *= anCfg.lepSFs[lType+"_sf_iso" ].getSF(m_lep_pt[validLeptons[0]],m_lep_eta[validLeptons[0]]).first;
+            evtWeight *= anCfg.lepSFs[lType+"_sf_iso" ].getSF(m_lep_pt[validLeptons[1]],m_lep_eta[validLeptons[1]]).first;
+            evtWeight *= anCfg.lepSFs[lType+"_sf_trig"].getSF(m_lep_pt[validLeptons[0]],m_lep_eta[validLeptons[0]]).first;
+            evtWeight *= anCfg.lepSFs[lType+"_sf_trig"].getSF(m_lep_pt[validLeptons[1]],m_lep_eta[validLeptons[1]]).first;
+            cout << "     SF TEST!! " << lType << ", " << evtWeight << endl;
         }
     }
 

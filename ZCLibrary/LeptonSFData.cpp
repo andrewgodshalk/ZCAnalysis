@@ -2,7 +2,7 @@
 LeptonSFData.cpp
 
  Created : 2016-09-08  godshalk
- Modified: 2016-09-11  godshalk
+ Modified: 2016-09-14  godshalk
 
  TO DO: Make a function to search tree for the correct bin range. Used twice,
    for pt and eta.
@@ -26,27 +26,29 @@ using std::endl;   using std::string;   using std::min;
 using boost::property_tree::ptree;
 
 LeptonSFData::LeptonSFData()
-: jsonFileName_(""), leptonType_(""), binningPref_(""), extrapolateFromClosestBin_(true), populated_(false)
+: sfFileName_(""), leptonType_(""), binningPref_(""), extrapolateFromClosestBin_(true), jsonTreePopulated_(false),
+  loadFromJSONSuccessful_(false), loadFromROOTSuccessful_(false), histEtaMaxBin_(-1), histPtMaxBin_(-1)
 {}
 
 
 LeptonSFData::LeptonSFData(string fn, string lt, string bp, bool efcb)
-: jsonFileName_(fn), leptonType_(lt), binningPref_(bp), extrapolateFromClosestBin_(efcb), populated_(false)
+: sfFileName_(fn), leptonType_(lt), binningPref_(bp), extrapolateFromClosestBin_(efcb), jsonTreePopulated_(false),
+  loadFromJSONSuccessful_(false), loadFromROOTSuccessful_(false), histEtaMaxBin_(-1), histPtMaxBin_(-1)
 {
   // TEST output
 //    cout << "  LeptonSFData: Created.\n"
-//            "    JSON File name     : " << jsonFileName_ << "\n"
+//            "    JSON File name     : " << sfFileName_ << "\n"
 //            "    Lepton Type        : " << leptonType_   << "\n"
 //            "    Binning preference : " << binningPref_  << "\n"
 //         << endl;
 
   // Attempt to extract the SF Tree for the given file name, lepton type, and binning preference.
-    if(!loadJSONFromFile(jsonFileName_))   // Attempt to open file.
-        cerr << "    ERROR: Unable to load JSON from file: " << jsonFileName_ << endl;
+    if(!loadJSONFromFile(sfFileName_))   // Attempt to open file.
+        cerr << "    ERROR: Unable to load JSON from file: " << sfFileName_ << endl;
 
     // Check the json file to see if the input leptonType is a member.
     else if(sfPropTree_.find(leptonType_) == sfPropTree_.not_found())
-        cerr << "    ERROR: Lepton type " << leptonType_ << " not found in file " << jsonFileName_ << endl;
+        cerr << "    ERROR: Lepton type " << leptonType_ << " not found in file " << sfFileName_ << endl;
 
     // Check if the desired input binning is found in the leptonType tree
 //    else if(sfPropTree_.find(leptonType_+"."+binningPref_) == sfPropTree_.not_found())
@@ -55,8 +57,8 @@ LeptonSFData::LeptonSFData(string fn, string lt, string bp, bool efcb)
     else  // All inputs are valid with the given parameters.
     { // Set the main prop tree to the child tree designated by leptonType_
         sfPropTree_ = sfPropTree_.get_child(leptonType_+"."+binningPref_);
-        //cout << "    LeptonSF JSON Successfully loaded from file: " << jsonFileName_ << endl;
-        populated_ = true;
+        //cout << "    LeptonSF JSON Successfully loaded from file: " << sfFileName_ << endl;
+        jsonTreePopulated_ = true;
     }
 }
 
@@ -76,7 +78,7 @@ bool LeptonSFData::loadJSONFromFile(string fn)
 pair<double, double> LeptonSFData::getSF(double pt, double eta)   // Get the lepton scale factor based on its pt and eta.
 {
   // If not work with a valid SF tree, return 1 +- 0.
-    if(!populated_) return std::make_pair(1.0, 0.0);
+    if(!jsonTreePopulated_) return std::make_pair(1.0, 0.0);
 
   // If the binning preference indicates absolute value of eta...
     if(binningPref_.find("abseta")!=string::npos) eta = fabs(eta);
