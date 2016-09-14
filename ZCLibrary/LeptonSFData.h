@@ -28,29 +28,49 @@
 #include <utility>
 //#include "json_parser_read.hpp"
 #include <boost/property_tree/ptree.hpp>
+#include <TFile.h>
+#include <TH2D.h>
 
 class LeptonSFData
 {
   public:
     LeptonSFData(std::string, std::string, std::string, bool efcb = true);  // Primary constructor.
     LeptonSFData();     // Empty Constructor
-   ~LeptonSFData(){}
+   ~LeptonSFData(){delete f_sfFile_; delete h_sfHisto_;}
 
-    bool loadJSONFromFile(std::string);                // Attempts to SFs from file into a property tree.
-    std::pair<double, double> getSF(double, double);   // Get the lepton scale factor based on its pt and eta (respectively).
+    bool loadSFFromJSON(std::string);                // Attempts to SFs from file into a property tree.
+    bool loadSFFromROOT(std::string);                // Attempts to SFs from file into a property tree.
+//    std::pair<double, double> getSF(double eta, double phi) {return (this->*sfRetrievalFunction_)(eta,phi);}
+    std::pair<double, double> getSF(double, double);
+        // Calls the SF function specified by the constructor.
 
   private:
+//    typedef std::pair<double, double> (LeptonSFData::*sfFunc)(double,double);
+//    sfFunc sfRetrievalFunction_ = NULL;       // Member function pointer set in the constructor based on input type.
+    std::pair<double, double> getSFFromJSON(double, double);   // Get the lepton scale factor based on its pt and eta (respectively) from JSON.
+    std::pair<double, double> getSFFromROOT(double, double);   // Get the lepton scale factor based on its pt and eta (respectively) from ROOT.
+    std::pair<double, double> getNonSF(double, double) { return std::make_pair(1.0, 0.0); }  // Returns unity if no SFs successfuly loaded.
+
     std::pair<float, float> getRangeFromKey(const std::string&);
         // Returns pair of numbers indicating a range from a string formatted like so: "label:[NUM,NUM]"
 
     boost::property_tree::ptree sfPropTree_;    // Boost property tree containing contents of SF JSON file.
+    TFile* f_sfFile_ = 0;                       // ROOT file containing SF.
+    TH2D* h_sfHisto_ = 0;                       // 2D histogram containing sf.
 
-    std::string jsonFileName_ ;
-    std::string leptonType_   ;
-    std::string binningPref_  ;
+    std::string sfFileName_ ;
+    std::string leptonType_ ;
+    std::string binningPref_;
 
     bool extrapolateFromClosestBin_;
     bool populated_;
+    bool loadFromJSONSuccessful_;
+    bool loadFromROOTSuccessful_;
+
+    // Max bins. Only valid when working with ROOT file.
+    int   histEtaMaxBin_;        // Max bin of histogram eta axis.
+    int   histPtMaxBin_ ;        // Max bin of histogram pt axis.
+
 };
 
 #endif
