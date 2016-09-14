@@ -133,6 +133,7 @@ AnalysisConfig::AnalysisConfig(TString fnc)
     lepSFs["elec_sf_trig"] = LeptonSFData( jsonDir+pt.get<string>("LEPTON SFS.elec_sf_trig_file"),
                                                    pt.get<string>("LEPTON SFS.elec_sf_trig_type"),
                                                    pt.get<string>("LEPTON SFS.elec_sf_trig_pref")
+                                       );
 }
 
 

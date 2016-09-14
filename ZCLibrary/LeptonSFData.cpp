@@ -73,7 +73,7 @@ LeptonSFData::LeptonSFData(string fn, string lt, string bp, bool efcb)
         { // Set the main prop tree to the child tree designated by leptonType_
             sfPropTree_ = sfPropTree_.get_child(leptonType_+"."+binningPref_);
             //cout << "    LeptonSF JSON Successfully loaded from file: " << sfFileName_ << endl;
-            populated_ = true;
+            jsonTreePopulated_ = true;
         }
     }
 
@@ -117,10 +117,9 @@ return true;
 
 pair<double, double> LeptonSFData::getSF(double eta, double pt)
 {
-    if(loadFromJSONSuccessful_ && populated_ ) return getSFFromJSON(eta,pt);
-    if(loadFromROOTSuccessful_)                return getSFFromROOT(eta,pt);
+    if(loadFromJSONSuccessful_ && jsonTreePopulated_ ) return getSFFromJSON(eta,pt);
+    if(loadFromROOTSuccessful_)                        return getSFFromROOT(eta,pt);
     return getNonSF(eta,pt);
-
 }
 
 
