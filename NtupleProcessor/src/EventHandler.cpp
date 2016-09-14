@@ -183,10 +183,10 @@ void EventHandler::evalCriteria()
 ////////////////////////////////////////////////
 
   // Calculate the event weight.
-    if(usingSim)
-    {
+//    if(usingSim)
+//    {
 //        evtWeight *= calculatePUReweight(m_nPVs);
-    }
+//    }
 
   // Check JSON if working with a data event.
     if(usingSim) inJSON = false;       // If using simulation, automatically set the JSON variable to false.
@@ -306,7 +306,6 @@ void EventHandler::evalCriteria()
             cout << "     SF TEST!! " << lType << ", " << evtWeight << endl;
         }
     }
-
 
     hasValidZBosonMass = m_Z_mass>=anCfg.dilepInvMassMin && m_Z_mass<=anCfg.dilepInvMassMax;
     hasValidMET        = m_MET_et<=anCfg.metMax;

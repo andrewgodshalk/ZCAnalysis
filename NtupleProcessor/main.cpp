@@ -4,7 +4,7 @@
 Modified: 2015-09-14
 
 Main file for the NtupleProcessor program.
-Handles command line arguements.
+Handles command line arguments.
 
 ------------------------------------------------------------------------------*/
 
@@ -110,8 +110,8 @@ int main(int argc, char* argv[])
             "\n";
 
   // Add secondary options to options input.
-    if( !(TString(dataset).Contains("muon") && TString(dataset).Contains("elec"))) options += "Sim";
-    if(   TString(dataset).Contains("dy", TString::kIgnoreCase)                  ) options += "DY" ;
+    if( !(TString(dataset).Contains("muon") || TString(dataset).Contains("elec"))) options += "Sim";
+    if(  TString(dataset).Contains("dy", TString::kIgnoreCase)                   ) options += "DY" ;
 
   // Create the NtupleProcessor
     NtupleProcessor ntplproc(dataset, npconfig, anconfig, options, maxEvents);
