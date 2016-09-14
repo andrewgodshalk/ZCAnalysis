@@ -102,30 +102,46 @@ AnalysisConfig::AnalysisConfig(TString fnc)
 
   // Extract Lepton Scale Factor Data Trees.
     string jsonDir = pt.get<string>("LEPTON SFS.json_dir");
-    lepSFs["muon_sf_id"  ] = LeptonSFData( jsonDir+pt.get<string>("LEPTON SFS.muon_sf_id_file"  ),
-                                                   pt.get<string>("LEPTON SFS.muon_sf_id_type"  ),
-                                                   pt.get<string>("LEPTON SFS.muon_sf_id_pref"  )
+    lepSFs["muon_sf_trk" ] = LeptonSFData( jsonDir+pt.get<string>("LEPTON SFS.muon_sf_trk_file" ),
+                                                   pt.get<string>("LEPTON SFS.muon_sf_trk_type" ),
+                                                   pt.get<string>("LEPTON SFS.muon_sf_trk_pref" )
                                        );
-    lepSFs["muon_sf_iso" ] = LeptonSFData( jsonDir+pt.get<string>("LEPTON SFS.muon_sf_iso_file" ),
-                                                   pt.get<string>("LEPTON SFS.muon_sf_iso_type" ),
-                                                   pt.get<string>("LEPTON SFS.muon_sf_iso_pref" )
-                                       );
-    lepSFs["muon_sf_trig"] = LeptonSFData( jsonDir+pt.get<string>("LEPTON SFS.muon_sf_trig_file"),
-                                                   pt.get<string>("LEPTON SFS.muon_sf_trig_type"),
-                                                   pt.get<string>("LEPTON SFS.muon_sf_trig_pref")
-                                       );
-    lepSFs["elec_sf_id"  ] = LeptonSFData( jsonDir+pt.get<string>("LEPTON SFS.elec_sf_id_file"  ),
-                                                   pt.get<string>("LEPTON SFS.elec_sf_id_type"  ),
-                                                   pt.get<string>("LEPTON SFS.elec_sf_id_pref"  )
-                                       );
-    lepSFs["elec_sf_iso" ] = LeptonSFData( jsonDir+pt.get<string>("LEPTON SFS.elec_sf_iso_file" ),
-                                                   pt.get<string>("LEPTON SFS.elec_sf_iso_type" ),
-                                                   pt.get<string>("LEPTON SFS.elec_sf_iso_pref" )
-                                       );
-    lepSFs["elec_sf_trig"] = LeptonSFData( jsonDir+pt.get<string>("LEPTON SFS.elec_sf_trig_file"),
-                                                   pt.get<string>("LEPTON SFS.elec_sf_trig_type"),
-                                                   pt.get<string>("LEPTON SFS.elec_sf_trig_pref")
-                                       );
+cout << "muon_sf_trk complete." << endl;
+//    lepSFs["muon_sf_id"  ] = LeptonSFData( jsonDir+pt.get<string>("LEPTON SFS.muon_sf_id_file"  ),
+//                                                   pt.get<string>("LEPTON SFS.muon_sf_id_type"  ),
+//                                                   pt.get<string>("LEPTON SFS.muon_sf_id_pref"  )
+//                                       );
+//cout << "muon_sf_trk complete." << endl;
+//    lepSFs["muon_sf_iso" ] = LeptonSFData( jsonDir+pt.get<string>("LEPTON SFS.muon_sf_iso_file" ),
+//                                                   pt.get<string>("LEPTON SFS.muon_sf_iso_type" ),
+//                                                   pt.get<string>("LEPTON SFS.muon_sf_iso_pref" )
+//                                       );
+//cout << "muon_sf_trk complete." << endl;
+//    lepSFs["muon_sf_trig"] = LeptonSFData( jsonDir+pt.get<string>("LEPTON SFS.muon_sf_trig_file"),
+//                                                   pt.get<string>("LEPTON SFS.muon_sf_trig_type"),
+//                                                   pt.get<string>("LEPTON SFS.muon_sf_trig_pref")
+//                                       );
+//cout << "muon_sf_trk complete." << endl;
+//    lepSFs["elec_sf_trk" ] = LeptonSFData( jsonDir+pt.get<string>("LEPTON SFS.elec_sf_trk_file" ),
+//                                                   pt.get<string>("LEPTON SFS.elec_sf_trk_type" ),
+//                                                   pt.get<string>("LEPTON SFS.elec_sf_trk_pref" )
+//                                       );
+//cout << "muon_sf_trk complete." << endl;
+//    lepSFs["elec_sf_id"  ] = LeptonSFData( jsonDir+pt.get<string>("LEPTON SFS.elec_sf_id_file"  ),
+//                                                   pt.get<string>("LEPTON SFS.elec_sf_id_type"  ),
+//                                                   pt.get<string>("LEPTON SFS.elec_sf_id_pref"  )
+//                                       );
+//cout << "muon_sf_trk complete." << endl;
+//    lepSFs["elec_sf_iso" ] = LeptonSFData( jsonDir+pt.get<string>("LEPTON SFS.elec_sf_iso_file" ),
+//                                                   pt.get<string>("LEPTON SFS.elec_sf_iso_type" ),
+//                                                   pt.get<string>("LEPTON SFS.elec_sf_iso_pref" )
+//                                       );
+//cout << "muon_sf_trk complete." << endl;
+//    lepSFs["elec_sf_trig"] = LeptonSFData( jsonDir+pt.get<string>("LEPTON SFS.elec_sf_trig_file"),
+//                                                   pt.get<string>("LEPTON SFS.elec_sf_trig_type"),
+//                                                   pt.get<string>("LEPTON SFS.elec_sf_trig_pref")
+//                                       );
+//cout << "muon_sf_trk complete." << endl;
 }
 
 
