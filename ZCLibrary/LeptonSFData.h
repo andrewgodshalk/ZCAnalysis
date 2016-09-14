@@ -36,7 +36,8 @@ class LeptonSFData
   public:
     LeptonSFData(std::string, std::string, std::string, bool efcb = true);  // Primary constructor.
     LeptonSFData();     // Empty Constructor
-   ~LeptonSFData(){delete f_sfFile_; delete h_sfHisto_;}
+//   ~LeptonSFData(){delete f_sfFile_; delete h_sfHisto_;}
+   ~LeptonSFData(){}
 
     bool loadSFFromJSON(std::string);                // Attempts to SFs from file into a property tree.
     bool loadSFFromROOT(std::string);                // Attempts to SFs from file into a property tree.
@@ -71,7 +72,7 @@ class LeptonSFData
   // Root objects.
     // RECEIVING SEG FAULTS IF THEY AREN'T ADDED AT END OF CLASS DEF. SOMETHING TO LOOK INTO, MAYBE?
     TFile* f_sfFile_ = 0;                       // ROOT file containing SF.
-    TH2D* h_sfHisto_ = 0;                       // 2D histogram containing sf.
+    TH2F* h_sfHisto_ = 0;                       // 2D histogram containing sf.
 
 };
 

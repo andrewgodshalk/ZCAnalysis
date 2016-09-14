@@ -13,6 +13,7 @@ Handles command line arguments.
 #include <iostream>                 // stdlib
 #include <string>
 #include <vector>
+#include "TApplication.h"
 #include <TFile.h>                  // ROOT class headers
 #include <TString.h>
 #include <TTree.h>
@@ -30,6 +31,10 @@ namespace po = boost::program_options;
 
 int main(int argc, char* argv[])
 {
+  // Needed to make sure ROOT libraries "link correctly. Receive seg faults while trying to use TH2F in LeptonSFData otherwise.
+  // Recommendation found at link: https://root.cern.ch/phpBB3/viewtopic.php?f=3&t=18101&p=76968#p76968
+    TApplication a("a", 0, 0); // just to make sure that the autoloading of ROOT libraries works
+
   // Record the time main starts processing.
     TString ts_mainBegin  = timeStamp();
     TString fts_mainBegin = fileTimeStamp();

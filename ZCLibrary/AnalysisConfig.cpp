@@ -122,6 +122,9 @@ AnalysisConfig::AnalysisConfig(TString fnc)
                                                    pt.get<string>("LEPTON SFS.elec_sf_trk_type" ),
                                                    pt.get<string>("LEPTON SFS.elec_sf_trk_pref" )
                                        );
+
+cout << "  TEST: AnalsysisConfig: lepSF[\"elec_sf_trk\"] initialized." << endl;
+
     lepSFs["elec_sf_id"  ] = LeptonSFData( jsonDir+pt.get<string>("LEPTON SFS.elec_sf_id_file"  ),
                                                    pt.get<string>("LEPTON SFS.elec_sf_id_type"  ),
                                                    pt.get<string>("LEPTON SFS.elec_sf_id_pref"  )

@@ -55,9 +55,9 @@ LeptonSFData::LeptonSFData(string fn, string lt, string bp, bool efcb)
 //        sfRetrievalFunction_ = &LeptonSFData::getNonSF;
 //    }
     if( file_sfx==".json") loadFromJSONSuccessful_=loadSFFromJSON(sfFileName_);
-//    if( file_sfx==".root") loadFromROOTSuccessful_=loadSFFromROOT(sfFileName_);
+    if( file_sfx==".root") loadFromROOTSuccessful_=loadSFFromROOT(sfFileName_);
     if(!loadFromJSONSuccessful_ && !loadFromROOTSuccessful_)
-        cerr << "    ERROR: Unable to load scale factors from file: " << sfFileName_ << endl;
+        cerr << "    LeptonSFData(): ERROR: Unable to load scale factors from file: " << sfFileName_ << endl;
 
     // If JSON file loaded, check the json file to see if the input leptonType is a member.
     if(loadFromJSONSuccessful_)
@@ -76,7 +76,7 @@ LeptonSFData::LeptonSFData(string fn, string lt, string bp, bool efcb)
             jsonTreePopulated_ = true;
         }
     }
-
+    cout << "    LeptonSFData(): reached end of constructor." << endl;
 }
 
 
@@ -102,15 +102,22 @@ bool LeptonSFData::loadSFFromROOT(string fn)
     }
 
   // Attempt to load histogram from file.
-    f_sfFile_->GetObject(leptonType_.c_str(), h_sfHisto_);
-    if(!h_sfHisto_){
+    TH2F* temp_histo;
+    f_sfFile_->GetObject(leptonType_.c_str(), temp_histo);
+    if(!temp_histo){
         cerr << "    ERROR: Unable to load SF Histogram from file. Histogram not found: " << leptonType_ << endl;
         return false;
     }
 
+  // Create a local clone of the histogram.
+    TString cloneName = TString("local_")+leptonType_+"_"+binningPref_;
+    h_sfHisto_ = (TH2F*) temp_histo->Clone(cloneName.Data());
+
   // Set maximum bin values, then return true;
     histEtaMaxBin_ = h_sfHisto_->GetXaxis()->GetNbins();
     histPtMaxBin_  = h_sfHisto_->GetYaxis()->GetNbins();
+    cout << "histogram bins: " << histEtaMaxBin_ << "," << histPtMaxBin_ << endl;
+
 return true;
 }
 
