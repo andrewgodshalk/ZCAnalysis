@@ -61,9 +61,10 @@ string templateFitter(TString plotName, TH1F* h_sample, TH1F* h_b, TH1F* h_c, TH
 {
     std::stringstream log("");
     log << "\n  ==TEMPLATEFITTER== \n"
-            "    " << plotName   << "\n"
-            "    " << timeStamp() << "\n"
-            "    Rebin: " << rebin << "\n";
+            "    " << plotName                     << "\n"
+            "    " << timeStamp()                  << "\n"
+            "    Rebin:       " << rebin           << "\n"
+        << endl;
 
   // Set up the environment
     gStyle->SetOptStat("");     // Gets rid of the stats panel
@@ -303,9 +304,9 @@ string templateFitter(TString plotName, TH1F* h_sample, TH1F* h_b, TH1F* h_c, TH
 }
 
 
-void getTemplatesFromRunIIFile(TString fn, TH1F*& h_b, TH1F*& h_c, TH1F*& h_l, TString channel)
+void getTemplatesFromRunIIFile(TString fn, TH1F*& h_b, TH1F*& h_c, TH1F*& h_l, TString channel, int statisticsScale = 1)
 {
-    void getTemplatesFromRunIIFile(TString, TH1F*&, TH1F*&, TH1F*&, TString);
+    void getTemplatesFromRunIIFile(TString, TH1F*&, TH1F*&, TH1F*&, TString, int);
     TFile* inputFile = TFile::Open(fn);
 
   // Pointers to file histograms
@@ -316,8 +317,8 @@ void getTemplatesFromRunIIFile(TString fn, TH1F*& h_b, TH1F*& h_c, TH1F*& h_l, T
     if(channel == "Zll")
     {
       // Get templates for Zuu and Zee
-        getTemplatesFromRunIIFile(fn, hf_b1, hf_c1, hf_l1, "Zuu");
-        getTemplatesFromRunIIFile(fn, hf_b2, hf_c2, hf_l2, "Zee");
+        getTemplatesFromRunIIFile(fn, hf_b1, hf_c1, hf_l1, "Zuu", statisticsScale);
+        getTemplatesFromRunIIFile(fn, hf_b2, hf_c2, hf_l2, "Zee", statisticsScale);
     }
     else
     {
@@ -334,6 +335,11 @@ void getTemplatesFromRunIIFile(TString fn, TH1F*& h_b, TH1F*& h_c, TH1F*& h_l, T
     h_b = (TH1F*) hf_b1->Clone("btemp");   h_b->Add(hf_b2);
     h_c = (TH1F*) hf_c1->Clone("ctemp");   h_c->Add(hf_c2);
     h_l = (TH1F*) hf_l1->Clone("ltemp");   h_l->Add(hf_l2);
+
+  // Scale based on input factor.
+    h_b->Scale(statisticsScale);
+    h_c->Scale(statisticsScale);
+    h_l->Scale(statisticsScale);
 
   // Clean up
     delete hf_b1;  delete hf_c1;  delete hf_l1;
