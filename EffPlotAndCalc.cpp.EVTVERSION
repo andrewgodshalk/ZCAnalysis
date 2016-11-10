@@ -65,7 +65,7 @@ int main(int argc, char* argv[])
 
 //    TString fn_input  = TString("zc_eff_raw_plots"     )+fn_label+".root";
     TString fn_input  = "zc_eff_raw_plots.root";
-    TString fn_output = TString("zc_eff_jet_comb_plots")+fn_label+".root";
+    TString fn_output = TString("zc_eff_evt_comb_plots")+fn_label+".root";
 
 
   // Open inputs, outputs.
@@ -161,7 +161,7 @@ int main(int argc, char* argv[])
             TH1F* h_leff = (TH1F*) h_eff[chLabel][hfLabel]["Zl"][CENTRAL]->Clone("h_leff");
 
           // Reset titles so that they are printed properly
-            h_beff->SetTitle("Eff. vs. Jet p_{T};Jet p_{T} (GeV);Efficiency");
+            h_beff->SetTitle("Eff. vs. Lead Tagged Jet p_{T};Jet p_{T} (GeV);Efficiency");
 
           // Pick a color, any color.
             h_beff->SetLineColor(kRed    );  h_beff->SetLineWidth(2.5);  //beff->SetMarkerColor(kRed);  beff->SetMarkerStyle(20);  beff->SetMarkerSize(1);
@@ -181,14 +181,14 @@ int main(int argc, char* argv[])
 
           // Create legend labels
             stringstream bLabel, cLabel, lLabel;
-            bLabel << "b jets     (avg: " << setprecision(3) <<  efficiency[chLabel][hfLabel]["Zb"][CENTRAL].first << "#pm" << efficiency[chLabel][hfLabel]["Zb"][CENTRAL].second << ")";
-            cLabel << "c jets     (avg: " << setprecision(3) <<  efficiency[chLabel][hfLabel]["Zc"][CENTRAL].first << "#pm" << efficiency[chLabel][hfLabel]["Zc"][CENTRAL].second << ")";
-            lLabel << "light jets (avg: " << setprecision(3) <<  efficiency[chLabel][hfLabel]["Zl"][CENTRAL].first << "#pm" << efficiency[chLabel][hfLabel]["Zl"][CENTRAL].second << ")";
+            bLabel << "Z+b (avg: " << setprecision(3) <<  efficiency[chLabel][hfLabel]["Zb"][CENTRAL].first << "#pm" << efficiency[chLabel][hfLabel]["Zb"][CENTRAL].second << ")";
+            cLabel << "Z+c (avg: " << setprecision(3) <<  efficiency[chLabel][hfLabel]["Zc"][CENTRAL].first << "#pm" << efficiency[chLabel][hfLabel]["Zc"][CENTRAL].second << ")";
+            lLabel << "Z+l (avg: " << setprecision(3) <<  efficiency[chLabel][hfLabel]["Zl"][CENTRAL].first << "#pm" << efficiency[chLabel][hfLabel]["Zl"][CENTRAL].second << ")";
 
           // The legend continues
             TLegend *leg = new TLegend(0.5,0.15,0.95,0.35);
-            if(hfLabel=="SVT") leg->SetHeader(hfLabel+    " Jet Selection Eff.");
-            else               leg->SetHeader(hfLabel+"+SVT Jet Selection Eff.");
+            if(hfLabel=="SVT") leg->SetHeader(hfLabel+    " Selection Eff.");
+            else               leg->SetHeader(hfLabel+"+SVT Selection Eff.");
             leg->AddEntry(h_beff, bLabel.str().c_str(), "L");
             leg->AddEntry(h_ceff, cLabel.str().c_str(), "L");
             leg->AddEntry(h_leff, lLabel.str().c_str(), "L");
@@ -225,36 +225,36 @@ TH1F* getDataWeightPlot(TFile* f, TString& channel, TString& hftag)
 
     if(channel == "Zuu")
     {
-        h_dtwt = (TH1F*) f->Get(path+muDataSets[0]+"/Zuu/ntJet_"+hftag)->Clone("h_dtwt");
+        h_dtwt = (TH1F*) f->Get(path+muDataSets[0]+"/Zuu/ntEvt_"+hftag)->Clone("h_dtwt");
         for( int i=1; i<muDataSets.size(); i++ )
         {
-            TH1F* h_temp = (TH1F*) f->Get(path+muDataSets[i]+"/Zuu/ntJet_"+hftag)->Clone("h_temp");
+            TH1F* h_temp = (TH1F*) f->Get(path+muDataSets[i]+"/Zuu/ntEvt_"+hftag)->Clone("h_temp");
             h_dtwt->Add(h_temp);
             delete h_temp;
         }
     }
-    if(channel == "Zee")// h_dtwt = (TH1F*) f->Get(path+"elec/Zee/ntJet_"+hftag)->Clone("h_dtwt");
+    if(channel == "Zee")// h_dtwt = (TH1F*) f->Get(path+"elec/Zee/ntEvt_"+hftag)->Clone("h_dtwt");
     {
-        h_dtwt = (TH1F*) f->Get(path+elDataSets[0]+"/Zee/ntJet_"+hftag)->Clone("h_dtwt");
+        h_dtwt = (TH1F*) f->Get(path+elDataSets[0]+"/Zee/ntEvt_"+hftag)->Clone("h_dtwt");
         for( int i=1; i<elDataSets.size(); i++ )
         {
-            TH1F* h_temp = (TH1F*) f->Get(path+elDataSets[i]+"/Zee/ntJet_"+hftag)->Clone("h_temp");
+            TH1F* h_temp = (TH1F*) f->Get(path+elDataSets[i]+"/Zee/ntEvt_"+hftag)->Clone("h_temp");
             h_dtwt->Add(h_temp);
             delete h_temp;
         }
     }
     if(channel == "Zll")
     {
-        h_dtwt = (TH1F*) f->Get(path+muDataSets[0]+"/Zuu/ntJet_"+hftag)->Clone("h_dtwt");
+        h_dtwt = (TH1F*) f->Get(path+muDataSets[0]+"/Zuu/ntEvt_"+hftag)->Clone("h_dtwt");
         for( int i=1; i<muDataSets.size(); i++ )
         {
-            TH1F* h_temp = (TH1F*) f->Get(path+muDataSets[i]+"/Zuu/ntJet_"+hftag)->Clone("h_temp");
+            TH1F* h_temp = (TH1F*) f->Get(path+muDataSets[i]+"/Zuu/ntEvt_"+hftag)->Clone("h_temp");
             h_dtwt->Add(h_temp);
             delete h_temp;
         }
         for( int i=0; i<elDataSets.size(); i++ )
         {
-            TH1F* h_temp = (TH1F*) f->Get(path+elDataSets[i]+"/Zee/ntJet_"+hftag)->Clone("h_temp");
+            TH1F* h_temp = (TH1F*) f->Get(path+elDataSets[i]+"/Zee/ntEvt_"+hftag)->Clone("h_temp");
             h_dtwt->Add(h_temp);
             delete h_temp;
         }
@@ -266,32 +266,33 @@ TH1F* getDataWeightPlot(TFile* f, TString& channel, TString& hftag)
 TH1F* getDenominatorPlot(TFile* f, TString& channel, TString& flavor)
 { // Extract Den (raw_eff_plots/dy/Zee_Zf/n_ZfEvents)
   // channel = Zee,Zuu,Zll   flavor = Zb, Zc, Zl
-cout << "      getDenominatorPlot(" << f->GetTitle() << ", " << channel << ", " << flavor << ")" << endl;
+cout << "      getDenominatorPlot(" << f->GetName() << ", " << channel << ", " << flavor << ")" << endl;
     TH1F *h_den, *h_temp;
     TString hName = TString("h_")+flavor+"Den";
     TString path   = "raw_eff_plots/dy/";
     TString path1j = "raw_eff_plots/dy1j_";
     if(channel == "Zuu" || channel == "Zee")
     {
-        h_den  = (TH1F*) f->Get(path+channel+"_"+flavor+"/n_"+flavor[1]+"Jets")->Clone(hName);
+        cout << path+channel+"_"+flavor+"/n_Z"+flavor[1]+"Events" << endl;
+        h_den  = (TH1F*) f->Get(path+channel+"_"+flavor+"/n_Z"+flavor[1]+"Events")->Clone(hName);
         for( char i='1', n='7'; i<=n; i++)
         {
-            h_temp = (TH1F*) f->Get(path1j+i+"of"+n+'/'+channel+"_"+flavor+"/n_"+flavor[1]+"Jets")->Clone("h_temp");
+            h_temp = (TH1F*) f->Get(path1j+i+"of"+n+'/'+channel+"_"+flavor+"/n_Z"+flavor[1]+"Events")->Clone("h_temp");
             h_den->Add(h_temp);
             delete h_temp;
         }
     }
     if(channel == "Zll")
-    {   h_den  = (TH1F*) f->Get(path+"Zuu_"+flavor+"/n_"+flavor[1]+"Jets")->Clone(hName);
-        h_temp = (TH1F*) f->Get(path+"Zee_"+flavor+"/n_"+flavor[1]+"Jets")->Clone("h_temp");
+    {   h_den  = (TH1F*) f->Get(path+"Zuu_"+flavor+"/n_Z"+flavor[1]+"Events")->Clone(hName);
+        h_temp = (TH1F*) f->Get(path+"Zee_"+flavor+"/n_Z"+flavor[1]+"Events")->Clone("h_temp");
         h_den->Add(h_temp);
         delete h_temp;
         for( char i='1', n='7'; i<=n; i++)
         {
-            h_temp = (TH1F*) f->Get(path1j+i+"of"+n+'/'+"Zuu_"+flavor+"/n_"+flavor[1]+"Jets")->Clone("h_temp");
+            h_temp = (TH1F*) f->Get(path1j+i+"of"+n+'/'+"Zuu_"+flavor+"/n_Z"+flavor[1]+"Events")->Clone("h_temp");
             h_den->Add(h_temp);
             delete h_temp;
-            h_temp = (TH1F*) f->Get(path1j+i+"of"+n+'/'+"Zee_"+flavor+"/n_"+flavor[1]+"Jets")->Clone("h_temp");
+            h_temp = (TH1F*) f->Get(path1j+i+"of"+n+'/'+"Zee_"+flavor+"/n_Z"+flavor[1]+"Events")->Clone("h_temp");
             h_den->Add(h_temp);
             delete h_temp;
         }
@@ -309,25 +310,25 @@ TH1F* getNumeratorPlot(TFile* f, TString& channel, TString& hftag, TString& flav
     TString errSuffix = (errFactor!=CENTRAL ? ( errFactor!=PLUS ? "_mErr" : "_pErr") : "" );
     if(channel == "Zuu" || channel == "Zee")
     {
-        h_num  = (TH1F*) f->Get(path  +channel+"_"+flavor+"/nt_"+flavor[1]+"Jets_"+hftag+errSuffix)->Clone(hName);
+        h_num  = (TH1F*) f->Get(path  +channel+"_"+flavor+"/nt_Z"+flavor[1]+"Events_"+hftag+errSuffix)->Clone(hName);
         for( char i='1', n='7'; i<=n; i++)
         {
-            h_temp = (TH1F*) f->Get(path1j+i+"of"+n+'/'+channel+"_"+flavor+"/nt_"+flavor[1]+"Jets_"+hftag+errSuffix)->Clone("h_temp");
+            h_temp = (TH1F*) f->Get(path1j+i+"of"+n+'/'+channel+"_"+flavor+"/nt_Z"+flavor[1]+"Events_"+hftag+errSuffix)->Clone("h_temp");
             h_num->Add(h_temp);
             delete h_temp;
         }
     }
     if(channel == "Zll")
-    {   h_num  = (TH1F*) f->Get(path  +"Zuu_"+flavor+"/nt_"+flavor[1]+"Jets_"+hftag+errSuffix)->Clone(hName);
-        h_temp = (TH1F*) f->Get(path  +"Zee_"+flavor+"/nt_"+flavor[1]+"Jets_"+hftag+errSuffix)->Clone("h_temp");
+    {   h_num  = (TH1F*) f->Get(path  +"Zuu_"+flavor+"/nt_Z"+flavor[1]+"Events_"+hftag+errSuffix)->Clone(hName);
+        h_temp = (TH1F*) f->Get(path  +"Zee_"+flavor+"/nt_Z"+flavor[1]+"Events_"+hftag+errSuffix)->Clone("h_temp");
         h_num->Add(h_temp);
         delete h_temp;
         for( char i='1', n='7'; i<=n; i++)
         {
-            h_temp = (TH1F*) f->Get(path1j+i+"of"+n+"/Zuu_"+flavor+"/nt_"+flavor[1]+"Jets_"+hftag+errSuffix)->Clone("h_temp");
+            h_temp = (TH1F*) f->Get(path1j+i+"of"+n+"/Zuu_"+flavor+"/nt_Z"+flavor[1]+"Events_"+hftag+errSuffix)->Clone("h_temp");
             h_num->Add(h_temp);
             delete h_temp;
-            h_temp = (TH1F*) f->Get(path1j+i+"of"+n+"/Zee_"+flavor+"/nt_"+flavor[1]+"Jets_"+hftag+errSuffix)->Clone("h_temp");
+            h_temp = (TH1F*) f->Get(path1j+i+"of"+n+"/Zee_"+flavor+"/nt_Z"+flavor[1]+"Events_"+hftag+errSuffix)->Clone("h_temp");
             h_num->Add(h_temp);
             delete h_temp;
         }
@@ -339,8 +340,8 @@ TH1F* getNumeratorPlot(TFile* f, TString& channel, TString& hftag, TString& flav
 
 TH1F* makeEfficiencyPlot( TH1F* h_num, TH1F* h_den, TString &flavor)
 {
-//    TString hName = TString("h_")+flavor[1]+"JetEff";
-    TString hName = TString::Format("h_%cJetEff", flavor[1]);
+//    TString hName = TString("h_")+flavor[1]+"EventEff";
+    TString hName = TString::Format("h_%cEventEff", flavor[1]);
     TH1F* h_eff = (TH1F*) h_num->Clone(hName);
     h_eff->Divide(h_den);
 

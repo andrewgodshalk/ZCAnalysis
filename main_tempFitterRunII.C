@@ -53,8 +53,8 @@
     mainLog << templateFitter(l_output+"_Zll"         , h_sample_Zll, h_b_Zll, h_c_Zll, h_l_Zll, rebin);
 //    mainLog << templateFitter(l_output+"_ZuuDBC_ZllL" , h_sample_Zuu, h_b_Zuu, h_c_Zuu, h_l_Zll, rebin);
 //    mainLog << templateFitter(l_output+"_ZeeDBC_ZllL" , h_sample_Zee, h_b_Zee, h_c_Zee, h_l_Zll, rebin);
-//    mainLog << templateFitter(l_output+"_ZuuD_ZllBCL" , h_sample_Zuu, h_b_Zll, h_c_Zll, h_l_Zll, rebin);
-//    mainLog << templateFitter(l_output+"_ZeeD_ZllBCL" , h_sample_Zee, h_b_Zll, h_c_Zll, h_l_Zll, rebin);
+    mainLog << templateFitter(l_output+"_ZuuD_ZllBCL" , h_sample_Zuu, h_b_Zll, h_c_Zll, h_l_Zll, rebin);
+    mainLog << templateFitter(l_output+"_ZeeD_ZllBCL" , h_sample_Zee, h_b_Zll, h_c_Zll, h_l_Zll, rebin);
     cout << mainLog.str();
 
     TString l_logname = TString::Format("fit_REBIN_%d_TEMPSCL_%d.log", rebin, tempScale);

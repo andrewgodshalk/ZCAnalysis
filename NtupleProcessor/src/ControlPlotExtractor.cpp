@@ -22,7 +22,7 @@ typedef unsigned int Index;
 
 // Initialize class statics
     //ControlPlotConfig ControlPlotExtractor::cfg       = ControlPlotConfig();
-    ControlPlotConfig ControlPlotExtractor::cfg       = ControlPlotConfig("zcControlPlotConfig_default.ini");
+    ControlPlotConfig ControlPlotExtractor::cfg       = ControlPlotConfig("NtupleProcessor/etc/zcControlPlotConfig_default.ini");
 
 const vector<TString> ControlPlotExtractor::multName  = {"", "_ld"  , "_sl"      , "_ex"   };
 const vector<TString> ControlPlotExtractor::multTitle = {"", "Lead ", "Sub-lead ", "Extra "};

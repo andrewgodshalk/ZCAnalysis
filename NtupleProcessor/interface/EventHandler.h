@@ -67,6 +67,7 @@ public:
     int   m_trig_dimuon2;
     int   m_trig_dielec1;
     float m_nPVs;
+    float m_lheNj;
 
 // Calculated variables
     float Z_DelR, Z_DelPhi, Z_DelEta;

@@ -48,15 +48,15 @@ bool EventHandler::mapTree(TTree* tree)
   // Deactivate all branches, reactivate as necessary.
     tree->SetBranchStatus("*",0);
     vector<TString> branches_to_reactivate = {
-//        "Vtype"      , "nallMuons"         , "nallElectrons"     , "nallJets"          ,
-//        "V*"         , "allMuon_pt"        , "allElectron_pt"    , "allJet_pt"         ,
-//        "zdecayMode" , "allMuon_eta"       , "allElectron_eta"   , "allJet_eta"        ,
-//        "EVENT*"     , "allMuon_phi"       , "allElectron_phi"   , "allJet_phi"        ,
-//         "MET*"      , "allMuon_charge"    , "allElectron_charge", "allJet_csv"        ,
-//                       "allMuon_pfCorrIso" ,                       "allJet_vtxMass"    ,
-//        "triggerFlags",                                            "allJet_flavour"    ,
-//        "weightTrig2012DiEle",
-//        "weightTrig2012DiMuon"
+      //  "Vtype"      , "nallMuons"         , "nallElectrons"     , "nallJets"          ,
+      //  "V*"         , "allMuon_pt"        , "allElectron_pt"    , "allJet_pt"         ,
+      //  "zdecayMode" , "allMuon_eta"       , "allElectron_eta"   , "allJet_eta"        ,
+      //  "EVENT*"     , "allMuon_phi"       , "allElectron_phi"   , "allJet_phi"        ,
+        // "MET*"      , "allMuon_charge"    , "allElectron_charge", "allJet_csv"        ,
+                      // "allMuon_pfCorrIso" ,                       "allJet_vtxMass"    ,
+      //  "triggerFlags",                                            "allJet_flavour"    ,
+      //  "weightTrig2012DiEle",
+      //  "weightTrig2012DiMuon"
         "Vtype" , "nvLeptons"          , "nJet"       , "met_pt"   ,
         "V_mass", "vLeptons_pt"        , "Jet_pt"     , "met_phi"  ,
         "V_pt"  , "vLeptons_eta"       , "Jet_eta"    , "met_sumEt",

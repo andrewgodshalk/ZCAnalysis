@@ -24,10 +24,11 @@ string timeStamp( char d, char b, char t ) {
         time-= 240000;
         date+= 1;
     }
-  
+
     output << date/10000 << d << (date%10000)/1000 << (date%1000)/100 << d << (date%100)/10 << date%10;
     if( b!='0' && t!='0' ) output << b << time/10000 << t << (time%10000)/1000 << (time%1000)/100 << t << (time%100)/10 << time%10;
-return output.str();
+
+    return output.str();
 }
 
 
@@ -45,7 +46,7 @@ string fileTimeStamp() {
 
   output << date/100000 << (date%100000)/10000 << '-' << (date%10000)/1000 << (date%1000)/100 << '-' << (date%100)/10 << date%10;
   output << '_' << time/100000 << (time%100000)/10000 << (time%10000)/1000 << (time%1000)/100 << (time%100)/10 << time%10;
-return output.str();
+  return output.str();
 }
 
 
@@ -81,12 +82,12 @@ string templateFitter(TString plotName, TH1F* h_sample, TH1F* h_b, TH1F* h_c, TH
     float nCjet = ctemp->Integral();  //ctemp->Scale(1.0/nCjet);
     float nLjet = ltemp->Integral();  //ltemp->Scale(1.0/nLjet);
     int   nBins = data->GetNbinsX();
-//    h_b  ->Scale(0.7*nData/nBjet);
-//    h_c  ->Scale(0.2*nData/nCjet);
-//    h_l  ->Scale(0.1*nData/nLjet);
-//    btemp->Scale(0.7*nData/nBjet);
-//    ctemp->Scale(0.2*nData/nCjet);
-//    ltemp->Scale(0.1*nData/nLjet);
+    //h_b  ->Scale(0.7*nData/nBjet);
+    //h_c  ->Scale(0.2*nData/nCjet);
+    //h_l  ->Scale(0.1*nData/nLjet);
+    //btemp->Scale(0.7*nData/nBjet);
+    //ctemp->Scale(0.2*nData/nCjet);
+    //ltemp->Scale(0.1*nData/nLjet);
 
   // Reset titles so that they are printed properly
     data->SetTitle("M_{SV};M_{SV};");
@@ -120,23 +121,26 @@ string templateFitter(TString plotName, TH1F* h_sample, TH1F* h_b, TH1F* h_c, TH
     seperate_plots->Update();
 
   // Set up slot for fitter variables
-    double frac[3], err[3];  int status;
-    TObjArray *temps = new TObjArray(3);  // Array for template histograms
-    temps->Add(btemp); temps->Add(ctemp); temps->Add(ltemp);
+    //double frac[3], err[3];  int status;
+    //TObjArray *temps = new TObjArray(3);  // Array for template histograms
+    //temps->Add(btemp); temps->Add(ctemp); temps->Add(ltemp);
+    double frac[2], err[2];  int status;
+    TObjArray *temps = new TObjArray(2);  // Array for template histograms
+    temps->Add(btemp); temps->Add(ctemp); //temps->Add(ltemp);
 
-///// TEST ////////
+  ///// TEST ////////
     log << endl << btemp->GetBinContent(7) << "  " << btemp->GetBinError(7) << endl << endl;
 
   // TEST loop over all bins in one temp,
-//    for(int i=1; i<=nBins; i++)
-//    {
-//        float binVal = btemp->GetBinContent(i);
-//        float newVal = gRandom->Poisson(binVal);
-//        btemp->SetBinContent(i,      newVal );
-//        btemp->SetBinError(  i, sqrt(newVal));
-//    }
+    //for(int i=1; i<=nBins; i++)
+    //{
+    //    float binVal = btemp->GetBinContent(i);
+    //    float newVal = gRandom->Poisson(binVal);
+    //    btemp->SetBinContent(i,      newVal );
+    //    btemp->SetBinError(  i, sqrt(newVal));
+    //}
 
-//////////////////////////////////
+  //////////////////////////////////
 
 
 
@@ -144,21 +148,22 @@ string templateFitter(TString plotName, TH1F* h_sample, TH1F* h_b, TH1F* h_c, TH
     TFractionFitter *fit = new TFractionFitter(data, temps);
     fit->Constrain(0, 0.00001, 0.99999);
     fit->Constrain(1, 0.00001, 0.99999);
-    fit->Constrain(2, 0.00001, 0.99999);
+//    fit->Constrain(2, 0.00001, 0.99999);
+    // Extract the number of bins in data, then Set the range of the fit to exclude first and last (underflow and overflow) bins.
+    fit->SetRangeX(1,nBins);
+
     for(int i=0; i<=nBins+1; i++)  // Exclude bins w/ negative values in data-bkgd from fitting.
         if(data->GetBinContent(i)<0)
             fit->ExcludeBin(i);
 
-  // Extract the number of bins in data, then Set the range of the fit to exclude first and last (underflow and overflow) bins.
-    fit->SetRangeX(1,nBins);
 
   // DO THE DEED!!
     status = fit->Fit();
-// ?????????????????????????? //
-    float _FUP = 0.54;        // set UP with 70% C.L. for 2 parameters  
+  // ?????????????????????????? //
+    float _FUP = 0.54;        // set UP with 70% C.L. for 2 parameters
     fit->ErrorAnalysis(_FUP); //
 
-// ?????????????????????????? //
+  // ?????????????????????????? //
 
 
     cout << "fit status:" << status << endl;
@@ -178,7 +183,8 @@ string templateFitter(TString plotName, TH1F* h_sample, TH1F* h_b, TH1F* h_c, TH
     }
 
   // Extract fit results
-    for(int i=0; i<3; i++) fit->GetResult(i, frac[i], err[i]);
+    //for(int i=0; i<3; i++) fit->GetResult(i, frac[i], err[i]);
+    for(int i=0; i<2; i++) fit->GetResult(i, frac[i], err[i]);
     TH1F* result = (TH1F*) fit->GetPlot();
 
     float chi2val = fit->GetChisquare()/fit->GetNDF();
@@ -195,13 +201,13 @@ string templateFitter(TString plotName, TH1F* h_sample, TH1F* h_b, TH1F* h_c, TH
   // Scale templates for plot
     btemp->Scale(frac[0]*nData/btemp->Integral());
     ctemp->Scale(frac[1]*nData/ctemp->Integral());
-    ltemp->Scale(frac[2]*nData/ltemp->Integral());
+//    ltemp->Scale(frac[2]*nData/ltemp->Integral());
 
   // Draw them histos.
     data ->Draw("hist PE sames");
     btemp->Draw("hist E sames");
     ctemp->Draw("hist E sames");
-    ltemp->Draw("hist E sames");
+//    ltemp->Draw("hist E sames");
     result->Draw("esame");
 
   // Set Log Y
@@ -211,7 +217,7 @@ string templateFitter(TString plotName, TH1F* h_sample, TH1F* h_b, TH1F* h_c, TH
     TString dataLegLabel = TString("Data (") + Form("%.1f",nData) + ")";
     TString bjetLegLabel = TString("Z+b (") + Form("%.3f",frac[0]) + "#pm" + Form("%.3f",err[0]) + ")";
     TString cjetLegLabel = TString("Z+c (") + Form("%.3f",frac[1]) + "#pm" + Form("%.3f",err[1]) + ")";
-    TString ljetLegLabel = TString("Z+dusg (") + Form("%.3f",frac[2]) + "#pm" + Form("%.3f",err[2]) + ")";
+//    TString ljetLegLabel = TString("Z+dusg (") + Form("%.3f",frac[2]) + "#pm" + Form("%.3f",err[2]) + ")";
     TString  fitLegLabel = TString("Fit (#chi^2/NDOF = ") + Form("%.3f", chi2val) + ")";
 
   // The legend continues
@@ -220,7 +226,7 @@ string templateFitter(TString plotName, TH1F* h_sample, TH1F* h_b, TH1F* h_c, TH
     leg->AddEntry(data,   dataLegLabel, "P");
     leg->AddEntry(btemp,  bjetLegLabel, "L");
     leg->AddEntry(ctemp,  cjetLegLabel, "L");
-    leg->AddEntry(ltemp,  ljetLegLabel, "L");
+  //  leg->AddEntry(ltemp,  ljetLegLabel, "L");
     leg->AddEntry(result,  fitLegLabel, "L");
     //leg->SetBorderSize(0);  leg->SetFillStyle(0);
     leg->Draw();
@@ -237,7 +243,7 @@ string templateFitter(TString plotName, TH1F* h_sample, TH1F* h_b, TH1F* h_c, TH
     stackedTemps->Draw("hist E sames");
     data->Draw("hist E sames");  result->Draw("esame");  leg->Draw();
   // Give plot a log axis
-//    resultPlotStacked->SetLogy();
+    //resultPlotStacked->SetLogy();
 
   // Set scale factors
     float sB, sC, sL;
@@ -248,7 +254,7 @@ string templateFitter(TString plotName, TH1F* h_sample, TH1F* h_b, TH1F* h_c, TH
     else  { sB = 0; sC = 0; sL = 0; }
 
   // Create text box w/ ratios for each plot
-//    TLatex ratioLabel(0.65, 0.5, Form("#splitline{(Z+b):(Z+c):(Z+light)}{%2.0f:%2.0f:%2.0f}", sB*100,sC*100,sL*100));
+    //TLatex ratioLabel(0.65, 0.5, Form("#splitline{(Z+b):(Z+c):(Z+light)}{%2.0f:%2.0f:%2.0f}", sB*100,sC*100,sL*100));
     //TLatex ratioLabel;
     //ratioLabel.SetNDC(kTRUE);
     //ratioLabel.SetTextSize(0.04);
@@ -256,7 +262,7 @@ string templateFitter(TString plotName, TH1F* h_sample, TH1F* h_b, TH1F* h_c, TH
     //ratioLabel.DrawLatex(0.63, 0.52, Form("%0.0f:%0.0f:%0.0f", sB*100,sC*100,sL*100));
     //ratioLabel.Draw();
 
-////////////////////// CONTROL PLOT
+  ////////////////////// CONTROL PLOT
   // Same thing, but with false-scaled templates
     THStack *stackedTemps_control = new THStack("temp_stack_control", "temp_stack_control");
     TCanvas *resultPlotStacked_control = new TCanvas(resultPlotName+"Stacked_control", resultPlotName+"Stacked_control");
@@ -280,14 +286,14 @@ string templateFitter(TString plotName, TH1F* h_sample, TH1F* h_b, TH1F* h_c, TH
            "      NDOF =      " << ndof << "\n"
            "      Chi2/NDOF = " << chi2val << "\n"
            "\n";
-/////////////////////////////////////////////
+  /////////////////////////////////////////////
 
   // Output plots to file
     TFile plotOutput(TString("fits/") + plotName + ".root", "RECREATE");
     seperate_plots   ->Write();
     resultPlot       ->Write();
     resultPlotStacked->Write();
-//    resultPlotStacked_control->Write();
+    //resultPlotStacked_control->Write();
     h_sample->Write();
     h_b->Write();
     h_c->Write();
@@ -326,15 +332,15 @@ void getTemplatesFromRunIIFile(TString fn, TH1F*& h_b, TH1F*& h_c, TH1F*& h_l, T
         inputFile->GetObject("control_plots/dy"  "/"+channel+"_Zb/zhfmet_CSVT_hfjet_ld_msv", hf_b1);
         inputFile->GetObject("control_plots/dy"  "/"+channel+"_Zc/zhfmet_CSVT_hfjet_ld_msv", hf_c1);
         inputFile->GetObject("control_plots/dy"  "/"+channel+"_Zl/zhfmet_CSVT_hfjet_ld_msv", hf_l1);
-        inputFile->GetObject("control_plots/dy1j""/"+channel+"_Zb/zhfmet_CSVT_hfjet_ld_msv", hf_b2);
-        inputFile->GetObject("control_plots/dy1j""/"+channel+"_Zc/zhfmet_CSVT_hfjet_ld_msv", hf_c2);
-        inputFile->GetObject("control_plots/dy1j""/"+channel+"_Zl/zhfmet_CSVT_hfjet_ld_msv", hf_l2);
+        //inputFile->GetObject("control_plots/dy1j""/"+channel+"_Zb/zhfmet_CSVT_hfjet_ld_msv", hf_b2);
+        //inputFile->GetObject("control_plots/dy1j""/"+channel+"_Zc/zhfmet_CSVT_hfjet_ld_msv", hf_c2);
+        //inputFile->GetObject("control_plots/dy1j""/"+channel+"_Zl/zhfmet_CSVT_hfjet_ld_msv", hf_l2);
     }
 
   // Add templates together to get final templates
-    h_b = (TH1F*) hf_b1->Clone("btemp");   h_b->Add(hf_b2);
-    h_c = (TH1F*) hf_c1->Clone("ctemp");   h_c->Add(hf_c2);
-    h_l = (TH1F*) hf_l1->Clone("ltemp");   h_l->Add(hf_l2);
+    h_b = (TH1F*) hf_b1->Clone("btemp");       if(channel == "Zll") h_b->Add(hf_b2);
+    h_c = (TH1F*) hf_c1->Clone("ctemp");       if(channel == "Zll") h_c->Add(hf_c2);
+    h_l = (TH1F*) hf_l1->Clone("ltemp");       if(channel == "Zll") h_l->Add(hf_l2);
 
   // Scale based on input factor.
     h_b->Scale(statisticsScale);
@@ -343,7 +349,9 @@ void getTemplatesFromRunIIFile(TString fn, TH1F*& h_b, TH1F*& h_c, TH1F*& h_l, T
 
   // Clean up
     delete hf_b1;  delete hf_c1;  delete hf_l1;
-    delete hf_b2;  delete hf_c2;  delete hf_l2;
+        if(channel == "Zll") delete hf_b2;
+        if(channel == "Zll") delete hf_c2;
+        if(channel == "Zll") delete hf_l2;
 
 }
 
@@ -362,7 +370,7 @@ TH1F* getRunIISampleFromFile(TString fn, TString channel)
         TH1F *h_zee = getRunIISampleFromFile(fn, "Zee");
         h_sample = (TH1F*) h_zuu->Clone("data_m_bkgd_"+channel);
         h_sample->Add(h_zee);
-//        h_sample->Sumw2();
+        //h_sample->Sumw2();
     }
 
   // If looking for an individual channel, get the appropriate data histogram and subtract its bkgd contributions.
