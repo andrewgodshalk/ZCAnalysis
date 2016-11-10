@@ -2,7 +2,7 @@
 
 CC=g++
 CFLAGS=-c -Wall 
-ROOTFLAGS=`root-config --cflags --glibs`
+ROOTFLAGS=`root-config --cflags --glibs --libs`
 
 all : NtupleProcessor ControlPlotMaker EffPlotAndCalc CombineBCLTemplates
 	make -f NtupleProcessor/makefile
