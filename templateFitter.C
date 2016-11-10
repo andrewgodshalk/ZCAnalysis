@@ -7,6 +7,8 @@
 #include <sstream>
 
 
+const bool useDY1J = true;
+
 // Spits out date and time, by default in YYYY-MM-DD HH:MM:SS
 string timeStamp(char d = '-', char b = ' ', char t = ':');
 // Spits out date and time, by default in YYYY-MM-DD_HH_MM_SS, for use in filenames
@@ -121,12 +123,12 @@ string templateFitter(TString plotName, TH1F* h_sample, TH1F* h_b, TH1F* h_c, TH
     seperate_plots->Update();
 
   // Set up slot for fitter variables
-    //double frac[3], err[3];  int status;
-    //TObjArray *temps = new TObjArray(3);  // Array for template histograms
-    //temps->Add(btemp); temps->Add(ctemp); temps->Add(ltemp);
-    double frac[2], err[2];  int status;
-    TObjArray *temps = new TObjArray(2);  // Array for template histograms
-    temps->Add(btemp); temps->Add(ctemp); //temps->Add(ltemp);
+    double frac[3], err[3];  int status;
+    TObjArray *temps = new TObjArray(3);  // Array for template histograms
+    temps->Add(btemp); temps->Add(ctemp); temps->Add(ltemp);
+    // double frac[2], err[2];  int status;
+    // TObjArray *temps = new TObjArray(2);  // Array for template histograms
+    // temps->Add(btemp); temps->Add(ctemp); //temps->Add(ltemp);
 
   ///// TEST ////////
     log << endl << btemp->GetBinContent(7) << "  " << btemp->GetBinError(7) << endl << endl;
@@ -148,7 +150,7 @@ string templateFitter(TString plotName, TH1F* h_sample, TH1F* h_b, TH1F* h_c, TH
     TFractionFitter *fit = new TFractionFitter(data, temps);
     fit->Constrain(0, 0.00001, 0.99999);
     fit->Constrain(1, 0.00001, 0.99999);
-//    fit->Constrain(2, 0.00001, 0.99999);
+    fit->Constrain(2, 0.00001, 0.99999);
     // Extract the number of bins in data, then Set the range of the fit to exclude first and last (underflow and overflow) bins.
     fit->SetRangeX(1,nBins);
 
@@ -183,8 +185,8 @@ string templateFitter(TString plotName, TH1F* h_sample, TH1F* h_b, TH1F* h_c, TH
     }
 
   // Extract fit results
-    //for(int i=0; i<3; i++) fit->GetResult(i, frac[i], err[i]);
-    for(int i=0; i<2; i++) fit->GetResult(i, frac[i], err[i]);
+    for(int i=0; i<3; i++) fit->GetResult(i, frac[i], err[i]);
+    // for(int i=0; i<2; i++) fit->GetResult(i, frac[i], err[i]);
     TH1F* result = (TH1F*) fit->GetPlot();
 
     float chi2val = fit->GetChisquare()/fit->GetNDF();
@@ -201,13 +203,13 @@ string templateFitter(TString plotName, TH1F* h_sample, TH1F* h_b, TH1F* h_c, TH
   // Scale templates for plot
     btemp->Scale(frac[0]*nData/btemp->Integral());
     ctemp->Scale(frac[1]*nData/ctemp->Integral());
-//    ltemp->Scale(frac[2]*nData/ltemp->Integral());
+    ltemp->Scale(frac[2]*nData/ltemp->Integral());
 
   // Draw them histos.
     data ->Draw("hist PE sames");
     btemp->Draw("hist E sames");
     ctemp->Draw("hist E sames");
-//    ltemp->Draw("hist E sames");
+   ltemp->Draw("hist E sames");
     result->Draw("esame");
 
   // Set Log Y
@@ -217,7 +219,7 @@ string templateFitter(TString plotName, TH1F* h_sample, TH1F* h_b, TH1F* h_c, TH
     TString dataLegLabel = TString("Data (") + Form("%.1f",nData) + ")";
     TString bjetLegLabel = TString("Z+b (") + Form("%.3f",frac[0]) + "#pm" + Form("%.3f",err[0]) + ")";
     TString cjetLegLabel = TString("Z+c (") + Form("%.3f",frac[1]) + "#pm" + Form("%.3f",err[1]) + ")";
-//    TString ljetLegLabel = TString("Z+dusg (") + Form("%.3f",frac[2]) + "#pm" + Form("%.3f",err[2]) + ")";
+   TString ljetLegLabel = TString("Z+dusg (") + Form("%.3f",frac[2]) + "#pm" + Form("%.3f",err[2]) + ")";
     TString  fitLegLabel = TString("Fit (#chi^2/NDOF = ") + Form("%.3f", chi2val) + ")";
 
   // The legend continues
@@ -226,9 +228,9 @@ string templateFitter(TString plotName, TH1F* h_sample, TH1F* h_b, TH1F* h_c, TH
     leg->AddEntry(data,   dataLegLabel, "P");
     leg->AddEntry(btemp,  bjetLegLabel, "L");
     leg->AddEntry(ctemp,  cjetLegLabel, "L");
-  //  leg->AddEntry(ltemp,  ljetLegLabel, "L");
+    leg->AddEntry(ltemp,  ljetLegLabel, "L");
     leg->AddEntry(result,  fitLegLabel, "L");
-    //leg->SetBorderSize(0);  leg->SetFillStyle(0);
+    leg->SetBorderSize(0);  leg->SetFillStyle(0);
     leg->Draw();
 
   // Same thing, but with your scaled templates stacked.
@@ -332,20 +334,20 @@ void getTemplatesFromRunIIFile(TString fn, TH1F*& h_b, TH1F*& h_c, TH1F*& h_l, T
         inputFile->GetObject("control_plots/dy"  "/"+channel+"_Zb/zhfmet_CSVT_hfjet_ld_msv", hf_b1);
         inputFile->GetObject("control_plots/dy"  "/"+channel+"_Zc/zhfmet_CSVT_hfjet_ld_msv", hf_c1);
         inputFile->GetObject("control_plots/dy"  "/"+channel+"_Zl/zhfmet_CSVT_hfjet_ld_msv", hf_l1);
-        //inputFile->GetObject("control_plots/dy1j""/"+channel+"_Zb/zhfmet_CSVT_hfjet_ld_msv", hf_b2);
-        //inputFile->GetObject("control_plots/dy1j""/"+channel+"_Zc/zhfmet_CSVT_hfjet_ld_msv", hf_c2);
-        //inputFile->GetObject("control_plots/dy1j""/"+channel+"_Zl/zhfmet_CSVT_hfjet_ld_msv", hf_l2);
+        if(useDY1J) inputFile->GetObject("control_plots/dy1j""/"+channel+"_Zb/zhfmet_CSVT_hfjet_ld_msv", hf_b2);
+        if(useDY1J) inputFile->GetObject("control_plots/dy1j""/"+channel+"_Zc/zhfmet_CSVT_hfjet_ld_msv", hf_c2);
+        if(useDY1J) inputFile->GetObject("control_plots/dy1j""/"+channel+"_Zl/zhfmet_CSVT_hfjet_ld_msv", hf_l2);
     }
 
   // Add templates together to get final templates
-    h_b = (TH1F*) hf_b1->Clone("btemp");       if(channel == "Zll") h_b->Add(hf_b2);
-    h_c = (TH1F*) hf_c1->Clone("ctemp");       if(channel == "Zll") h_c->Add(hf_c2);
-    h_l = (TH1F*) hf_l1->Clone("ltemp");       if(channel == "Zll") h_l->Add(hf_l2);
+    h_b = (TH1F*) hf_b1->Clone("btemp");       /*if(channel == "Zll")*/ if(useDY1J) h_b->Add(hf_b2);
+    h_c = (TH1F*) hf_c1->Clone("ctemp");       /*if(channel == "Zll")*/ if(useDY1J) h_c->Add(hf_c2);
+    h_l = (TH1F*) hf_l1->Clone("ltemp");       /*if(channel == "Zll")*/ if(useDY1J) h_l->Add(hf_l2);
 
   // Scale based on input factor.
-    h_b->Scale(statisticsScale);
-    h_c->Scale(statisticsScale);
-    h_l->Scale(statisticsScale);
+//    h_b->Scale(statisticsScale);
+//    h_c->Scale(statisticsScale);
+//    h_l->Scale(statisticsScale);
 
   // Clean up
     delete hf_b1;  delete hf_c1;  delete hf_l1;

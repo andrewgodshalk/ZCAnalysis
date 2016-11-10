@@ -14,13 +14,16 @@
 ///////////////////////////////////////////////////
 // PLACE TO MODIFY
 ///////////////////////////////////////////////////
-    int rebin     = 2;
-    int tempScale = 10;
+    int rebin     = 3;
+//    int rebin     = 2;
+    int tempScale = 1;
 
-//    TString fn_input = "zc_cp_2016-06-15_w_trig.root";
-//    TString fn_sample = "zc_cp_2016-06-15_w_trig.root";
-    TString fn_input =  "zc_cp_2016-09-15_wLepSF.root";
+    // TString fn_input  = "zc_cp_2016-09-11_wLepSF.root";
+    // TString fn_sample = "zc_cp_2016-09-11_wLepSF.root";
+    TString fn_input  = "zc_cp_2016-09-15_wLepSF.root";
     TString fn_sample = "zc_cp_2016-09-15_wLepSF.root";
+    // TString fn_input  = "zc_2016-11-10_wDYWeight.root";
+    // TString fn_sample = "zc_2016-11-10_wDYWeight.root";
 
 //////////////////////////////////////////////////
 //////////////////////////////////////////////////
