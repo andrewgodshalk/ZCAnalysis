@@ -70,7 +70,8 @@ bool EventHandler::mapTree(TTree* tree)
         "HLT_BIT_HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_v",
         "HLT_BIT_HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_v",
         "HLT_BIT_HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v",
-        "nPVs"
+        "nPVs",
+        "lheNj"
     };
     if(usingSim) branches_to_reactivate.push_back("Jet_mcFlavour");
 
@@ -136,8 +137,9 @@ bool EventHandler::mapTree(TTree* tree)
     tree->SetBranchAddress( "Jet_btagCSV"    ,  m_jet_csv     );
     tree->SetBranchAddress( "Jet_vtxMass"    ,  m_jet_msv     );
 if(usingSim)
-    tree->SetBranchAddress( "Jet_mcFlavour"  ,  m_jet_flv     );
-//    tree->SetBranchAddress( "Jet_id"         ,  m_jet_flv     );
+{   tree->SetBranchAddress( "Jet_mcFlavour"  ,  m_jet_flv     );
+    tree->SetBranchAddress( "lheNj"          , &m_lheNj       );
+}
 
   // MET variables
 //    temp_branch = tree->GetBranch("MET");
@@ -306,6 +308,9 @@ void EventHandler::evalCriteria()
             //cout << "     SF TEST!! " << lType << ", " << evtWeight << endl;
         }
     }
+
+  // ADDED 2016-11-10 - MEANT FOR COMBINATION OF DY AND DY1J EVENTS.
+    if(usingSim && usingDY && m_lheNj == 1) evtWeight *= 0.028391905220026;
 
     hasValidZBosonMass = m_Z_mass>=anCfg.dilepInvMassMin && m_Z_mass<=anCfg.dilepInvMassMax;
     hasValidMET        = m_MET_et<=anCfg.metMax;
