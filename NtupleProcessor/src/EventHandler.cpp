@@ -310,7 +310,7 @@ void EventHandler::evalCriteria()
     }
 
   // ADDED 2016-11-10 - MEANT FOR COMBINATION OF DY AND DY1J EVENTS.
-    if(usingSim && usingDY && m_lheNj == 1) evtWeight *= 0.028391905220026;
+    //if(usingSim && usingDY && m_lheNj == 1) evtWeight *= 0.028391905220026;
 
     hasValidZBosonMass = m_Z_mass>=anCfg.dilepInvMassMin && m_Z_mass<=anCfg.dilepInvMassMax;
     hasValidMET        = m_MET_et<=anCfg.metMax;

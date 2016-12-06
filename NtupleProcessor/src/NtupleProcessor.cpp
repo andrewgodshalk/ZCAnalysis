@@ -132,8 +132,8 @@ void NtupleProcessor::createHistogramExtractorFromString(TString& inputString)
         for(TString dsOp : dsOptions)
         {
             TString datasetLabel = dataset;
-            // if(dataset(0,4) == "dy1j"  ) datasetLabel = "dy1j"  ;
-            if(dataset(0,4) == "dy1j"  ) datasetLabel = "dy"    ;
+            if(dataset(0,4) == "dy1j"  ) datasetLabel = "dy1j"  ;
+            // if(dataset(0,4) == "dy1j"  ) datasetLabel = "dy"    ;
             if(dataset(0,4) == "muon"  ) datasetLabel = "muon"  ;
             if(dataset(0,4) == "elec"  ) datasetLabel = "elec"  ;
             if(dataset(0,3) == "tt_"   ) datasetLabel = "tt_"   ;
@@ -161,8 +161,8 @@ void NtupleProcessor::createHistogramExtractorFromString(TString& inputString)
         for(TString dsOp : dsOptions)
         {
             TString datasetLabel = dataset;
-            // if(dataset(0,4) == "dy1j"  ) datasetLabel = "dy1j"  ;
-            if(dataset(0,4) == "dy1j"  ) datasetLabel = "dy"  ;
+            if(dataset(0,4) == "dy1j"  ) datasetLabel = "dy1j"  ;
+            // if(dataset(0,4) == "dy1j"  ) datasetLabel = "dy"  ;
             if(dataset(0,4) == "muon"  ) datasetLabel = "muon"  ;
             if(dataset(0,4) == "elec"  ) datasetLabel = "elec"  ;
             if(dataset(0,3) == "tt_"   ) datasetLabel = "tt_"   ;

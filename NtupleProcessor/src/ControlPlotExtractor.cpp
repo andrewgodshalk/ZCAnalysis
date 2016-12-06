@@ -1,6 +1,6 @@
 /*
   ControlPlotExtractor.cpp
- 
+
    Created on: May 19, 2015
        Author: godshalk
  */
@@ -222,6 +222,7 @@ void ControlPlotExtractor::makePhysicsObjectHistograms(TString poLabel, TString 
             histoName  = prefix + "_" + poLabel + multName[i] + info[0];
             //cout << "    ControlPlotExtractor::ControlPlotExtractor(): Creating histogram " << histoName << " w/ title: " << (multTitle[i]+histoTitle) << endl;
             h[histoName] = new TH1F(histoName, multTitle[i]+histoTitle, numBins, binMin, binMax);
+            h[histoName]->Sumw2();
             hDir->WriteTObject(h[histoName], 0, "Overwrite");
         } while( splitThis && (i++)<3);
     }
@@ -345,4 +346,3 @@ void ControlPlotExtractor::fillAllObjectHistograms(TString prefix)
     fillJetHistograms(     prefix);
     fillMETHistograms(     prefix);
 }
-
