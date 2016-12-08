@@ -71,9 +71,13 @@ bool EventHandler::mapTree(TTree* tree)
         "HLT_BIT_HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_v",
         "HLT_BIT_HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v",
         "nPVs",
-        "lheNj"
+        //"lheNj"
     };
-    if(usingSim) branches_to_reactivate.push_back("Jet_mcFlavour");
+    if(usingSim)
+    { 
+        branches_to_reactivate.push_back("Jet_mcFlavour");
+        branches_to_reactivate.push_back("lheNj"        );
+    }
 
  for(TString br : branches_to_reactivate) tree->SetBranchStatus(br.Data(), 1);
 

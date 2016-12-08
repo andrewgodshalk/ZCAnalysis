@@ -48,11 +48,16 @@ int main(int argc, char* argv[])
 
   // Set up list of valid datsets
     vector<string> datasetNames = {
-      "dy1j_1of7","dy1j_2of7","dy1j_3of7","dy1j_4of7","dy1j_5of7","dy1j_6of7","dy1j_7of7","dy",
-      "st_s","st_t_4f_lep","st_t_5f_lep","stbar_t_4f_lep","stbar_t_5f_lep","stbar_tw_5f_nohad","stbar_tw_5f","st_tw_5f_nohad","st_tw_5f",
-      "elec_c","elec_d_1of8","elec_d_2of8","elec_d_3of8","elec_d_4of8","elec_d_5of8","elec_d_6of8","elec_d_7of8","elec_d_8of8",
-      "muon_c","muon_d_1of6","muon_d_2of6","muon_d_3of6","muon_d_4of6","muon_d_5of6","muon_d_6of6",
-      "tt_lep_1of2","tt_lep_2of2","tt_1of5","tt_2of5","tt_3of5","tt_4of5","tt_5of5","ww","wzz","wz","zz" 
+      "muonBv1","muonBv2_01of24","muonBv2_02of24","muonBv2_03of24","muonBv2_04of24","muonBv2_05of24","muonBv2_06of24",
+      "muonBv2_07of24","muonBv2_08of24","muonBv2_09of24","muonBv2_10of24","muonBv2_11of24","muonBv2_12of24",
+      "muonBv2_13of24","muonBv2_14of24","muonBv2_15of24","muonBv2_16of24","muonBv2_17of24","muonBv2_18of24",
+      "muonBv2_19of24","muonBv2_20of24","muonBv2_21of24","muonBv2_22of24","muonBv2_23of24","muonBv2_24of24",
+      "muonC", "muonD", "dy_inc_amc","dy_inc_mm","tt","ww","wz","zz",
+      //"dy1j_1of7","dy1j_2of7","dy1j_3of7","dy1j_4of7","dy1j_5of7","dy1j_6of7","dy1j_7of7","dy",
+      //"st_s","st_t_4f_lep","st_t_5f_lep","stbar_t_4f_lep","stbar_t_5f_lep","stbar_tw_5f_nohad","stbar_tw_5f","st_tw_5f_nohad","st_tw_5f",
+      //"elec_c","elec_d_1of8","elec_d_2of8","elec_d_3of8","elec_d_4of8","elec_d_5of8","elec_d_6of8","elec_d_7of8","elec_d_8of8",
+      //"muon_c","muon_d_1of6","muon_d_2of6","muon_d_3of6","muon_d_4of6","muon_d_5of6","muon_d_6of6",
+      //"tt_lep_1of2","tt_lep_2of2","tt_1of5","tt_2of5","tt_3of5","tt_4of5","tt_5of5","ww","wzz","wz","zz" 
     };
 
   // Process command line input.
