@@ -44,6 +44,7 @@ ControlPlotExtractor::ControlPlotExtractor(EventHandler& eh, TDirectory* d, TStr
     nEvents["Valid Z mass"               ] = 0;
     nEvents["Valid Z+j Event"            ] = 0;
     nEvents["Valid Z+j Event w/ MET cut" ] = 0;
+    nEvents["Pass JSON"                  ] = 0;
     for(const TString& hfLabel : ControlPlotExtractor::HFTags)
     {   nEvents[TString("Valid Z+HF Event("            )+hfLabel+")"] = 0;
         nEvents[TString("Valid Z+HF Event w/ MET cut (")+hfLabel+")"] = 0;
@@ -94,13 +95,14 @@ void ControlPlotExtractor::fillHistos()
 
   // If event isn't in JSON and isn't a simulation event, move on to the next event.
     if(!evt.inJSON && !usingSim) return;
+    nEvents["Pass JSON"]++;
 
  // If using a DY, check starting conditions to see if a certain type of event is desired.
     if(usingDY)
-    {   if(selectingZtautau  && !evt.zBosonFromTaus        ) return;
-        else if( selectingZb && !evt.hasBJet               ) return;
-        else if( selectingZc && !evt.hasCJet               ) return;
-        else if( selectingZl && (evt.hasBJet||evt.hasCJet) ) return;
+    {   if(selectingZtautau  && !evt.zBosonFromTaus          ) return;
+        else if( selectingZb && !evt.hasBJet                 ) return;
+        else if( selectingZc && !(!evt.hasBJet&&evt.hasCJet) ) return;
+        else if( selectingZl && (evt.hasBJet||evt.hasCJet)   ) return;
     }
 
   // Check if the event has triggered for the desired decay chain. If not, kill.

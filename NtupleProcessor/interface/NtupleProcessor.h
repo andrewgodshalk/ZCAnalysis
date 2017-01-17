@@ -25,11 +25,12 @@
 class NtupleProcessor
 {
   public:
-    NtupleProcessor(TString, TString fnnp="NtupleProcessor/etc/zcNtupleProcConfig_default.ini", TString fnac="NtupleProcessor/etc/zcAnalysisConfig_default.ini", TString o = "", int me=-1);  // Primary constructor.
+    NtupleProcessor(TString, TString nf = "", TString fnnp="NtupleProcessor/etc/zcNtupleProcConfig_default.ini", TString fnac="NtupleProcessor/etc/zcAnalysisConfig_default.ini", TString o = "", int me=-1);  // Primary constructor.
    ~NtupleProcessor(){}
 
   private:
     TString           dataset;
+    TString           fileString;     // Location of the input ntuple file. 
     NtupleProcConfig  runParams;      // Contains options specific for NtupleProcessor to run
     EventHandler      eHandler;       // TreeIterator and EventHandler for running over the ntuple and extracting the desired information.
     TreeIterator      tIter;
@@ -40,6 +41,7 @@ class NtupleProcessor
 
     bool usingSim;
     bool usingDY;
+    bool noTrigOnMC;
 
     std::map<TString, HistogramExtractor*> hExtractors;    // Map of histogram extractors. Key is the output directory within the output file where histograms are stored.
 

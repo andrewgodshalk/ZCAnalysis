@@ -17,19 +17,21 @@ NtupleProcessor.cpp
 
 using std::cout;   using std::endl;   using std::vector;   using std::ifstream;
 
-NtupleProcessor::NtupleProcessor(TString ds, TString fnpc, TString fnac, TString o, int me)
-:  dataset(ds), runParams(fnpc), eHandler(fnac,o), tIter(eHandler, hExtractors), options(o), maxEvents(me)
+NtupleProcessor::NtupleProcessor(TString ds, TString nf, TString fnpc, TString fnac, TString o, int me)
+:  dataset(ds), fileString(nf), runParams(fnpc), eHandler(fnac,o), tIter(eHandler, hExtractors), options(o), maxEvents(me)
 {
   // TEST output
     cout << "  NtupleProcessor: Created.\n"
             "    Ntuple Processing Config File: " << fnpc << "\n"
+            "    Ntuple File:                   " << fileString << "\n"
             "    Dataset:                       " << dataset   << "\n"
             "    Options:                       " << options   << "\n"
          << endl;
 
   // Extract options
-    usingSim = (options.Contains("Sim", TString::kIgnoreCase) ? true : false);
-    usingDY  = (options.Contains("DY" , TString::kIgnoreCase) ? true : false);
+    usingSim    = (options.Contains("Sim"        , TString::kIgnoreCase) ? true : false);
+    usingDY     = (options.Contains("DY"         , TString::kIgnoreCase) ? true : false);
+    noTrigOnMC  = (options.Contains("NoTrigOnMC" , TString::kIgnoreCase) ? true : false);
 
   // Open output file
     //outputFile = TFile::Open(runParams.fn_output, "UPDATE");
@@ -40,7 +42,7 @@ NtupleProcessor::NtupleProcessor(TString ds, TString fnpc, TString fnac, TString
     for(auto& heStr : runParams.hExtractorStrs) createHistogramExtractorFromString(heStr);
 
   //If using muon or elec, listed file lists.
-    TString fileString = runParams.fn_ntuple[dataset.Data()];
+    if(fileString == "") fileString = runParams.fn_ntuple[dataset.Data()];
     int fileStrLength = fileString.Length();
     TString fileSuffix( fileString( fileStrLength-4, 4 ) );
     if((ds == "elec" || ds == "muon") && fileSuffix == ".txt")
@@ -77,7 +79,10 @@ NtupleProcessor::NtupleProcessor(TString ds, TString fnpc, TString fnac, TString
     else
     {
       // Open and set up appropriate file & tree
-        ntupleFile = TFile::Open(runParams.fn_ntuple[dataset.Data()]);
+        // ntupleFile = TFile::Open(runParams.fn_ntuple[dataset.Data()]);
+        ntupleFile = TFile::Open(fileString);
+	cout << "    Dataset = " << dataset << endl;
+	cout << "    File    = " << runParams.fn_ntuple[dataset.Data()] << endl;
         if(!ntupleFile) cout << "NtupleProcessor: ERROR: Unable to open file " << runParams.fn_ntuple[dataset.Data()] << endl;
         TTree *ntuple   = (TTree*) ntupleFile->Get("tree");
 
@@ -91,8 +96,6 @@ NtupleProcessor::NtupleProcessor(TString ds, TString fnpc, TString fnac, TString
         else              ntuple->Process(&tIter, options);
         cout << endl;
     }
-
-
 
   // When finished, save to file.
     for(auto& he : hExtractors)

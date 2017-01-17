@@ -65,6 +65,8 @@ public:
     float m_wt_diMuon;
     int   m_trig_dimuon1;
     int   m_trig_dimuon2;
+    int   m_trig_dimuon3;
+    int   m_trig_dimuon4;
     int   m_trig_dielec1;
     float m_nPVs;
     float m_lheNj;
@@ -76,6 +78,7 @@ public:
   // Selection Variables
     bool usingSim; // Simulation events. For plotting sim-truth information.
     bool usingDY ;
+    bool noTrigOnMC;
 
     bool inJSON             ;
     bool isElTriggered      ;

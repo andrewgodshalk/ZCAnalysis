@@ -24,6 +24,7 @@ EventHandler::EventHandler(TString fnac, TString o) : anCfg(fnac), options(o)
   // Check the option to see if we're working with Simulation or Data
     usingSim           = (options.Contains("Sim"        , TString::kIgnoreCase) ? true : false);
     usingDY            = (options.Contains("DY"         , TString::kIgnoreCase) ? true : false);
+    noTrigOnMC         = (options.Contains("NoTrigOnMC" , TString::kIgnoreCase) ? true : false);
     usingTopHalfDY     = (options.Contains("TOPHALF"    , TString::kIgnoreCase) ? true : false);
     usingBottomHalfDY  = (options.Contains("BOTTOMHALF" , TString::kIgnoreCase) ? true : false);
     usingEvenEventDY   = (options.Contains("EVEN"       , TString::kIgnoreCase) ? true : false);
@@ -67,6 +68,8 @@ bool EventHandler::mapTree(TTree* tree)
         "htJet30"    ,
         "mhtJet30"   ,
         "mhtPhiJet30",
+        "HLT_BIT_HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_v",
+        "HLT_BIT_HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_v",
         "HLT_BIT_HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_v",
         "HLT_BIT_HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_v",
         "HLT_BIT_HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v",
@@ -165,6 +168,8 @@ if(usingSim)
 //    tree->SetBranchAddress( "triggerFlags",         m_triggers   );
 //    tree->SetBranchAddress( "weightTrig2012DiEle" , &m_wt_diEle  );
 //    tree->SetBranchAddress( "weightTrig2012DiMuon", &m_wt_diMuon );
+    tree->SetBranchAddress("HLT_BIT_HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_v"         , &m_trig_dimuon3);
+    tree->SetBranchAddress("HLT_BIT_HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_v"       , &m_trig_dimuon4);
     tree->SetBranchAddress("HLT_BIT_HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_v"      , &m_trig_dimuon1);
     tree->SetBranchAddress("HLT_BIT_HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_v"    , &m_trig_dimuon2);
     tree->SetBranchAddress("HLT_BIT_HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v", &m_trig_dielec1);
@@ -204,6 +209,7 @@ void EventHandler::evalCriteria()
 //    isMuTriggered = triggered(anCfg.muonTriggers);
     isElTriggered = m_trig_dielec1;
     isMuTriggered = (m_trig_dimuon1 || m_trig_dimuon2);
+    if(usingSim && noTrigOnMC) isMuTriggered = isElTriggered = true;
 //cout << "   TRIGGER TEST: trig1: " << m_trig_dimuon1 << "  trig2: " << m_trig_dimuon2 << endl;
     if(!isElTriggered && !isMuTriggered) return;
 

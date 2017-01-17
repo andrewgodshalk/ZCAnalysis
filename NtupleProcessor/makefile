@@ -1,7 +1,7 @@
 # Make file for ZCAnalysis/NtupleProcessor package
 
-#CC=g++
-CC=g++-4.9
+CC=g++
+#CC=g++-4.9
 #CFLAGS=-std=c++14 -c -Wall
 CFLAGS=-c -Wall -fdiagnostics-color
 ROOTFLAGS=`root-config --cflags --glibs`
