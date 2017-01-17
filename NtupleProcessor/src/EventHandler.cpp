@@ -34,6 +34,10 @@ EventHandler::EventHandler(TString fnac, TString o) : anCfg(fnac), options(o)
     entriesInNtuple   = 0;
 
     evtWeight = 1.0;
+
+  // Set up trigger map objects to the same size as the list of triggers specified for selection in the analysis config file.
+    m_muon_trig = vector<int>(anCfg.muonTriggers.size(), 0);
+    m_elec_trig = vector<int>(anCfg.elecTriggers.size(), 0);
 }
 
 bool EventHandler::mapTree(TTree* tree)
@@ -68,11 +72,11 @@ bool EventHandler::mapTree(TTree* tree)
         "htJet30"    ,
         "mhtJet30"   ,
         "mhtPhiJet30",
-        "HLT_BIT_HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_v",
-        "HLT_BIT_HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_v",
-        "HLT_BIT_HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_v",
-        "HLT_BIT_HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_v",
-        "HLT_BIT_HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v",
+        //"HLT_BIT_HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_v",
+        //"HLT_BIT_HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_v",
+        //"HLT_BIT_HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_v",
+        //"HLT_BIT_HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_v",
+        //"HLT_BIT_HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v",
         "nPVs",
         //"lheNj"
     };
@@ -82,7 +86,10 @@ bool EventHandler::mapTree(TTree* tree)
         branches_to_reactivate.push_back("lheNj"        );
     }
 
- for(TString br : branches_to_reactivate) tree->SetBranchStatus(br.Data(), 1);
+  // Reactivate branches specified above, as well as branches for triggers named in the analysis config.
+    for(TString br : branches_to_reactivate) tree->SetBranchStatus(br.Data(), 1);
+    for(TString br : anCfg.muonTriggers    ) tree->SetBranchStatus(br.Data(), 1);
+    for(TString br : anCfg.elecTriggers    ) tree->SetBranchStatus(br.Data(), 1);
 
   // Z variables
     m_zdecayMode = 0;
@@ -165,14 +172,16 @@ if(usingSim)
 //    temp_branch->GetLeaf( "met_rawPt"  )->SetAddress( &m_MET_sig   );
 
   // Trigger variables
-//    tree->SetBranchAddress( "triggerFlags",         m_triggers   );
-//    tree->SetBranchAddress( "weightTrig2012DiEle" , &m_wt_diEle  );
-//    tree->SetBranchAddress( "weightTrig2012DiMuon", &m_wt_diMuon );
-    tree->SetBranchAddress("HLT_BIT_HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_v"         , &m_trig_dimuon3);
-    tree->SetBranchAddress("HLT_BIT_HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_v"       , &m_trig_dimuon4);
-    tree->SetBranchAddress("HLT_BIT_HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_v"      , &m_trig_dimuon1);
-    tree->SetBranchAddress("HLT_BIT_HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_v"    , &m_trig_dimuon2);
-    tree->SetBranchAddress("HLT_BIT_HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v", &m_trig_dielec1);
+    //tree->SetBranchAddress( "triggerFlags",         m_triggers   );
+    //tree->SetBranchAddress( "weightTrig2012DiEle" , &m_wt_diEle  );
+    //tree->SetBranchAddress( "weightTrig2012DiMuon", &m_wt_diMuon );
+    //tree->SetBranchAddress("HLT_BIT_HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_v"         , &m_trig_dimuon3);
+    //tree->SetBranchAddress("HLT_BIT_HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_v"       , &m_trig_dimuon4);
+    //tree->SetBranchAddress("HLT_BIT_HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_v"      , &m_trig_dimuon1);
+    //tree->SetBranchAddress("HLT_BIT_HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_v"    , &m_trig_dimuon2);
+    //tree->SetBranchAddress("HLT_BIT_HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v", &m_trig_dielec1);
+  // Set up trigger vector to be mapped to trigger variables specified in AnalysisCfg.
+    for(int i=0; i<m_muon_trig.size(); i++) tree->SetBranchAddress(anCfg.muonTriggers[i].c_str(), &m_muon_trig[i]);
     return true;
 }
 
@@ -207,8 +216,11 @@ void EventHandler::evalCriteria()
   // Check if event has the required triggers. Kick if not triggered.
 //    isElTriggered = triggered(anCfg.elecTriggers);
 //    isMuTriggered = triggered(anCfg.muonTriggers);
-    isElTriggered = m_trig_dielec1;
-    isMuTriggered = (m_trig_dimuon1 || m_trig_dimuon2);
+    isElTriggered = isMuTriggered = false;
+    for( const int& trig : m_muon_trig ) if(trig != 0) {isMuTriggered = true; break;}
+    for( const int& trig : m_elec_trig ) if(trig != 0) {isElTriggered = true; break;}
+    //isElTriggered = m_trig_dielec1;
+    //isMuTriggered = (m_trig_dimuon1 || m_trig_dimuon2);
     if(usingSim && noTrigOnMC) isMuTriggered = isElTriggered = true;
 //cout << "   TRIGGER TEST: trig1: " << m_trig_dimuon1 << "  trig2: " << m_trig_dimuon2 << endl;
     if(!isElTriggered && !isMuTriggered) return;

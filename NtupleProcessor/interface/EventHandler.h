@@ -70,6 +70,8 @@ public:
     int   m_trig_dielec1;
     float m_nPVs;
     float m_lheNj;
+    std::vector<int> m_muon_trig;
+    std::vector<int> m_elec_trig;
 
 // Calculated variables
     float Z_DelR, Z_DelPhi, Z_DelEta;

@@ -52,8 +52,8 @@ class AnalysisConfig : public ConfigReader
     float                                jetPtMin               ;
     float                                jetEtaMax              ;
     bool                                 jsonSelect             ;
-    std::vector<int>                     muonTriggers           ;
-    std::vector<int>                     elecTriggers           ;
+    std::vector<std::string>             muonTriggers           ;
+    std::vector<std::string>             elecTriggers           ;
     std::vector<std::pair<float,float> > jetPtBins              ;
     std::vector<std::pair<float,float> > jetEtaBins             ;
     std::vector<std::pair<float,float> > dileptonPtBins         ;
@@ -62,7 +62,7 @@ class AnalysisConfig : public ConfigReader
 
   private: 
     void processBinString(std::vector<std::pair<float,float> >&, std::string&);  // For processing input string of bin variables. Outputs set of pairs with integrated pair first.
-    void processTriggerString(std::vector<int>&, std::string&);              // For processing input string of trigger numbers.
+    void processTriggerString(std::vector<std::string>&, std::string&);              // For processing input string of trigger numbers.
 
 
 };
