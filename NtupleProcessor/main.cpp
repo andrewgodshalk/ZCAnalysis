@@ -40,12 +40,13 @@ int main(int argc, char* argv[])
     TString fts_mainBegin = fileTimeStamp();
 
   // Variables needed for Ntuple processor
-    string dataset    = "dy";
-    string npconfig   = "NtupleProcessor/etc/zcNtupleProcConfig_default.ini";
-    string anconfig   = "ZCLibrary/zcAnalysisConfig_default.ini";
-    string ntupleFile = "";
-    string options    = "";
-    int maxEvents     = -1;
+    string dataset     = "dy";
+    string npconfig    = "NtupleProcessor/etc/zcNtupleProcConfig_default.ini";
+    string anconfig    = "ZCLibrary/zcAnalysisConfig_default.ini";
+    string ntupleFile  = "";
+    string ntupleLabel = "";
+    string options     = "";
+    int maxEvents      = -1;
 
   // Set up list of valid datsets
     vector<string> datasetNames = {
@@ -78,13 +79,14 @@ int main(int argc, char* argv[])
     // Set up options
     po::options_description opDesc("Z+c Ntuple Processor options", 150);
     opDesc.add_options()
-        ("help"     ",h",                                                 "Print help message"                      )
-        ("dataset"  ",d",  po::value<string>()->default_value(dataset     ), "Dataset to process"                   )
-        ("ntuple"   ",N",  po::value<string>()->default_value(ntupleFile  ), "Ntuple file input (overides NPC def)" )
-        ("npconfig" ",n",  po::value<string>()->default_value(npconfig    ), "NtupleProcConfig file"                )
-        ("anconfig" ",a",  po::value<string>()->default_value(anconfig    ), "AnalysisConfig file"                  )
-        ("options"  ",o",  po::value<string>()->default_value(options     ), "Misc. options"                        )
-        ("maxevents"",m",  po::value<int>()   ->default_value(maxEvents   ), "Number of events to process"          )
+        ("help"        ",h",                                                 "Print help message"                      )
+        ("dataset"     ",d",  po::value<string>()->default_value(dataset     ), "Dataset to process"                   )
+        ("ntuplefile"  ",N",  po::value<string>()->default_value(ntupleFile  ), "Ntuple file input (overides NPC def)" )
+        ("ntuplelabel" ",L",  po::value<string>()->default_value(ntupleLabel ), "Label for input Ntuple File"          )
+        ("npconfig"    ",n",  po::value<string>()->default_value(npconfig    ), "NtupleProcConfig file"                )
+        ("anconfig"    ",a",  po::value<string>()->default_value(anconfig    ), "AnalysisConfig file"                  )
+        ("options"     ",o",  po::value<string>()->default_value(options     ), "Misc. options"                        )
+        ("maxevents"   ",m",  po::value<int>()   ->default_value(maxEvents   ), "Number of events to process"          )
     ;
     po::variables_map cmdInput;
     po::store(po::parse_command_line(argc, argv, opDesc), cmdInput);
@@ -99,11 +101,13 @@ int main(int argc, char* argv[])
     }
 
   // Check to see if an ntuple was specified.
-    if(cmdInput.count("ntuple")) ntupleFile = cmdInput["ntuple"].as<string>();
+    if(cmdInput.count("ntuplefile" )) ntupleFile  = cmdInput["ntuplefile" ].as<string>();
+    if(cmdInput.count("ntuplelabel")) ntupleLabel = cmdInput["ntuplelabel"].as<string>();
     if( ntupleFile != "")
     {
 	cout << "main(): Ntuple File Speified with dataset label: " << dataset
-	     << "\nFile: " << ntupleFile << endl;
+	     << "\nFile : " << ntupleFile
+	     << "\nLabel: " << ntupleLabel << endl;
     }
 
   // Get dataset name to run on - NtupleProc should know where the ntuple is and how to run on it.
@@ -147,7 +151,7 @@ int main(int argc, char* argv[])
     if(  TString(dataset).Contains("dy", TString::kIgnoreCase)                   ) options += "DY" ;
 
   // Create the NtupleProcessor
-    NtupleProcessor ntplproc(dataset, ntupleFile, npconfig, anconfig, options, maxEvents);
+    NtupleProcessor ntplproc(dataset, ntupleFile, ntupleLabel, npconfig, anconfig, options, maxEvents);
 
   // CLOSING OUTPUT.
     TString ts_mainEnd = timeStamp();

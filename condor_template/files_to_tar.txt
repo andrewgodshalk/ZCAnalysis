@@ -1,6 +1,6 @@
 ../NtupleProcessor.exe
-../zcAC_runII_noSF.ini
-../zcNPC_2016.ini
 dsList.txt
+zcAC.ini
+zcNPC.ini
 ../zcControlPlotConfig_default.ini
 ../ZCLibrary/data/leptonSF

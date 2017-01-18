@@ -25,12 +25,13 @@
 class NtupleProcessor
 {
   public:
-    NtupleProcessor(TString, TString nf = "", TString fnnp="NtupleProcessor/etc/zcNtupleProcConfig_default.ini", TString fnac="NtupleProcessor/etc/zcAnalysisConfig_default.ini", TString o = "", int me=-1);  // Primary constructor.
+    NtupleProcessor(TString, TString nf = "", TString nl="", TString fnnp="NtupleProcessor/etc/zcNtupleProcConfig_default.ini", TString fnac="NtupleProcessor/etc/zcAnalysisConfig_default.ini", TString o = "", int me=-1);  // Primary constructor.
    ~NtupleProcessor(){}
 
   private:
     TString           dataset;
     TString           fileString;     // Location of the input ntuple file. 
+    TString           ntupleLabel;    // Label for ntuple file to differentiate it from other ntuples from same dataset (i.e. dy_mm_inc_1of5)
     NtupleProcConfig  runParams;      // Contains options specific for NtupleProcessor to run
     EventHandler      eHandler;       // TreeIterator and EventHandler for running over the ntuple and extracting the desired information.
     TreeIterator      tIter;

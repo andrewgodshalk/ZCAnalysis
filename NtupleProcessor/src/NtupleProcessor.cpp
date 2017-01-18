@@ -17,15 +17,16 @@ NtupleProcessor.cpp
 
 using std::cout;   using std::endl;   using std::vector;   using std::ifstream;
 
-NtupleProcessor::NtupleProcessor(TString ds, TString nf, TString fnpc, TString fnac, TString o, int me)
-:  dataset(ds), fileString(nf), runParams(fnpc), eHandler(fnac,o), tIter(eHandler, hExtractors), options(o), maxEvents(me)
+NtupleProcessor::NtupleProcessor(TString ds, TString nf, TString nl, TString fnpc, TString fnac, TString o, int me)
+:  dataset(ds), fileString(nf), ntupleLabel(nl), runParams(fnpc), eHandler(fnac,o), tIter(eHandler, hExtractors), options(o), maxEvents(me)
 {
   // TEST output
     cout << "  NtupleProcessor: Created.\n"
             "    Ntuple Processing Config File: " << fnpc << "\n"
             "    Ntuple File:                   " << fileString << "\n"
+	    "    Ntuple Label:                  " << ntupleLabel << "\n"
             "    Dataset:                       " << dataset   << "\n"
-            "    Options:                       " << options   << "\n"
+	    "    Options:                       " << options   << "\n"
          << endl;
 
   // Extract options
@@ -36,7 +37,7 @@ NtupleProcessor::NtupleProcessor(TString ds, TString nf, TString fnpc, TString f
   // Open output file
     //outputFile = TFile::Open(runParams.fn_output, "UPDATE");
     //outputFile = TFile::Open(runParams.fn_output, "RECREATE");
-    outputFile = TFile::Open(TString("zc_out_")+ds+".root", "RECREATE");
+    outputFile = TFile::Open(TString("zc_out_")+ntupleLabel+".root", "RECREATE");
 
   // Create HistogramExtractors from strings from NtupleProcConfig
     for(auto& heStr : runParams.hExtractorStrs) createHistogramExtractorFromString(heStr);
