@@ -87,4 +87,3 @@ dy_inc_mm_rehlt_17of20   dy     root://cmseos.fnal.gov//store/group/leptonjets/n
 dy_inc_mm_rehlt_18of20   dy     root://cmseos.fnal.gov//store/group/leptonjets/noreplica/godshalk/2017-01_ZJNtuples2016/DYJetsToLL_M-50_TuneCUETP8M1_13TeV-madgraphMLM-pythia8_18of20.root
 dy_inc_mm_rehlt_19of20   dy     root://cmseos.fnal.gov//store/group/leptonjets/noreplica/godshalk/2017-01_ZJNtuples2016/DYJetsToLL_M-50_TuneCUETP8M1_13TeV-madgraphMLM-pythia8_19of20.root
 dy_inc_mm_rehlt_20of20   dy     root://cmseos.fnal.gov//store/group/leptonjets/noreplica/godshalk/2017-01_ZJNtuples2016/DYJetsToLL_M-50_TuneCUETP8M1_13TeV-madgraphMLM-pythia8_20of20.root
-
