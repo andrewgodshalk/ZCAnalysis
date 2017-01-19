@@ -182,6 +182,7 @@ if(usingSim)
     //tree->SetBranchAddress("HLT_BIT_HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v", &m_trig_dielec1);
   // Set up trigger vector to be mapped to trigger variables specified in AnalysisCfg.
     for(int i=0; i<m_muon_trig.size(); i++) tree->SetBranchAddress(anCfg.muonTriggers[i].c_str(), &m_muon_trig[i]);
+    for(int i=0; i<m_elec_trig.size(); i++) tree->SetBranchAddress(anCfg.elecTriggers[i].c_str(), &m_elec_trig[i]);
     return true;
 }
 
@@ -202,35 +203,27 @@ void EventHandler::evalCriteria()
     if(usingOddEventDY   && m_event%2 == 0     ) return;
 ////////////////////////////////////////////////
 
-  // Calculate the event weight.
-//    if(usingSim)
-//    {
-//        evtWeight *= calculatePUReweight(m_nPVs);
-//    }
-
   // Check JSON if working with a data event.
     if(usingSim) inJSON = false;       // If using simulation, automatically set the JSON variable to false.
     else         inJSON = m_json==1 || !anCfg.jsonSelect;   //  Otherwise, go with what value is given by the ntuple or set to true if not checking.
-    //cout << m_json << " ";
 
   // Check if event has the required triggers. Kick if not triggered.
-//    isElTriggered = triggered(anCfg.elecTriggers);
-//    isMuTriggered = triggered(anCfg.muonTriggers);
     isElTriggered = isMuTriggered = false;
     for( const int& trig : m_muon_trig ) if(trig != 0) {isMuTriggered = true; break;}
     for( const int& trig : m_elec_trig ) if(trig != 0) {isElTriggered = true; break;}
-    //isElTriggered = m_trig_dielec1;
-    //isMuTriggered = (m_trig_dimuon1 || m_trig_dimuon2);
+
+  // If there are no triggers specified, take all triggers.
+    if(m_muon_trig.size() == 0) isMuTriggered = true;
+    if(m_elec_trig.size() == 0) isElTriggered = true;
+
+    //for( int i=0; i<m_muon_trig.size(); i++) cout << "  " << m_muon_trig[i] << "  " << anCfg.muonTriggers[i] << endl;
+    //for( int i=0; i<m_elec_trig.size(); i++) cout << "  " << m_elec_trig[i] << "  " << anCfg.elecTriggers[i] << endl;
+
     if(usingSim && noTrigOnMC) isMuTriggered = isElTriggered = true;
-//cout << "   TRIGGER TEST: trig1: " << m_trig_dimuon1 << "  trig2: " << m_trig_dimuon2 << endl;
     if(!isElTriggered && !isMuTriggered) return;
 
   // Check for the proper number or leptons. Kick if neither.
-//    if( m_nElecs<2 && m_nMuons<2 ) return;
     if( m_nLeps<2 ) return;
-//cout << "    EventHandler::evalCriteria(): TEST: SELECTION CHECK: # Muons = " << m_nMuons;
-//    if( m_nMuons<2 ) { cout << endl; return;}
-//    cout << " --> SELECTED!!" << endl;
 
   // Lepton selection
     // **************PROBLEM AREA*********************

@@ -103,6 +103,7 @@ int main(int argc, char* argv[])
   // Check to see if an ntuple was specified.
     if(cmdInput.count("ntuplefile" )) ntupleFile  = cmdInput["ntuplefile" ].as<string>();
     if(cmdInput.count("ntuplelabel")) ntupleLabel = cmdInput["ntuplelabel"].as<string>();
+    if(cmdInput.count("dataset"    )) dataset     = cmdInput["dataset"    ].as<string>();
     if( ntupleFile != "")
     {
 	cout << "main(): Ntuple File Speified with dataset label: " << dataset
@@ -112,8 +113,8 @@ int main(int argc, char* argv[])
 
   // Get dataset name to run on - NtupleProc should know where the ntuple is and how to run on it.
     else if(    !(cmdInput.count("dataset"))   // If no dataset is specified...
-        || std::find(datasetNames.begin(), datasetNames.end(), (dataset=cmdInput["dataset"].as<string>()))==datasetNames.end()    // .. or an improper dataset is specified...
-      )
+             || std::find(datasetNames.begin(), datasetNames.end(), dataset)==datasetNames.end()    // .. or an improper dataset is specified...
+           )
     { // KICK
         cout << "main(): No valid dataset specified. Please use one of the following options: ";
         for(auto& dsNm : datasetNames) cout << dsNm << ", ";
