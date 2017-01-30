@@ -21,6 +21,7 @@
 #include <TString.h>
 #include "../ZCLibrary/ConfigReader.h"
 #include "../ZCLibrary/LeptonSFData.h"
+#include "../ZCLibrary/LumiJSONReader.h"
 
 class AnalysisConfig : public ConfigReader
 {
@@ -52,6 +53,7 @@ class AnalysisConfig : public ConfigReader
     float                                jetPtMin               ;
     float                                jetEtaMax              ;
     bool                                 jsonSelect             ;
+    std::string                          jsonFile               ;
     std::vector<std::string>             muonTriggers           ;
     std::vector<std::string>             elecTriggers           ;
     std::vector<std::pair<float,float> > jetPtBins              ;
@@ -59,6 +61,8 @@ class AnalysisConfig : public ConfigReader
     std::vector<std::pair<float,float> > dileptonPtBins         ;
 
     std::map<std::string, LeptonSFData> lepSFs;  // List of lepton scale factor storage objects, input from json files.
+
+    LumiJSONReader lumiJSON;
 
   private: 
     void processBinString(std::vector<std::pair<float,float> >&, std::string&);  // For processing input string of bin variables. Outputs set of pairs with integrated pair first.

@@ -69,6 +69,8 @@ public:
     int   m_trig_dimuon4;
     int   m_trig_dielec1;
     float m_nPVs;
+    unsigned int m_run;
+    unsigned int m_lumi;
     float m_lheNj;
     std::vector<int> m_muon_trig;
     std::vector<int> m_elec_trig;

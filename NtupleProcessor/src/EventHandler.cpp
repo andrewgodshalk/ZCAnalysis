@@ -78,6 +78,7 @@ bool EventHandler::mapTree(TTree* tree)
         //"HLT_BIT_HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_v",
         //"HLT_BIT_HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v",
         "nPVs",
+	"run", "lumi",
         //"lheNj"
     };
     if(usingSim)
@@ -113,6 +114,9 @@ bool EventHandler::mapTree(TTree* tree)
     tree->SetBranchAddress( "json", &m_json );
     tree->SetBranchAddress( "evt" , &m_event);
     tree->SetBranchAddress( "nPVs", &m_nPVs );
+    tree->SetBranchAddress( "run" , &m_run  );
+    tree->SetBranchAddress( "lumi", &m_lumi );
+
 
   // Muon variables
 //    tree->SetBranchAddress( "nallMuons"         , &m_nMuons      );
@@ -205,7 +209,12 @@ void EventHandler::evalCriteria()
 
   // Check JSON if working with a data event.
     if(usingSim) inJSON = false;       // If using simulation, automatically set the JSON variable to false.
-    else         inJSON = m_json==1 || !anCfg.jsonSelect;   //  Otherwise, go with what value is given by the ntuple or set to true if not checking.
+    else if(anCfg.jsonSelect)          // if selecting from JSON...
+    {   if(anCfg.lumiJSON.isValid())   //   If JSON provided in Analysis Config...
+            inJSON = anCfg.lumiJSON.isInJSON(m_run, m_lumi);  // Check to see if the run and lumi are in the "good" JSON sections.
+        else inJSON = m_json==1;       // Use the ntuple value
+    }
+    else inJSON = true;                // Set to true if not selecting from JSON
 
   // Check if event has the required triggers. Kick if not triggered.
     isElTriggered = isMuTriggered = false;
