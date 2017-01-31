@@ -17,6 +17,7 @@ TO DO
 
 ------------------------------------------------------------------------------*/
 
+#include <array>
 #include <list>
 #include <sstream>
 #include <vector>
@@ -46,6 +47,7 @@ public:
     void resetSelectionVariables();               // Resets all selection variables to false.
     void printJets();                             // Test function that prints jets and their properties.
     float calculatePUReweight(int);
+    float calculateJetMSVQuickCorrection(int);
 
   // Running Variables
     TString options;         // Options input with TreeIterator.
@@ -58,6 +60,16 @@ public:
     float m_Vtype ;     float m_jet_csv[maxNumJets];   int   m_lep_charge[maxNumElecs];   bool  m_triggers[54];
     int   m_zdecayMode; float m_jet_msv[maxNumJets];   float m_lep_iso   [maxNumElecs];   float m_json        ;
                         int   m_jet_flv[maxNumJets];                                      int   m_event       ;
+    float m_jet_vtx_px[maxNumJets];
+    float m_jet_vtx_py[maxNumJets];
+    float m_jet_vtx_pz[maxNumJets];
+    float m_jet_vtx_x[maxNumJets];
+    float m_jet_vtx_y[maxNumJets];
+    float m_jet_vtx_z[maxNumJets];
+    int   m_npv_array ;
+    float m_pv_x[maxNumJets];
+    float m_pv_y[maxNumJets];
+    float m_pv_z[maxNumJets];
     float m_ht;
     float m_mht;
     float m_mht_phi;
@@ -69,6 +81,7 @@ public:
     int   m_trig_dimuon4;
     int   m_trig_dielec1;
     float m_nPVs;
+    float m_genWeight;
     unsigned int m_run;
     unsigned int m_lumi;
     float m_lheNj;
@@ -77,6 +90,7 @@ public:
 
 // Calculated variables
     float Z_DelR, Z_DelPhi, Z_DelEta;
+    std::array<float, maxNumJets> jet_msv_quickCorr;
     float evtWeight;
 
   // Selection Variables

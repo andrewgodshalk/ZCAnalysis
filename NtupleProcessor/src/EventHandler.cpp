@@ -6,6 +6,7 @@
  */
 
 #include <algorithm>
+#include <cmath>
 #include <iomanip>
 #include <iostream>
 #include <string>
@@ -14,10 +15,12 @@
 #include <TBranch.h>
 #include <TLeaf.h>
 #include <TMath.h>
+#include <TVector3.h>
 #include "../interface/EventHandler.h"
 
 using std::cout;   using std::endl;   using std::vector;   using std::swap;
-using std::setw;   using std::setprecision;   using std::string;
+using std::setw;   using std::setprecision;   
+using std::sqrt;   using std::string;
 
 EventHandler::EventHandler(TString fnac, TString o) : anCfg(fnac), options(o)
 {
@@ -33,6 +36,7 @@ EventHandler::EventHandler(TString fnac, TString o) : anCfg(fnac), options(o)
     patEventsAnalyzed = 0;
     entriesInNtuple   = 0;
 
+    jet_msv_quickCorr.fill(-1.0);
     evtWeight = 1.0;
 
   // Set up trigger map objects to the same size as the list of triggers specified for selection in the analysis config file.
@@ -68,10 +72,20 @@ bool EventHandler::mapTree(TTree* tree)
         "V_eta" , "vLeptons_phi"       , "Jet_phi"    ,
         "V_phi" , "vLeptons_charge"    , "Jet_btagCSV",
         "json"  , "vLeptons_pfRelIso04", "Jet_vtxMass",
-        "evt"   ,
+	"Jet_vtxPx",
+	"Jet_vtxPy",
+	"Jet_vtxPz",
+	"Jet_vtxPosX",
+	"Jet_vtxPosY",
+	"Jet_vtxPosZ",
+        "evt"        ,
         "htJet30"    ,
         "mhtJet30"   ,
         "mhtPhiJet30",
+	"nprimaryVertices" ,
+	"primaryVertices_x",
+	"primaryVertices_y",
+	"primaryVertices_z",
         //"HLT_BIT_HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_v",
         //"HLT_BIT_HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_v",
         //"HLT_BIT_HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_v",
@@ -83,6 +97,7 @@ bool EventHandler::mapTree(TTree* tree)
     };
     if(usingSim)
     { 
+        branches_to_reactivate.push_back("genWeight");
         branches_to_reactivate.push_back("Jet_mcFlavour");
         branches_to_reactivate.push_back("lheNj"        );
     }
@@ -94,8 +109,8 @@ bool EventHandler::mapTree(TTree* tree)
 
   // Z variables
     m_zdecayMode = 0;
-    if(tree->GetListOfBranches()->FindObject("zdecayMode"))
-        tree->SetBranchAddress("zdecayMode",      &m_zdecayMode  );
+  if(tree->GetListOfBranches()->FindObject("zdecayMode"))
+    tree->SetBranchAddress("zdecayMode",      &m_zdecayMode  );
     tree->SetBranchAddress("Vtype"     ,          &m_Vtype       );
 //    temp_branch = tree->GetBranch("V");
 //    temp_branch->GetLeaf( "mass" )->SetAddress(   &m_Z_mass      );
@@ -154,10 +169,21 @@ bool EventHandler::mapTree(TTree* tree)
     tree->SetBranchAddress( "Jet_phi"        ,  m_jet_phi     );
     tree->SetBranchAddress( "Jet_btagCSV"    ,  m_jet_csv     );
     tree->SetBranchAddress( "Jet_vtxMass"    ,  m_jet_msv     );
-if(usingSim)
-{   tree->SetBranchAddress( "Jet_mcFlavour"  ,  m_jet_flv     );
+    tree->SetBranchAddress( "Jet_vtxPx"  , m_jet_vtx_px );
+    tree->SetBranchAddress( "Jet_vtxPy"  , m_jet_vtx_py );
+    tree->SetBranchAddress( "Jet_vtxPz"  , m_jet_vtx_pz );
+    tree->SetBranchAddress( "Jet_vtxPosX", m_jet_vtx_x  );
+    tree->SetBranchAddress( "Jet_vtxPosY", m_jet_vtx_y  );
+    tree->SetBranchAddress( "Jet_vtxPosZ", m_jet_vtx_z  );
+    tree->SetBranchAddress("nprimaryVertices" , &m_npv_array );
+    tree->SetBranchAddress("primaryVertices_x",  m_pv_x      );
+    tree->SetBranchAddress("primaryVertices_y",  m_pv_y      );
+    tree->SetBranchAddress("primaryVertices_z",  m_pv_z      );
+  if(usingSim)
+  { tree->SetBranchAddress( "Jet_mcFlavour"  ,  m_jet_flv     );
     tree->SetBranchAddress( "lheNj"          , &m_lheNj       );
-}
+    tree->SetBranchAddress( "genWeight"      , &m_genWeight   );
+  }
 
   // MET variables
 //    temp_branch = tree->GetBranch("MET");
@@ -206,6 +232,10 @@ void EventHandler::evalCriteria()
     if(usingEvenEventDY  && m_event%2 == 1     ) return;
     if(usingOddEventDY   && m_event%2 == 0     ) return;
 ////////////////////////////////////////////////
+
+  // Apply genWeight sign (for amc#NLO)
+    if(usingSim)
+        if(m_genWeight < 0) evtWeight*=-1;
 
   // Check JSON if working with a data event.
     if(usingSim) inJSON = false;       // If using simulation, automatically set the JSON variable to false.
@@ -313,7 +343,7 @@ void EventHandler::evalCriteria()
         Z_DelR   = sqrt(Z_DelEta*Z_DelEta+Z_DelPhi*Z_DelPhi);
     }
 
-  // Calculate Event Weight
+  // Apply lepton SFs
     if(usingSim)
     {
         string lType="";
@@ -331,6 +361,7 @@ void EventHandler::evalCriteria()
             evtWeight *= anCfg.lepSFs[lType+"_sf_trig"].getSF(m_lep_pt[validLeptons[1]],m_lep_eta[validLeptons[1]]).first;
             //cout << "     SF TEST!! " << lType << ", " << evtWeight << endl;
         }
+
     }
 
   // ADDED 2016-11-10 - MEANT FOR COMBINATION OF DY AND DY1J EVENTS.
@@ -366,9 +397,16 @@ void EventHandler::evalCriteria()
         HFJets["NoHF"] = vector<bool>(validJets.size(), false);   hasHFJets["NoHF"] = false;
     }
 
-  // Check HF Tagging info for all valid jets
+  // Check HF Tagging info for all valid jets and perform on-the-fly calculations
+    //if(validJets.size() > 0) cout << "  Testing " << validJets.size() << " jets..." << endl; 
     for(Index vJet_i=0, evt_i=0; vJet_i<validJets.size(); vJet_i++)
-    { // Jet is HF if it passes the CSV operating point and has a reconstructed secondary vertex.
+    {
+      // For each jet, calculate corrected secondary vertex mass (calculate for valid jets only)
+        jet_msv_quickCorr[evt_i] = calculateJetMSVQuickCorrection(evt_i);
+	//if(jet_msv_quickCorr[evt_i] != 0) cout << "    TEST: Jet msv: " << m_jet_msv[evt_i] << "   Jet MSVQCorr: " << jet_msv_quickCorr[evt_i] << endl; 
+	//if(jet_msv_quickCorr[evt_i] != 0 && m_jet_msv[evt_i] == 0) cout << "    TEST: Jet msv: " << m_jet_msv[evt_i] << "   Jet MSVQCorr: " << jet_msv_quickCorr[evt_i] << endl; 
+
+      // Jet is HF if it passes the CSV operating point and has a reconstructed secondary vertex.
         evt_i = validJets[vJet_i];  // Set the evt_i to the validJet's index within the EventHandler.
         if(m_jet_csv[evt_i] < anCfg.stdCSVOpPts["NoHF"]) cout << "   csv sub-NoHF: "  << m_jet_csv[evt_i] << " < " << anCfg.stdCSVOpPts["NoHF"] << endl;
         if(m_jet_msv[evt_i] < anCfg.noSVT)               cout << "   csv sub-noSVT: " << m_jet_msv[evt_i] << " < " << anCfg.minSVT              << endl;
@@ -386,7 +424,6 @@ void EventHandler::evalCriteria()
     isZuuEvent = (usingSim || inJSON) && hasValidMuons     && hasValidZBosonMass;
     isZllEvent = isZeeEvent || isZuuEvent;
     isZpJEvent = isZllEvent && validJets.size()>0;
-
 
   // Kick function if not using Sim. Otherwise, check jets for flavor properties
     if(!usingSim) return;
@@ -428,6 +465,7 @@ void EventHandler::resetSelectionVariables()
     validLeptons.clear();
     validJets.clear();
     evtWeight = 1.0;
+    jet_msv_quickCorr.fill(-1.0);
 }
 
 
@@ -452,4 +490,18 @@ float EventHandler::calculatePUReweight(int i)  // Taking an input of the number
     if(i<0 || i>51) return 1;
     return data2[i]/mc2[i];
     // Use modded up/down arrays for up/down error calculation.
+}
+
+float EventHandler::calculateJetMSVQuickCorrection(int jet_i)
+{
+  // Set up vector variables
+    TVector3 priVtxPos(m_pv_x[0], m_pv_y[0], m_pv_z[0]);
+    TVector3 secVtxPos(m_jet_vtx_x[jet_i] , m_jet_vtx_y[jet_i] , m_jet_vtx_z[jet_i] );
+    TVector3 secVtxMom(m_jet_vtx_px[jet_i], m_jet_vtx_py[jet_i], m_jet_vtx_pz[jet_i]);
+    TVector3 secVtxRelPos(secVtxPos-priVtxPos);
+  // Secondary vertex momentum that is transverse to the vertex position vector relative to the PV: = rsv x psv / |rsv|
+    float secVtxPtSq = (secVtxRelPos.Mag2() > 0 ? secVtxRelPos.Cross(secVtxMom).Mag2()/secVtxRelPos.Mag2() : 0);
+        
+    //ROOT.TMath.Sqrt(sv_mass*sv_mass + sv_pt2) + ROOT.TMath.Sqrt(sv_pt2) 
+    return sqrt(m_jet_msv[jet_i]*m_jet_msv[jet_i] + secVtxPtSq) + sqrt(secVtxPtSq);
 }
