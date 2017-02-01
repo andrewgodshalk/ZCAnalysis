@@ -97,6 +97,7 @@ bool EventHandler::mapTree(TTree* tree)
     };
     if(usingSim)
     { 
+        branches_to_reactivate.push_back("puWeight");
         branches_to_reactivate.push_back("genWeight");
         branches_to_reactivate.push_back("Jet_mcFlavour");
         branches_to_reactivate.push_back("lheNj"        );
@@ -183,6 +184,7 @@ bool EventHandler::mapTree(TTree* tree)
   { tree->SetBranchAddress( "Jet_mcFlavour"  ,  m_jet_flv     );
     tree->SetBranchAddress( "lheNj"          , &m_lheNj       );
     tree->SetBranchAddress( "genWeight"      , &m_genWeight   );
+    tree->SetBranchAddress( "puWeight"       , &m_puWeight    );
   }
 
   // MET variables
@@ -236,6 +238,10 @@ void EventHandler::evalCriteria()
   // Apply genWeight sign (for amc#NLO)
     if(usingSim)
         if(m_genWeight < 0) evtWeight*=-1;
+
+  // Apply puWeight on Sim
+    if(usingSim)
+	evtWeight*=m_puWeight;
 
   // Check JSON if working with a data event.
     if(usingSim) inJSON = false;       // If using simulation, automatically set the JSON variable to false.

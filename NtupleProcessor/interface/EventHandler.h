@@ -82,6 +82,7 @@ public:
     int   m_trig_dielec1;
     float m_nPVs;
     float m_genWeight;
+    float m_puWeight;
     unsigned int m_run;
     unsigned int m_lumi;
     float m_lheNj;
