@@ -1,3 +1,6 @@
+#ifndef GUARD_EffPlotAndCalc_h
+#define GUARD_EffPlotAndCalc_h
+
 /*------------------------------------------------------------------------------
 
 EffPlotAndCalc
@@ -53,3 +56,6 @@ private:
     TH2F* h_temp_;    // Template for 2D efficiency histograms
 
 };
+
+
+#endif
