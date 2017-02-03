@@ -134,6 +134,9 @@ void EffPlotExtractor::fillHistos()
 {
     nEvents["Entries Analyzed"]++;
 
+  // Set up sign for negatively weighted events.
+    double evtWeight = (evt.evtWeight < 0 ? -1.0 : 1.0);
+
   // If event isn't in JSON and isn't a simulation event, move on to the next event.
     if(!evt.inJSON && !usingSim) return;
 
@@ -157,28 +160,28 @@ void EffPlotExtractor::fillHistos()
     if(usingDY)
     {
         if(selectingZb)
-        {   h["n_ZbEvents"]->Fill(evt.m_jet_pt[evt.validJets[evt.leadBJet]]);           // Fill for by-evt eff.
+        {   h["n_ZbEvents"]->Fill(evt.m_jet_pt[evt.validJets[evt.leadBJet]], evtWeight);           // Fill for by-evt eff.
             for(Index i=0; i<evt.validJets.size(); i++)                                   // Cycle over valid jets
                 if(evt.bMCJets[i])                                                          //   Store jet pt value if jet is valid b jet
 	        {
-                    h["n_bJets"]->Fill(evt.m_jet_pt[evt.validJets[i]]);
-                    h["n_bJets_2D"]->Fill(evt.m_jet_pt[evt.validJets[i]], evt.m_jet_eta[evt.validJets[i]]);
+                    h["n_bJets"]->Fill(evt.m_jet_pt[evt.validJets[i]], evtWeight);
+                    ((TH2*)h["n_bJets_2D"])->Fill(evt.m_jet_pt[evt.validJets[i]], evt.m_jet_eta[evt.validJets[i]], evtWeight);
 		}
         }
         if(selectingZc)
-        {   h["n_ZcEvents"]->Fill(evt.m_jet_pt[evt.validJets[evt.leadCJet]]);
+        {   h["n_ZcEvents"]->Fill(evt.m_jet_pt[evt.validJets[evt.leadCJet]], evtWeight);
             for(Index i=0; i<evt.validJets.size(); i++)
                 if(evt.cMCJets[i])
-                {   h["n_cJets"]->Fill(evt.m_jet_pt[evt.validJets[i]]);
-                    h["n_cJets_2D"]->Fill(evt.m_jet_pt[evt.validJets[i]], evt.m_jet_eta[evt.validJets[i]]);
+                {   h["n_cJets"]->Fill(evt.m_jet_pt[evt.validJets[i]], evtWeight);
+                    ((TH2*)h["n_cJets_2D"])->Fill(evt.m_jet_pt[evt.validJets[i]], evt.m_jet_eta[evt.validJets[i]], evtWeight);
 		}
         }
         if(selectingZl)
-        {   h["n_ZlEvents"]->Fill(evt.m_jet_pt[evt.validJets[0]]);
+        {   h["n_ZlEvents"]->Fill(evt.m_jet_pt[evt.validJets[0]], evtWeight);
             for(Index i=0; i<evt.validJets.size(); i++)
                 if(evt.lMCJets[i])
-                {   h["n_lJets"]->Fill(evt.m_jet_pt[evt.validJets[i]]);
-                    h["n_lJets_2D"]->Fill(evt.m_jet_pt[evt.validJets[i]], evt.m_jet_eta[evt.validJets[i]]);
+                {   h["n_lJets"]->Fill(evt.m_jet_pt[evt.validJets[i]], evtWeight);
+                    ((TH2*)h["n_lJets_2D"])->Fill(evt.m_jet_pt[evt.validJets[i]], evt.m_jet_eta[evt.validJets[i]], evtWeight);
 		}
         }
     }
@@ -188,13 +191,13 @@ void EffPlotExtractor::fillHistos()
       // Select for Z events with at least one HF jet and with the MET cut.
         if(!evt.hasHFJets[hfLabel]) continue;
         nEvents[TString("Valid Z+HF Event w/ MET cut (")+hfLabel+")"]++;
-        h[TString("nt_Evt_")+hfLabel]->Fill(evt.m_jet_pt[evt.validJets[evt.leadHFJet[hfLabel]]]);
+        h[TString("nt_Evt_")+hfLabel]->Fill(evt.m_jet_pt[evt.validJets[evt.leadHFJet[hfLabel]]], evtWeight);
         for(Index i = 0; i<evt.validJets.size(); i++)       // Cycle over all jets and fill when appropriate.
             if(evt.HFJets[hfLabel][i])  // If jet is of this HF variety...
             {
                 nJets[TString("Valid HF Jets (")+hfLabel+")"]++;                    // Increment appropriate counter
-                h[TString("nt_Jet_"  )+hfLabel]->Fill(evt.m_jet_pt[evt.validJets[i]]); // Add jet by pt to appropriate histogram.
-                h[TString("nt_Jet_2D_")+hfLabel]->Fill(evt.m_jet_pt[evt.validJets[i]], evt.m_jet_eta[evt.validJets[i]]); // Add jet by pt to appropriate histogram.
+                h[TString("nt_Jet_"  )+hfLabel]->Fill(evt.m_jet_pt[evt.validJets[i]], evtWeight); // Add jet by pt to appropriate histogram.
+                ((TH2*)h[TString("nt_Jet_2D_")+hfLabel])->Fill(evt.m_jet_pt[evt.validJets[i]], evt.m_jet_eta[evt.validJets[i]], evtWeight); // Add jet by pt to appropriate histogram.
             }
         if(usingDY)
         {
@@ -206,46 +209,46 @@ void EffPlotExtractor::fillHistos()
             {
                 jet_pt  = evt.m_jet_pt [evt.validJets[evt.leadBJet]];
                 jet_eta = evt.m_jet_eta[evt.validJets[evt.leadBJet]];
-                h[TString("nt_ZbEvents_"   )+hfLabel]->Fill(jet_pt         );
-                //h[TString("nt_ZbEvents_2D_")+hfLabel]->Fill(jet_pt, jet_eta);
+                h[TString("nt_ZbEvents_"   )+hfLabel]->Fill(jet_pt, evtWeight         );
+                //((TH2*)h[TString("nt_ZbEvents_2D_")+hfLabel])->Fill(jet_pt, jet_eta);
                 for(Index i = 0; i<evt.validJets.size(); i++)       // Cycle over all jets and fill when appropriate.
                 {
                     if(!evt.bMCJets[i]) continue;
                     nJets[TString("Valid HF Jets (")+hfLabel+")"]++;
                     jet_pt  = evt.m_jet_pt [evt.validJets[i]];
                     jet_eta = evt.m_jet_eta[evt.validJets[i]];
-                    h[TString("nt_bJets_"   )+hfLabel]->Fill(jet_pt         );
-                    h[TString("nt_bJets_2D_")+hfLabel]->Fill(jet_pt, jet_eta);
+                    h[TString("nt_bJets_")+hfLabel]           ->Fill(jet_pt         , evtWeight);
+                    ((TH2*)h[TString("nt_bJets_2D_")+hfLabel])->Fill(jet_pt, jet_eta, evtWeight);
                 }
             }
             if(selectingZc)
             {
                 jet_pt  = evt.m_jet_pt [evt.validJets[evt.leadCJet]];
                 jet_eta = evt.m_jet_eta[evt.validJets[evt.leadCJet]];
-                h[TString("nt_ZcEvents_"   )+hfLabel]->Fill(jet_pt          );
-                //h[TString("nt_ZcEvents_2D_")+hfLabel]->Fill(jet_pt, jet_eta );
+                h[TString("nt_ZcEvents_"   )+hfLabel]->Fill(jet_pt          , evtWeight);
+                //((TH2*)h[TString("nt_ZcEvents_2D_")+hfLabel])->Fill(jet_pt, jet_eta , evtWeight);
                 for(Index i = 0; i<evt.validJets.size(); i++)       // Cycle over all jets and fill when appropriate.
                 {
                     if(!evt.cMCJets[i]) continue;
                     nJets[TString("Valid HF Jets (")+hfLabel+")"]++;
                     jet_pt  = evt.m_jet_pt [evt.validJets[i]];
                     jet_eta = evt.m_jet_eta[evt.validJets[i]];
-                    h[TString("nt_cJets_"   )+hfLabel        ]->Fill(jet_pt         );
-                    h[TString("nt_cJets_2D_")+hfLabel        ]->Fill(jet_pt, jet_eta);
+                    h[TString("nt_cJets_"   )+hfLabel        ]->Fill(jet_pt         , evtWeight);
+                    ((TH2*)h[TString("nt_cJets_2D_")+hfLabel        ])->Fill(jet_pt, jet_eta);
                 }
             }
             if(selectingZl)
             {
-                h[TString("nt_ZlEvents_"   )+hfLabel]->Fill(evt.m_jet_pt [evt.validJets[0]] );
-                //h[TString("nt_ZlEvents_2D_")+hfLabel]->Fill(evt.m_jet_eta[evt.validJets[0]] );
+                h[TString("nt_ZlEvents_"   )+hfLabel]->Fill(evt.m_jet_pt [evt.validJets[0]] , evtWeight);
+                //((TH2*)h[TString("nt_ZlEvents_2D_")+hfLabel])->Fill(evt.m_jet_eta[evt.validJets[0]] , evtWeight);
                 for(Index i = 0; i<evt.validJets.size(); i++)       // Cycle over all jets and fill when appropriate.
                 {
                     if(!evt.lMCJets[i]) continue;
                     nJets[TString("Valid HF Jets (")+hfLabel+")"]++;
                     jet_pt  = evt.m_jet_pt [evt.validJets[i]];
                     jet_eta = evt.m_jet_eta[evt.validJets[i]];
-                    h[TString("nt_lJets_"   )+hfLabel]->Fill(jet_pt         );
-                    h[TString("nt_lJets_2D_")+hfLabel]->Fill(jet_pt, jet_eta);
+                    h[TString("nt_lJets_"   )+hfLabel]->Fill(jet_pt         , evtWeight);
+                    ((TH2*)h[TString("nt_lJets_2D_")+hfLabel])->Fill(jet_pt, jet_eta, evtWeight);
                 }
             }
         }
