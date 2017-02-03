@@ -48,10 +48,14 @@ TemplateExtractor::TemplateExtractor(EventHandler& eh, TDirectory* d, TString o)
     hDir->cd();
     for(const TString& hfLabel : TemplateExtractor::HFTags)
     {
-        TString histLabel = tempPrefix+hfLabel;
-        h[histLabel] = new TH1F(histLabel, "Jet M_{SV}; M_{SV} (GeV); Events/Bin", 50, 0, 5);
-        h[histLabel]->Sumw2();
-        hDir->WriteTObject(h[histLabel], 0, "Overwrite");
+        TString histLabel_msv   = tempPrefix+"msv_"  +hfLabel;
+        TString histLabel_msvqc = tempPrefix+"msvqc_"+hfLabel;
+        h[histLabel_msv  ] = new TH1F(histLabel_msv  , "Jet M_{SV}; M_{SV} (GeV); Events/Bin", 200, 0, 10);
+        h[histLabel_msvqc] = new TH1F(histLabel_msvqc, "Jet M_{SV,QCorr.}; M_{SV,QCorr.} (GeV); Events/Bin", 200, 0, 10);
+        h[histLabel_msv  ]->Sumw2();
+        h[histLabel_msvqc]->Sumw2();
+        hDir->WriteTObject(h[histLabel_msv  ], 0, "Overwrite");
+        hDir->WriteTObject(h[histLabel_msvqc], 0, "Overwrite");
     }
 }
 
@@ -80,7 +84,8 @@ void TemplateExtractor::fillHistos()
         if(!evt.hasHFJets[hfLabel]) continue;
         nEvents[TString("Valid Z+HF Event w/ MET cut (")+hfLabel+")"]++;
       // Fill templates!!
-        h[tempPrefix+hfLabel]->Fill(evt.m_jet_msv[evt.leadHFJet[hfLabel]]);
+        h[tempPrefix+"msv_"  +hfLabel]->Fill(evt.m_jet_msv[evt.leadHFJet[hfLabel]]);
+        h[tempPrefix+"msvqc_"+hfLabel]->Fill(evt.jet_msv_quickCorr[evt.leadHFJet[hfLabel]]);
     }
 }
 

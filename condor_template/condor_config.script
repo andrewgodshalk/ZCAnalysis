@@ -10,4 +10,4 @@ Log = zcntupler_$(Cluster)_$(Process).log
 notify_user = ${LOGNAME}@FNAL.GOV
 +LENGTH="SHORT"
 x509userproxy = /tmp/x509up_u42382
-Queue 2
+Queue 2 

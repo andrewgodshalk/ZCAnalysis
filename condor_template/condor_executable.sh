@@ -13,18 +13,24 @@ tar -zxf zcfiles.tgz
 
 # Set up variables to select files to run cmsRun, ZCAnalyzer over
 let jobNum=$1+1
-dsName=`sed "${jobNum}q;d" dsList.txt`
-echo "  Using dataset $dsName"
+dsInfo=`sed "${jobNum}q;d" dsList.txt`
+echo "  Dataset Info: $dsInfo"
+read ntuple dataset file <<< $dsInfo
+echo $ntuple
+echo $dataset
+echo $file
 
 # Run the main process
 #./NtupleProcessor.exe -d $dsName -n zcNPC_runII.ini -a zcAnalysisConfig_runII.ini
-./NtupleProcessor.exe -d $dsName -n zcNPC_2016.ini -a zcAC_runII_noSF.ini
+#./NtupleProcessor.exe -d $dsName -n zcNPC_2016.ini -a zcAC_runII_noSF.ini
+#./NtupleProcessor.exe -d $dsName -n zcNPC_2016_SingleLepSets.ini -a zcAC_runII_muonIDISO_2016-12-22.ini
+./NtupleProcessor.exe -N $file -L $ntuple -d $dataset -n zcNPC.ini -a zcAC.ini
 
 # Clean up
 rm NtupleProcessor.exe
 rm -r NtupleProcessor
 rm ZCLibrary/ -r
-rm zcAC_runII_noSF.ini
-rm zcNPC_2016.ini
+rm zcAC_*
+rm zcNPC_*
 rm zcfiles.tgz
 rm zcControlPlotConfig_default.ini

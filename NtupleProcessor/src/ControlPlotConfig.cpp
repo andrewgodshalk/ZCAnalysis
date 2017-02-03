@@ -25,6 +25,7 @@ ControlPlotConfig::ControlPlotConfig(TString fnc)
             "      Config Input File: " << fn_config
          << endl;
 
+    getHistoStringsFromFileHeading("EVENT"   );
     getHistoStringsFromFileHeading("MUON"    );
     getHistoStringsFromFileHeading("ELECTRON");
     getHistoStringsFromFileHeading("DILEPTON");

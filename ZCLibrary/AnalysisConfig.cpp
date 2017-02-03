@@ -83,6 +83,8 @@ AnalysisConfig::AnalysisConfig(TString fnc)
     jetEtaMax       = pt.get<float>("JET.jet_eta_max"        );
 
     jsonSelect      = pt.get<bool>("JSON.use_JSON");
+    jsonFile        = pt.get<string>("JSON.json_file");
+    lumiJSON.setFile(jsonFile);
 
     string triggerStr_muon    = pt.get<string>("TRIGGERS.muon_triggers"                );
     string triggerStr_elec    = pt.get<string>("TRIGGERS.elec_triggers"                );
@@ -183,8 +185,8 @@ void AnalysisConfig::processBinString(vector<pair<float,float> >& binSet, string
 }
 
 
-void AnalysisConfig::processTriggerString(vector<int>& trigSet, string& inputString)
+void AnalysisConfig::processTriggerString(vector<string>& trigSet, string& inputString)
 {
-    getListFromString<int>(inputString, trigSet);
+    getListFromString<string>(inputString, trigSet);
     //getListFromString<string>(inputString, trigSet);
 }

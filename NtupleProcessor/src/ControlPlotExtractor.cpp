@@ -44,6 +44,7 @@ ControlPlotExtractor::ControlPlotExtractor(EventHandler& eh, TDirectory* d, TStr
     nEvents["Valid Z mass"               ] = 0;
     nEvents["Valid Z+j Event"            ] = 0;
     nEvents["Valid Z+j Event w/ MET cut" ] = 0;
+    nEvents["Pass JSON"                  ] = 0;
     for(const TString& hfLabel : ControlPlotExtractor::HFTags)
     {   nEvents[TString("Valid Z+HF Event("            )+hfLabel+")"] = 0;
         nEvents[TString("Valid Z+HF Event w/ MET cut (")+hfLabel+")"] = 0;
@@ -59,8 +60,10 @@ ControlPlotExtractor::ControlPlotExtractor(EventHandler& eh, TDirectory* d, TStr
     selectingZb      = (options.Contains("Zb"        , TString::kIgnoreCase) ? true : false);
     selectingZtautau = (options.Contains("Ztautau"   , TString::kIgnoreCase) ? true : false);
 
+    makePhysicsObjectHistograms("event"   , "raw"    , "(No Selection)"                   );
     makePhysicsObjectHistograms("muon"    , "raw"    , "(No Selection)"                   );
     makePhysicsObjectHistograms("electron", "raw"    , "(No Selection)"                   );
+    makePhysicsObjectHistograms("event"   , "vldll"  , "(Valid Leptons)"                  );
     makePhysicsObjectHistograms("muon"    , "vldll"  , "(Valid Leptons)"   , selectingZuu );
     makePhysicsObjectHistograms("electron", "vldll"  , "(Valid Leptons)"   , selectingZee );
     makePhysicsObjectHistograms("dilepton", "vldll"  , "(Valid Leptons)"                  );
@@ -94,13 +97,14 @@ void ControlPlotExtractor::fillHistos()
 
   // If event isn't in JSON and isn't a simulation event, move on to the next event.
     if(!evt.inJSON && !usingSim) return;
+    nEvents["Pass JSON"]++;
 
  // If using a DY, check starting conditions to see if a certain type of event is desired.
     if(usingDY)
-    {   if(selectingZtautau  && !evt.zBosonFromTaus        ) return;
-        else if( selectingZb && !evt.hasBJet               ) return;
-        else if( selectingZc && !evt.hasCJet               ) return;
-        else if( selectingZl && (evt.hasBJet||evt.hasCJet) ) return;
+    {   if(selectingZtautau  && !evt.zBosonFromTaus          ) return;
+        else if( selectingZb && !evt.hasBJet                 ) return;
+        else if( selectingZc && !(!evt.hasBJet&&evt.hasCJet) ) return;
+        else if( selectingZl && (evt.hasBJet||evt.hasCJet)   ) return;
     }
 
   // Check if the event has triggered for the desired decay chain. If not, kill.
@@ -108,6 +112,7 @@ void ControlPlotExtractor::fillHistos()
     else return;
 
   // Fill raw lepton histograms.
+    fillEventHistograms(   "raw", false);
     fillMuonHistograms(    "raw", false);
     fillElectronHistograms("raw", false);
 
@@ -124,6 +129,7 @@ void ControlPlotExtractor::fillHistos()
     //cout << "    ControlPlotExtractor(" << options << ")::fillHistos(): Found event w/ valid leptons." << endl;
     //if(selectingZee) fillMuonHistograms(    "vl");
     //if(selectingZuu) fillElectronHistograms("vl");
+    fillEventHistograms(   "vldll");
     fillMuonHistograms(    "vldll");
     fillElectronHistograms("vldll");
     fillDileptonHistograms("vldll");
@@ -180,6 +186,7 @@ void ControlPlotExtractor::saveToFile()
 
 void ControlPlotExtractor::makePhysicsObjectHistograms(TString prefix, TString titleAddition)
 {
+    makePhysicsObjectHistograms("event"   , prefix, titleAddition, selectingZuu );
     makePhysicsObjectHistograms("muon"    , prefix, titleAddition, selectingZuu );
     makePhysicsObjectHistograms("electron", prefix, titleAddition, selectingZee );
     makePhysicsObjectHistograms("dilepton", prefix, titleAddition               );
@@ -190,7 +197,7 @@ void ControlPlotExtractor::makePhysicsObjectHistograms(TString prefix, TString t
 void ControlPlotExtractor::makePhysicsObjectHistograms(TString poLabel, TString prefix, TString titleAddition, bool split)
 {
   // Unset splitting if working with objects that should be singular.
-    if(poLabel == "met" || poLabel == "dilepton") split = false;
+    if(poLabel == "met" || poLabel == "dilepton" || poLabel == "event") split = false;
 
     hDir->cd();     // Move to this extractor's output directory to initialize the histograms.
     TString histoName, histoTitle;
@@ -226,6 +233,13 @@ void ControlPlotExtractor::makePhysicsObjectHistograms(TString poLabel, TString 
             hDir->WriteTObject(h[histoName], 0, "Overwrite");
         } while( splitThis && (i++)<3);
     }
+}
+
+void ControlPlotExtractor::fillEventHistograms(TString prefix, bool split)
+{
+    //cout << "  fillEventHistograms(" << prefix << ")" << endl;
+    //cout << "    filling : " << prefix+"_event_npv" << endl;
+    h[prefix+"_event_npv"]->Fill(evt.m_nPVs, evt.evtWeight);
 }
 
 void ControlPlotExtractor::fillMuonHistograms(TString prefix, bool split)
@@ -300,18 +314,20 @@ void ControlPlotExtractor::fillJetHistograms(TString prefix)
     int objsEntered = 0;      // Keeps track of how many objects you've entered for labeling purposes
     for(Index i : evt.validJets)
     { // Fill general histograms
-        h[prefix+"_jet_pt" ]->Fill(evt.m_jet_pt [i], evt.evtWeight);
-        h[prefix+"_jet_eta"]->Fill(evt.m_jet_eta[i], evt.evtWeight);
-        h[prefix+"_jet_phi"]->Fill(evt.m_jet_phi[i], evt.evtWeight);
-        h[prefix+"_jet_csv"]->Fill(evt.m_jet_csv[i], evt.evtWeight);
-        h[prefix+"_jet_msv"]->Fill(evt.m_jet_msv[i], evt.evtWeight);
+        h[prefix+"_jet_pt"   ]->Fill(evt.m_jet_pt [i]        , evt.evtWeight);
+        h[prefix+"_jet_eta"  ]->Fill(evt.m_jet_eta[i]        , evt.evtWeight);
+        h[prefix+"_jet_phi"  ]->Fill(evt.m_jet_phi[i]        , evt.evtWeight);
+        h[prefix+"_jet_csv"  ]->Fill(evt.m_jet_csv[i]        , evt.evtWeight);
+        h[prefix+"_jet_msv"  ]->Fill(evt.m_jet_msv[i]        , evt.evtWeight);
+        h[prefix+"_jet_msvqc"]->Fill(evt.jet_msv_quickCorr[i], evt.evtWeight);
       // Select for lead/sublead/extra histograms
         int j = min(++objsEntered, 3);
-        h[prefix+"_jet"+multName[j]+"_pt" ]->Fill(evt.m_jet_pt [i], evt.evtWeight);
-        h[prefix+"_jet"+multName[j]+"_eta"]->Fill(evt.m_jet_eta[i], evt.evtWeight);
-        h[prefix+"_jet"+multName[j]+"_phi"]->Fill(evt.m_jet_phi[i], evt.evtWeight);
-        h[prefix+"_jet"+multName[j]+"_csv"]->Fill(evt.m_jet_csv[i], evt.evtWeight);
-        h[prefix+"_jet"+multName[j]+"_msv"]->Fill(evt.m_jet_msv[i], evt.evtWeight);
+        h[prefix+"_jet"+multName[j]+"_pt"   ]->Fill(evt.m_jet_pt [i], evt.evtWeight);
+        h[prefix+"_jet"+multName[j]+"_eta"  ]->Fill(evt.m_jet_eta[i], evt.evtWeight);
+        h[prefix+"_jet"+multName[j]+"_phi"  ]->Fill(evt.m_jet_phi[i], evt.evtWeight);
+        h[prefix+"_jet"+multName[j]+"_csv"  ]->Fill(evt.m_jet_csv[i], evt.evtWeight);
+        h[prefix+"_jet"+multName[j]+"_msv"  ]->Fill(evt.m_jet_msv[i], evt.evtWeight);
+        h[prefix+"_jet"+multName[j]+"_msvqc"]->Fill(evt.jet_msv_quickCorr[i], evt.evtWeight);
     }
     if(!prefix.Contains("hf")) return;
     objsEntered = 0;      // Keeps track of how many objects you've entered for labeling purposes
@@ -322,24 +338,27 @@ void ControlPlotExtractor::fillJetHistograms(TString prefix)
     { // Cycle through valid jet listings.
         if(!evt.HFJets[hfTag][i]) continue;     // If this jet doesn't have the appropriate tag, continue.
         Index k = evt.validJets[i];
-        h[prefix+"_hfjet_pt" ]->Fill(evt.m_jet_pt [k], evt.evtWeight);
-        h[prefix+"_hfjet_eta"]->Fill(evt.m_jet_eta[k], evt.evtWeight);
-        h[prefix+"_hfjet_phi"]->Fill(evt.m_jet_phi[k], evt.evtWeight);
-        h[prefix+"_hfjet_csv"]->Fill(evt.m_jet_csv[k], evt.evtWeight);
-        h[prefix+"_hfjet_msv"]->Fill(evt.m_jet_msv[k], evt.evtWeight);
+        h[prefix+"_hfjet_pt"   ]->Fill(evt.m_jet_pt [k], evt.evtWeight);
+        h[prefix+"_hfjet_eta"  ]->Fill(evt.m_jet_eta[k], evt.evtWeight);
+        h[prefix+"_hfjet_phi"  ]->Fill(evt.m_jet_phi[k], evt.evtWeight);
+        h[prefix+"_hfjet_csv"  ]->Fill(evt.m_jet_csv[k], evt.evtWeight);
+        h[prefix+"_hfjet_msv"  ]->Fill(evt.m_jet_msv[k], evt.evtWeight);
+        h[prefix+"_hfjet_msvqc"]->Fill(evt.jet_msv_quickCorr[k], evt.evtWeight);
       // Select for lead/sublead/extra histograms
         int j = min(++objsEntered, 3);
-        h[prefix+"_hfjet"+multName[j]+"_pt" ]->Fill(evt.m_jet_pt [k], evt.evtWeight);
-        h[prefix+"_hfjet"+multName[j]+"_eta"]->Fill(evt.m_jet_eta[k], evt.evtWeight);
-        h[prefix+"_hfjet"+multName[j]+"_phi"]->Fill(evt.m_jet_phi[k], evt.evtWeight);
-        h[prefix+"_hfjet"+multName[j]+"_csv"]->Fill(evt.m_jet_csv[k], evt.evtWeight);
-        h[prefix+"_hfjet"+multName[j]+"_msv"]->Fill(evt.m_jet_msv[k], evt.evtWeight);
+        h[prefix+"_hfjet"+multName[j]+"_pt"   ]->Fill(evt.m_jet_pt [k], evt.evtWeight);
+        h[prefix+"_hfjet"+multName[j]+"_eta"  ]->Fill(evt.m_jet_eta[k], evt.evtWeight);
+        h[prefix+"_hfjet"+multName[j]+"_phi"  ]->Fill(evt.m_jet_phi[k], evt.evtWeight);
+        h[prefix+"_hfjet"+multName[j]+"_csv"  ]->Fill(evt.m_jet_csv[k], evt.evtWeight);
+        h[prefix+"_hfjet"+multName[j]+"_msv"  ]->Fill(evt.m_jet_msv[k], evt.evtWeight);
+        h[prefix+"_hfjet"+multName[j]+"_msvqc"]->Fill(evt.jet_msv_quickCorr[k], evt.evtWeight);
     }
     h[prefix+"_hfjet_mult"]->Fill(objsEntered, evt.evtWeight);     // Fill hf mult with the number of hf jets entered.
 }
 
 void ControlPlotExtractor::fillAllObjectHistograms(TString prefix)
 {
+    fillEventHistograms(   prefix);
     fillMuonHistograms(    prefix);
     fillElectronHistograms(prefix);
     fillDileptonHistograms(prefix);
