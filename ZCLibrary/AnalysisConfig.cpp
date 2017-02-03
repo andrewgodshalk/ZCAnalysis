@@ -40,7 +40,8 @@ AnalysisConfig::AnalysisConfig(TString fnc)
     setWeight["ww"     ] = pt.get<float>("DATASET WEIGHTS.ww"     );
     setWeight["wz"     ] = pt.get<float>("DATASET WEIGHTS.wz"     );
     setWeight["zz"     ] = pt.get<float>("DATASET WEIGHTS.zz"     );
-    setWeight["tt_lep" ] = pt.get<float>("DATASET WEIGHTS.tt_lep" );
+    // setWeight["tt_lep" ] = pt.get<float>("DATASET WEIGHTS.tt_lep" );
+    setWeight["tt"     ] = pt.get<float>("DATASET WEIGHTS.tt" );
 
     minSVT = pt.get<float>("SVT OPERATING POINTS.minSVT");
     noSVT  = pt.get<float>("SVT OPERATING POINTS.noSVT" );

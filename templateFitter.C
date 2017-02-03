@@ -7,7 +7,7 @@
 #include <sstream>
 
 
-const bool useDY1J = true;
+const bool useDY1J = false;
 
 // Spits out date and time, by default in YYYY-MM-DD HH:MM:SS
 string timeStamp(char d = '-', char b = ' ', char t = ':');

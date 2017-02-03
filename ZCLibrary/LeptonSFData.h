@@ -12,7 +12,7 @@
      - The type of lepton we're trying to extract scale factors for.
      - The desired binning we'd like to use.
 
- Implementation adapted from leptonSF python class used by CMS VHbb group: 
+ Implementation adapted from leptonSF python class used by CMS VHbb group:
     https://twiki.cern.ch/twiki/bin/viewauth/CMS/VHiggsBBCodeUtils#Lepton_SF
     https://github.com/vhbb/cmssw/blob/vhbbHeppy76X/VHbbAnalysis/Heppy/python/leptonSF.py
  More information on Muon SFs given at:
@@ -26,8 +26,8 @@
 
 #include <string>
 #include <utility>
-#include "json_parser_read.hpp"
-//#include <boost/property_tree/ptree.hpp>
+//#include "json_parser_read.hpp"
+#include <boost/property_tree/ptree.hpp>
 #include <TFile.h>
 #include <TH2D.h>
 

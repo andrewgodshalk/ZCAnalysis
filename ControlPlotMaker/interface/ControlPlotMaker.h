@@ -23,7 +23,7 @@ class ControlPlotMaker
     ControlPlotMaker(  // Primary constructor.
             TString fnac ="NtupleProcessor/etc/zcAnalysisConfig_default.ini",    // Analysis config file. Used mostly weights, colors, etc.
             TString fni  ="zc_analysis.root"       ,    // root file where individual dataset histograms are stored.
-            TString fno  ="zc_analysis_cpplot.root",    // root file where 
+            TString fno  ="zc_analysis_cpplot.root",    // root file where
             TString o    = ""                      ,    // Extra options input with program
             bool log     = true                    ,    // Use log scale on plots?
             bool flv     = true                    ,    // Split DY by flavor?
@@ -44,6 +44,7 @@ class ControlPlotMaker
     bool    splitTauDecayFromDY ;
     bool    outputAsEPS         ;
     bool    usingLegStats       ;
+    int     rebinOpt            ;
 
     TFile* inputFile;
     TFile* outputFile;

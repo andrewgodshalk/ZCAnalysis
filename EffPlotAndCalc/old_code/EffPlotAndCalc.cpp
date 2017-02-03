@@ -401,5 +401,3 @@ pair<float,float> calculateEfficiency(TH1F* h_eff, TH1F* h_dtwt)
     delete h_wt;
 return { eff, err };
 }
-
-

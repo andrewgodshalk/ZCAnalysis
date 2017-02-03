@@ -7,32 +7,38 @@ ControlPlotMaker.cpp
 ------------------------------------------------------------------------------*/
 
 #include <algorithm>
+#include <cstdlib>
 #include <iomanip>
 #include <iostream>
 #include <list>
 #include <TCanvas.h>
 #include <TFile.h>
 #include <THStack.h>
-#include <TLegend.h>
 #include <TImage.h>
+#include <TLegend.h>
+#include <TRegexp.h>
 #include "../interface/ControlPlotMaker.h"
 
+using std::atoi;   using std::setw  ;
 using std::cout;   using std::string;
 using std::endl;   using std::vector;
 using std::map ;   using std::list  ;
-using std::setw;
 
 ControlPlotMaker::ControlPlotMaker(TString fnac, TString fni, TString fno, TString o, bool log, bool flv, bool tau, bool eps)
- : anCfg(fnac), fnInput(fni), fnOutput(fno), options(o), usingLogScale(log), splitDYByFlavor(flv), splitTauDecayFromDY(tau), outputAsEPS(eps), usingLegStats(true)
+ : anCfg(fnac), fnInput(fni), fnOutput(fno), options(o), usingLogScale(log), splitDYByFlavor(flv), splitTauDecayFromDY(tau), outputAsEPS(eps), usingLegStats(true), rebinOpt(2)
 {
   // TEST output
     cout << "  ControlPlotMaker::ControlPlotMaker(): Created.\n"
             "    Options:                       " << options   << "\n"
          << endl;
 
+  // Get HF rebin option from command line option.
+    if(options.Index(TRegexp("[rR][eE][bB][iI][nN][0-9]")) != -1)
+        rebinOpt = atoi(options(5,1).Data());
+
   // Set up lists of datasets
     //bkgdDatasets = {"zz", "wz", "ww", "ttlep", "ttsemi", "tthad", "t_s", "t_t", "t_tw", "tbar_s", "tbar_t", "tbar_tw"};
-    bkgdDatasets = {"zz", "wz", "ww", "tt_lep"};
+    bkgdDatasets = {"zz", "wz", "ww", "tt"};
     if(splitTauDecayFromDY) bkgdDatasets.push_back("dy_tautau");
     if(splitDYByFlavor) sigDatasets = {"dy_Zl", "dy_Zc", "dy_Zb"};
     else                sigDatasets = {"dy"};
@@ -42,10 +48,10 @@ ControlPlotMaker::ControlPlotMaker(TString fnac, TString fni, TString fno, TStri
     allDatasets.insert(allDatasets.end(), bkgdDatasets.begin(), bkgdDatasets.end() );
 
   // Set up color and style maps.
-    vector<string> dsNameVec  = { "muon", "elec",        "dy",       "dy_tautau",       "dy_Zl",     "dy_Zc",    "dy_Zb",      "zz",     "wz",     "ww",        "tt_lep",         "ttsemi",         "tthad",          "t_s",          "t_t",          "t_tw",             "tbar_s",             "tbar_t",             "tbar_tw" };
-    Color_t dsColorVec[]      = { kBlack, kBlack,      kRed+1,           kYellow,        kRed+1,      kRed+1,     kRed+1,  kGreen-1, kGreen-2, kGreen-3,         kBlue-0,          kBlue-2,         kBlue-3,           kRed,           kRed,       kOrange+3,                 kRed,                 kRed,             kOrange+3 };
-    Style_t dsStyleVec[]      = {      0,      0,        1001,              1001,          1001,        3001,       3002,      1001,     1001,     1001,            1001,             1001,            1001,           1001,           1001,            1001,                 1001,                 1001,                  3001 };
-    string  dsLegLabel[]      = { "Data", "Data", "Drell-Yan", "DY (Z->#tau#tau", "DY (Z+udsg}",  "DY (Z+c)", "DY (Z+c)",      "ZZ",     "WZ",     "WW", "t#bar{t}(lep)", "t#bar{t}(semi)", "t#bar{t}(had)", "t(s-channel)", "t(t-channel)", "t(tW-channel)", "#bar{t}(s-channel)", "#bar{t}(t-channel)", "#bar{t}(tW-channel)" };
+    vector<string> dsNameVec  = { "muon", "elec",        "dy",       "dy_tautau",       "dy_Zl",     "dy_Zc",    "dy_Zb",      "zz",     "wz",     "ww",       "tt",        "tt_lep",         "ttsemi",         "tthad",          "t_s",          "t_t",          "t_tw",             "tbar_s",             "tbar_t",             "tbar_tw" };
+    Color_t dsColorVec[]      = { kBlack, kBlack,      kRed+1,           kYellow,        kRed+1,      kRed+1,     kRed+1,  kGreen-1, kGreen-2, kGreen-3,    kBlue-0,         kBlue-0,          kBlue-2,         kBlue-3,           kRed,           kRed,       kOrange+3,                 kRed,                 kRed,             kOrange+3 };
+    Style_t dsStyleVec[]      = {      0,      0,        1001,              1001,          1001,        3001,       3002,      1001,     1001,     1001,       1001,            1001,             1001,            1001,           1001,           1001,            1001,                 1001,                 1001,                  3001 };
+    string  dsLegLabel[]      = { "Data", "Data", "Drell-Yan", "DY (Z->#tau#tau", "DY (Z+udsg}",  "DY (Z+c)", "DY (Z+c)",      "ZZ",     "WZ",     "WW", "t#bar{t}", "t#bar{t}(lep)", "t#bar{t}(semi)", "t#bar{t}(had)", "t(s-channel)", "t(t-channel)", "t(tW-channel)", "#bar{t}(s-channel)", "#bar{t}(t-channel)", "#bar{t}(tW-channel)" };
 
     for(unsigned int i=0; i<dsNameVec.size(); i++)
     {   dsColor[dsNameVec[i]] = dsColorVec[i];
@@ -63,8 +69,9 @@ ControlPlotMaker::ControlPlotMaker(TString fnac, TString fni, TString fno, TStri
     outputFile = fileList[fnOutput];
 
   // For the Zuu, then Zee plots...
-    vector<string> decayChain = {"Zuu", "Zee"}; 
-    for(int ds_i=0; ds_i<2; ds_i++)
+    vector<string> decayChain = {"Zuu"};
+    //vector<string> decayChain = {"Zuu", "Zee"};
+    for(int ds_i=0; ds_i<1; ds_i++)
     {   cout << "  ControlPlotMaker::ControlPlotMaker(): Processing decay chain: " << decayChain[ds_i] << endl;
 
       // Set up output directory in output file
@@ -89,7 +96,7 @@ ControlPlotMaker::ControlPlotMaker(TString fnac, TString fni, TString fno, TStri
         {
             TString histToStack = hist->GetName();
 
-//if(histToStack!="zhfmet_CSVT_hfjet_ld_msv") continue;
+            // if(histToStack!="zhfmet_CSVT_hfjet_ld_msv") continue;
 
        cout << "    ControlPlotMaker::ControlPlotMaker(): Processing histo: " << hist->GetName() << endl;
           // Iterate through each dataset and:
@@ -99,9 +106,9 @@ ControlPlotMaker::ControlPlotMaker(TString fnac, TString fni, TString fno, TStri
             map<string, float> dsIntegral;
             list<string> dsOrder;
             for(auto& ds_h : dsHist) dsIntegral[ds_h.first] = ds_h.second->Integral();
-//            for(auto& ds_n : dsIntegral) cout << "    ControlPlotMaker::ControlPlotMaker(): " << ds_n.first << " has integral of " << ds_n.second << endl;
-//            for(auto& ds : allDatasets)  cout << "    ControlPlotMaker::ControlPlotMaker(): " << setw(12) << ds << " has integral of " << dsIntegral[ds] << " (" << dsHist[ds]->Integral() << "," << dsHist[ds]->GetEntries() << ")" << endl;
-//            for(auto& ds : allDatasets)  cout << "  " << setw(12) << ds << setw(10) << dsIntegral[ds] << setw(10) << dsHist[ds]->Integral() << setw(10) << dsHist[ds]->GetEntries() << endl;
+          //  for(auto& ds_n : dsIntegral) cout << "    ControlPlotMaker::ControlPlotMaker(): " << ds_n.first << " has integral of " << ds_n.second << endl;
+          //  for(auto& ds : allDatasets)  cout << "    ControlPlotMaker::ControlPlotMaker(): " << setw(12) << ds << " has integral of " << dsIntegral[ds] << " (" << dsHist[ds]->Integral() << "," << dsHist[ds]->GetEntries() << ")" << endl;
+          //  for(auto& ds : allDatasets)  cout << "  " << setw(12) << ds << setw(10) << dsIntegral[ds] << setw(10) << dsHist[ds]->Integral() << setw(10) << dsHist[ds]->GetEntries() << endl;
             for(auto& ds_n : dsIntegral)
             {
                 if(ds_n.first=="muon" || ds_n.first=="elec" || ds_n.second < 10) continue;
@@ -114,13 +121,13 @@ ControlPlotMaker::ControlPlotMaker(TString fnac, TString fni, TString fno, TStri
             //cout << endl;
 
           // Create histo for ratio plot denominator.
-            TH1F* mcHist = new TH1F("totalSim", dsHist["tt_lep"]->GetTitle(), dsHist["tt_lep"]->GetNbinsX(), dsHist["tt_lep"]->GetXaxis()->GetXmin(), dsHist["tt_lep"]->GetXaxis()->GetXmax());
+            TH1F* mcHist = new TH1F("totalSim", dsHist["tt"]->GetTitle(), dsHist["tt"]->GetNbinsX(), dsHist["tt"]->GetXaxis()->GetXmin(), dsHist["tt"]->GetXaxis()->GetXmax());
             mcHist->Sumw2();
-//            TH1F *mcHist = (TH1F*) dsHist["tt_lep"]->Clone("totalSim");
-//            for(int i=0; i<mcHist->GetNbinsX(); i++)
-//            {   mcHist->SetBinContent(0,0);
-//                mcHist->SetBinError(0,0);
-//            }
+          //  TH1F *mcHist = (TH1F*) dsHist["tt"]->Clone("totalSim");
+          //  for(int i=0; i<mcHist->GetNbinsX(); i++)
+          //  {   mcHist->SetBinContent(0,0);
+          //      mcHist->SetBinError(0,0);
+          //  }
 
           // Create a stack for signal and background histograms based on population.
             TString stackName = TString("h_stack_")+histToStack;
@@ -245,7 +252,8 @@ TH1* ControlPlotMaker::createStackHisto(string& ds, TString& histName)
     TH1* h = (TH1*)(dsDirectory[ds]->Get(histName)->Clone(ds+"_"+histName));
 
   // If hist is at the zhf level, rebin to make it a bit more reasonable.
-    if(histName(0,3)=="zhf" && !histName.Contains("mult")) h->Rebin(3);
+    //if(histName(0,3)=="zhf" && !histName.Contains("mult")) h->Rebin(3);
+    if(histName(0,3)=="zhf" && !histName.Contains("mult")) h->Rebin(rebinOpt);
 
   // Set color/fill/etc. Scale each clone by set weight if ds is a sim set.
     if(ds=="muon" || ds=="elec")
@@ -262,10 +270,10 @@ TH1* ControlPlotMaker::createStackHisto(string& ds, TString& histName)
         if(ds=="dy_tautau" || ds=="dy_Zl" || ds=="dy_Zc" || ds=="dy_Zb" ) h->Scale(anCfg.setWeight["dy"]);
         else                                                              h->Scale(anCfg.setWeight[ ds ]);
       // Set scale factor for tagging.
-//        if(histName.Contains("CSVL")) h->Scale(anCfg.flatHFTagSF["CSVL"]);
-//        if(histName.Contains("CSVM")) h->Scale(anCfg.flatHFTagSF["CSVM"]);
-//        if(histName.Contains("CSVT")) h->Scale(anCfg.flatHFTagSF["CSVT"]);
-//        if(histName.Contains("CSVS")) h->Scale(anCfg.flatHFTagSF["CSVS"]);
+      //  if(histName.Contains("CSVL")) h->Scale(anCfg.flatHFTagSF["CSVL"]);
+      //  if(histName.Contains("CSVM")) h->Scale(anCfg.flatHFTagSF["CSVM"]);
+      //  if(histName.Contains("CSVT")) h->Scale(anCfg.flatHFTagSF["CSVT"]);
+      //  if(histName.Contains("CSVS")) h->Scale(anCfg.flatHFTagSF["CSVS"]);
     }
 
 return h;

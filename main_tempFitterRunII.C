@@ -14,16 +14,11 @@
 ///////////////////////////////////////////////////
 // PLACE TO MODIFY
 ///////////////////////////////////////////////////
-    int rebin     = 3;
-//    int rebin     = 2;
+    int rebin     = 1;
     int tempScale = 1;
 
-    // TString fn_input  = "zc_cp_2016-09-11_wLepSF.root";
-    // TString fn_sample = "zc_cp_2016-09-11_wLepSF.root";
-    TString fn_input  = "zc_cp_2016-09-15_wLepSF.root";
-    TString fn_sample = "zc_cp_2016-09-15_wLepSF.root";
-    // TString fn_input  = "zc_2016-11-10_wDYWeight.root";
-    // TString fn_sample = "zc_2016-11-10_wDYWeight.root";
+    TString fn_input  = "raw_cp_merges/2017-01-19_singleMuG_Trig_noSF_fileJSON/zc_rawcp_2017-01-19_singleMuG_Trig_noSF_fileJSON.root";
+    TString fn_sample = "raw_cp_merges/2017-01-19_singleMuG_Trig_noSF_fileJSON/zc_rawcp_2017-01-19_singleMuG_Trig_noSF_fileJSON.root";
 
 //////////////////////////////////////////////////
 //////////////////////////////////////////////////
@@ -51,13 +46,13 @@
     TString l_output = TString::Format("fit_REBIN_%d_TEMPSCL_%d", rebin, tempScale);
 
   // TEMPLATE TEST
-//    mainLog << templateFitter(l_output+"_Zuu"         , h_sample_Zuu, h_b_Zuu, h_c_Zuu, h_l_Zuu, rebin);
+    mainLog << templateFitter(l_output+"_Zuu"         , h_sample_Zuu, h_b_Zuu, h_c_Zuu, h_l_Zuu, rebin);
 //    mainLog << templateFitter(l_output+"_Zee"         , h_sample_Zee, h_b_Zee, h_c_Zee, h_l_Zee, rebin);
-    mainLog << templateFitter(l_output+"_Zll"         , h_sample_Zll, h_b_Zll, h_c_Zll, h_l_Zll, rebin);
+//    mainLog << templateFitter(l_output+"_Zll"         , h_sample_Zll, h_b_Zll, h_c_Zll, h_l_Zll, rebin);
 //    mainLog << templateFitter(l_output+"_ZuuDBC_ZllL" , h_sample_Zuu, h_b_Zuu, h_c_Zuu, h_l_Zll, rebin);
 //    mainLog << templateFitter(l_output+"_ZeeDBC_ZllL" , h_sample_Zee, h_b_Zee, h_c_Zee, h_l_Zll, rebin);
-    mainLog << templateFitter(l_output+"_ZuuD_ZllBCL" , h_sample_Zuu, h_b_Zll, h_c_Zll, h_l_Zll, rebin);
-    mainLog << templateFitter(l_output+"_ZeeD_ZllBCL" , h_sample_Zee, h_b_Zll, h_c_Zll, h_l_Zll, rebin);
+//    mainLog << templateFitter(l_output+"_ZuuD_ZuuBCL" , h_sample_Zuu, h_b_Zll, h_c_Zll, h_l_Zll, rebin);
+//    mainLog << templateFitter(l_output+"_ZeeD_ZllBCL" , h_sample_Zee, h_b_Zll, h_c_Zll, h_l_Zll, rebin);
     cout << mainLog.str();
 
     TString l_logname = TString::Format("fit_REBIN_%d_TEMPSCL_%d.log", rebin, tempScale);
