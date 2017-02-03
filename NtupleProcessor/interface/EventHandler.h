@@ -60,6 +60,8 @@ public:
     float m_Vtype ;     float m_jet_csv[maxNumJets];   int   m_lep_charge[maxNumElecs];   bool  m_triggers[54];
     int   m_zdecayMode; float m_jet_msv[maxNumJets];   float m_lep_iso   [maxNumElecs];   float m_json        ;
                         int   m_jet_flv[maxNumJets];                                      int   m_event       ;
+    int   m_jet_hadflv[maxNumJets];
+    int   m_jet_parflv[maxNumJets];
     float m_jet_vtx_px[maxNumJets];
     float m_jet_vtx_py[maxNumJets];
     float m_jet_vtx_pz[maxNumJets];

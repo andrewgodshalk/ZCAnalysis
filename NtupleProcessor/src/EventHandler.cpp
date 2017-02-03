@@ -100,6 +100,8 @@ bool EventHandler::mapTree(TTree* tree)
         branches_to_reactivate.push_back("puWeight");
         branches_to_reactivate.push_back("genWeight");
         branches_to_reactivate.push_back("Jet_mcFlavour");
+        branches_to_reactivate.push_back("Jet_partonFlavour");
+        branches_to_reactivate.push_back("Jet_hadronFlavour");
         branches_to_reactivate.push_back("lheNj"        );
     }
 
@@ -181,7 +183,9 @@ bool EventHandler::mapTree(TTree* tree)
     tree->SetBranchAddress("primaryVertices_y",  m_pv_y      );
     tree->SetBranchAddress("primaryVertices_z",  m_pv_z      );
   if(usingSim)
-  { tree->SetBranchAddress( "Jet_mcFlavour"  ,  m_jet_flv     );
+  { tree->SetBranchAddress( "Jet_mcFlavour"    , m_jet_flv    );
+    tree->SetBranchAddress( "Jet_hadronFlavour", m_jet_hadflv );
+    tree->SetBranchAddress( "Jet_partonFlavour", m_jet_parflv );
     tree->SetBranchAddress( "lheNj"          , &m_lheNj       );
     tree->SetBranchAddress( "genWeight"      , &m_genWeight   );
     tree->SetBranchAddress( "puWeight"       , &m_puWeight    );
@@ -439,9 +443,9 @@ void EventHandler::evalCriteria()
     for(Index vJet_i=0, evt_i=0; vJet_i<validJets.size(); vJet_i++)
     {
         evt_i = validJets[vJet_i];  // Set the evt_i to the validJet's index within the EventHandler.
-        if(fabs(m_jet_flv[evt_i])==5) { bMCJets[vJet_i]=true; if(!hasBJet) leadBJet=vJet_i; hasBJet = true; }
-        if(fabs(m_jet_flv[evt_i])==4) { cMCJets[vJet_i]=true; if(!hasCJet) leadCJet=vJet_i; hasCJet = true; }
-        lMCJets[vJet_i] = fabs(m_jet_flv[evt_i])!=5 && fabs(m_jet_flv[evt_i])!=4;
+        if(fabs(m_jet_hadflv[evt_i])==5) { bMCJets[vJet_i]=true; if(!hasBJet) leadBJet=vJet_i; hasBJet = true; }
+        if(fabs(m_jet_hadflv[evt_i])==4) { cMCJets[vJet_i]=true; if(!hasCJet) leadCJet=vJet_i; hasCJet = true; }
+        lMCJets[vJet_i] = fabs(m_jet_hadflv[evt_i])!=5 && fabs(m_jet_hadflv[evt_i])!=4;
     }
 
   // Kick function if not using DY. Otherwise, check for origin from Z->tautau
@@ -480,8 +484,8 @@ void EventHandler::printJets()
     if(!hasBJet && !hasCJet) return;
     cout << "------------------------------\n"
             "    Printing Jets..." << endl;
-    for( auto& i : validJets ) cout << "   " << setw(4) << i << setprecision(4) << setw(8) << m_jet_pt[i] << setw(4) << m_jet_flv[i]
-                                    << (m_jet_flv[i] == 4 || m_jet_flv[i] == -4 || m_jet_flv[i] == 5 || m_jet_flv[i] == -5 ? "    <------" : "") << "\n";
+    for( auto& i : validJets ) cout << "   " << setw(4) << i << setprecision(4) << setw(8) << m_jet_pt[i] << setw(4) << m_jet_hadflv[i]
+                                    << (m_jet_hadflv[i] == 4 || m_jet_hadflv[i] == -4 || m_jet_hadflv[i] == 5 || m_jet_hadflv[i] == -5 ? "    <------" : "") << "\n";
     if(usingDY)
     {
         if(hasBJet) cout << "    Leading BJet = " << validJets[leadBJet] << endl;
