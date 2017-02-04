@@ -48,6 +48,7 @@ public:
     void printJets();                             // Test function that prints jets and their properties.
     float calculatePUReweight(int);
     float calculateJetMSVQuickCorrection(int);
+    float calculateJetTagEvtWeight(std::string);
 
   // Running Variables
     TString options;         // Options input with TreeIterator.
@@ -95,6 +96,7 @@ public:
     float Z_DelR, Z_DelPhi, Z_DelEta;
     std::array<float, maxNumJets> jet_msv_quickCorr;
     float evtWeight;
+    std::map<std::string, float> jetTagEvtWeight;    // Additional event weight calculated for each tagging operating point.
 
   // Selection Variables
     bool usingSim; // Simulation events. For plotting sim-truth information.

@@ -19,7 +19,7 @@
 #include "../interface/EventHandler.h"
 
 using std::cout;   using std::endl;   using std::vector;   using std::swap;
-using std::setw;   using std::setprecision;   
+using std::setw;   using std::setprecision;
 using std::sqrt;   using std::string;
 
 EventHandler::EventHandler(TString fnac, TString o) : anCfg(fnac), options(o)
@@ -72,31 +72,31 @@ bool EventHandler::mapTree(TTree* tree)
         "V_eta" , "vLeptons_phi"       , "Jet_phi"    ,
         "V_phi" , "vLeptons_charge"    , "Jet_btagCSV",
         "json"  , "vLeptons_pfRelIso04", "Jet_vtxMass",
-	"Jet_vtxPx",
-	"Jet_vtxPy",
-	"Jet_vtxPz",
-	"Jet_vtxPosX",
-	"Jet_vtxPosY",
-	"Jet_vtxPosZ",
+        "Jet_vtxPx",
+        "Jet_vtxPy",
+        "Jet_vtxPz",
+        "Jet_vtxPosX",
+        "Jet_vtxPosY",
+        "Jet_vtxPosZ",
         "evt"        ,
         "htJet30"    ,
         "mhtJet30"   ,
         "mhtPhiJet30",
-	"nprimaryVertices" ,
-	"primaryVertices_x",
-	"primaryVertices_y",
-	"primaryVertices_z",
+        "nprimaryVertices" ,
+        "primaryVertices_x",
+        "primaryVertices_y",
+        "primaryVertices_z",
         //"HLT_BIT_HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_v",
         //"HLT_BIT_HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_v",
         //"HLT_BIT_HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_v",
         //"HLT_BIT_HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_v",
         //"HLT_BIT_HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v",
         "nPVs",
-	"run", "lumi",
+        "run", "lumi",
         //"lheNj"
     };
     if(usingSim)
-    { 
+    {
         branches_to_reactivate.push_back("puWeight");
         branches_to_reactivate.push_back("genWeight");
         branches_to_reactivate.push_back("Jet_mcFlavour");
@@ -115,20 +115,20 @@ bool EventHandler::mapTree(TTree* tree)
   if(tree->GetListOfBranches()->FindObject("zdecayMode"))
     tree->SetBranchAddress("zdecayMode",      &m_zdecayMode  );
     tree->SetBranchAddress("Vtype"     ,          &m_Vtype       );
-//    temp_branch = tree->GetBranch("V");
-//    temp_branch->GetLeaf( "mass" )->SetAddress(   &m_Z_mass      );
-//    temp_branch->GetLeaf( "pt"   )->SetAddress(   &m_Z_pt        );
-//    temp_branch->GetLeaf( "eta"  )->SetAddress(   &m_Z_eta       );
-//    temp_branch->GetLeaf( "phi"  )->SetAddress(   &m_Z_phi       );
+  //  temp_branch = tree->GetBranch("V");
+  //  temp_branch->GetLeaf( "mass" )->SetAddress(   &m_Z_mass      );
+  //  temp_branch->GetLeaf( "pt"   )->SetAddress(   &m_Z_pt        );
+  //  temp_branch->GetLeaf( "eta"  )->SetAddress(   &m_Z_eta       );
+  //  temp_branch->GetLeaf( "phi"  )->SetAddress(   &m_Z_phi       );
     tree->SetBranchAddress( "V_mass", &m_Z_mass      );
     tree->SetBranchAddress( "V_pt"  , &m_Z_pt        );
     tree->SetBranchAddress( "V_eta" , &m_Z_eta       );
     tree->SetBranchAddress( "V_phi" , &m_Z_phi       );
 
   // JSON
-//    temp_branch = tree->GetBranch("EVENT");
-//    temp_branch->GetLeaf( "json"  )->SetAddress(   &m_json        );
-//    temp_branch->GetLeaf( "event" )->SetAddress(   &m_event       );
+  //  temp_branch = tree->GetBranch("EVENT");
+  //  temp_branch->GetLeaf( "json"  )->SetAddress(   &m_json        );
+  //  temp_branch->GetLeaf( "event" )->SetAddress(   &m_event       );
     tree->SetBranchAddress( "json", &m_json );
     tree->SetBranchAddress( "evt" , &m_event);
     tree->SetBranchAddress( "nPVs", &m_nPVs );
@@ -137,12 +137,12 @@ bool EventHandler::mapTree(TTree* tree)
 
 
   // Muon variables
-//    tree->SetBranchAddress( "nallMuons"         , &m_nMuons      );
-//    tree->SetBranchAddress( "allMuon_pt"        ,  m_muon_pt     );
-//    tree->SetBranchAddress( "allMuon_eta"       ,  m_muon_eta    );
-//    tree->SetBranchAddress( "allMuon_phi"       ,  m_muon_phi    );
-//    tree->SetBranchAddress( "allMuon_charge"    ,  m_muon_charge );
-//    tree->SetBranchAddress( "allMuon_pfCorrIso" ,  m_muon_iso    );
+  //  tree->SetBranchAddress( "nallMuons"         , &m_nMuons      );
+  //  tree->SetBranchAddress( "allMuon_pt"        ,  m_muon_pt     );
+  //  tree->SetBranchAddress( "allMuon_eta"       ,  m_muon_eta    );
+  //  tree->SetBranchAddress( "allMuon_phi"       ,  m_muon_phi    );
+  //  tree->SetBranchAddress( "allMuon_charge"    ,  m_muon_charge );
+  //  tree->SetBranchAddress( "allMuon_pfCorrIso" ,  m_muon_iso    );
     tree->SetBranchAddress( "nvLeptons"           , &m_nLeps      );
     tree->SetBranchAddress( "vLeptons_pt"         ,  m_lep_pt     );
     tree->SetBranchAddress( "vLeptons_eta"        ,  m_lep_eta    );
@@ -151,21 +151,21 @@ bool EventHandler::mapTree(TTree* tree)
     tree->SetBranchAddress( "vLeptons_pfRelIso04" ,  m_lep_iso    );
 
   // Muon variables
-//    tree->SetBranchAddress( "nallElectrons"        , &m_nElecs      );
-//    tree->SetBranchAddress( "allElectron_pt"       ,  m_elec_pt     );
-//    tree->SetBranchAddress( "allElectron_eta"      ,  m_elec_eta    );
-//    tree->SetBranchAddress( "allElectron_phi"      ,  m_elec_phi    );
-//    tree->SetBranchAddress( "allElectron_charge"   ,  m_elec_charge );
-//    tree->SetBranchAddress( "allElectron_pfCorrIso",  m_elec_iso    );
+  //  tree->SetBranchAddress( "nallElectrons"        , &m_nElecs      );
+  //  tree->SetBranchAddress( "allElectron_pt"       ,  m_elec_pt     );
+  //  tree->SetBranchAddress( "allElectron_eta"      ,  m_elec_eta    );
+  //  tree->SetBranchAddress( "allElectron_phi"      ,  m_elec_phi    );
+  //  tree->SetBranchAddress( "allElectron_charge"   ,  m_elec_charge );
+  //  tree->SetBranchAddress( "allElectron_pfCorrIso",  m_elec_iso    );
 
   // Jet variables
-//    tree->SetBranchAddress( "nallJets"          , &m_nJets       );
-//    tree->SetBranchAddress( "allJet_pt"         ,  m_jet_pt      );
-//    tree->SetBranchAddress( "allJet_eta"        ,  m_jet_eta     );
-//    tree->SetBranchAddress( "allJet_phi"        ,  m_jet_phi     );
-//    tree->SetBranchAddress( "allJet_csv"        ,  m_jet_csv     );
-//    tree->SetBranchAddress( "allJet_vtxMass"    ,  m_jet_msv     );
-//    tree->SetBranchAddress( "allJet_flavour"    ,  m_jet_flv     );
+  //  tree->SetBranchAddress( "nallJets"          , &m_nJets       );
+  //  tree->SetBranchAddress( "allJet_pt"         ,  m_jet_pt      );
+  //  tree->SetBranchAddress( "allJet_eta"        ,  m_jet_eta     );
+  //  tree->SetBranchAddress( "allJet_phi"        ,  m_jet_phi     );
+  //  tree->SetBranchAddress( "allJet_csv"        ,  m_jet_csv     );
+  //  tree->SetBranchAddress( "allJet_vtxMass"    ,  m_jet_msv     );
+  //  tree->SetBranchAddress( "allJet_flavour"    ,  m_jet_flv     );
     tree->SetBranchAddress( "nJet"           , &m_nJets       );
     tree->SetBranchAddress( "Jet_pt"         ,  m_jet_pt      );
     tree->SetBranchAddress( "Jet_eta"        ,  m_jet_eta     );
@@ -192,12 +192,12 @@ bool EventHandler::mapTree(TTree* tree)
   }
 
   // MET variables
-//    temp_branch = tree->GetBranch("MET");
-//    temp_branch->GetLeaf( "et"   )->SetAddress( &m_MET_et    );
-//    temp_branch->GetLeaf( "phi"  )->SetAddress( &m_MET_phi   );
-//    temp_branch->GetLeaf( "sumet")->SetAddress( &m_MET_sumet );
-//    temp_branch->GetLeaf( "sig"  )->SetAddress( &m_MET_sig   );
-//    temp_branch = tree->GetBranch("MET");
+  //  temp_branch = tree->GetBranch("MET");
+  //  temp_branch->GetLeaf( "et"   )->SetAddress( &m_MET_et    );
+  //  temp_branch->GetLeaf( "phi"  )->SetAddress( &m_MET_phi   );
+  //  temp_branch->GetLeaf( "sumet")->SetAddress( &m_MET_sumet );
+  //  temp_branch->GetLeaf( "sig"  )->SetAddress( &m_MET_sig   );
+  //  temp_branch = tree->GetBranch("MET");
     tree->SetBranchAddress( "met_pt"     , &m_MET_et    );
     tree->SetBranchAddress( "met_phi"    , &m_MET_phi   );
     tree->SetBranchAddress( "met_sumEt"  , &m_MET_sumet );
@@ -205,7 +205,7 @@ bool EventHandler::mapTree(TTree* tree)
     tree->SetBranchAddress( "mhtJet30"   , &m_mht_phi   );
     tree->SetBranchAddress( "mhtPhiJet30", &m_mht       );
 
-//    temp_branch->GetLeaf( "met_rawPt"  )->SetAddress( &m_MET_sig   );
+  //  temp_branch->GetLeaf( "met_rawPt"  )->SetAddress( &m_MET_sig   );
 
   // Trigger variables
     //tree->SetBranchAddress( "triggerFlags",         m_triggers   );
@@ -226,18 +226,18 @@ bool EventHandler::mapTree(TTree* tree)
 void EventHandler::evalCriteria()
 { // Evaluates the class' list of event selection criteria
 
-//cout << "   EventHandler::evalCriteria(): BEGIN." << endl;
-//cout << "    EventHandler::evalCriteria(): TEST: EVENT NUMBER = " << m_event << endl;
+  // cout << "   EventHandler::evalCriteria(): BEGIN." << endl;
+  // cout << "    EventHandler::evalCriteria(): TEST: EVENT NUMBER = " << m_event << endl;
 
     resetSelectionVariables();
 
-////////////////////////////////////////////////
-// 2016-03-15 - SPECIAL TEMP FITTING CHECK
+  ////////////////////////////////////////////////
+  // 2016-03-15 - SPECIAL TEMP FITTING CHECK
     if(usingTopHalfDY    && m_event <= 30000000) return;
     if(usingBottomHalfDY && m_event >  30000000) return;
     if(usingEvenEventDY  && m_event%2 == 1     ) return;
     if(usingOddEventDY   && m_event%2 == 0     ) return;
-////////////////////////////////////////////////
+  ////////////////////////////////////////////////
 
   // Apply genWeight sign (for amc#NLO)
     if(usingSim)
@@ -245,7 +245,7 @@ void EventHandler::evalCriteria()
 
   // Apply puWeight on Sim
     if(usingSim)
-	evtWeight*=m_puWeight;
+        evtWeight*=m_puWeight;
 
   // Check JSON if working with a data event.
     if(usingSim) inJSON = false;       // If using simulation, automatically set the JSON variable to false.
@@ -305,7 +305,7 @@ void EventHandler::evalCriteria()
     {
         for(Index i=0; i<m_nLeps; i++)
         {
-//cout << "    EventHandler::evalCriteria(): ELEC Props (elec #, pt, eta, iso): = (" << i << ", " << m_lep_pt[i] << ", " << m_lep_eta[i] << ", " << m_lep_iso[i] << ")" << endl;
+    //cout << "    EventHandler::evalCriteria(): ELEC Props (elec #, pt, eta, iso): = (" << i << ", " << m_lep_pt[i] << ", " << m_lep_eta[i] << ", " << m_lep_iso[i] << ")" << endl;
           // Perform selection on this electron.
             if(    m_lep_pt [i] < anCfg.elecPtMin
                 || (fabs(m_lep_eta[i])>anCfg.elecEtaInnerMax && (fabs(m_lep_eta[i])<anCfg.elecEtaOuterMin || fabs(m_lep_eta[i])>anCfg.elecEtaOuterMax))
@@ -323,15 +323,15 @@ void EventHandler::evalCriteria()
   //
 
   // Check for two valid muons, electrons. (Assume 0, 1 are leading and subleading.)
-//    hasValidMuons =    validMuons.size() >=2   //  && m_Vtype==0
-//                    && (m_muon_charge[validMuons[0]]*m_muon_charge[validMuons[1]]==-1 || !anCfg.dilepMuonReqOppSign )
-//                    && isMuTriggered
-//                    && m_Vtype==0
-//    ;
-//    hasValidElectrons =    validElectrons.size()>=2 //&& m_Vtype==1
-//                        && (m_elec_charge[validElectrons[0]]*m_elec_charge[validElectrons[1]]==-1 || !anCfg.dilepElecReqOppSign )
-//                        && isElTriggered
-//    ;
+  //  hasValidMuons =    validMuons.size() >=2   //  && m_Vtype==0
+                  //  && (m_muon_charge[validMuons[0]]*m_muon_charge[validMuons[1]]==-1 || !anCfg.dilepMuonReqOppSign )
+                  //  && isMuTriggered
+                  //  && m_Vtype==0
+  //  ;
+  //  hasValidElectrons =    validElectrons.size()>=2 //&& m_Vtype==1
+                      //  && (m_elec_charge[validElectrons[0]]*m_elec_charge[validElectrons[1]]==-1 || !anCfg.dilepElecReqOppSign )
+                      //  && isElTriggered
+  //  ;
     hasValidMuons =    m_Vtype==0
                     && isMuTriggered
                     && validLeptons.size() >=2
@@ -408,13 +408,13 @@ void EventHandler::evalCriteria()
     }
 
   // Check HF Tagging info for all valid jets and perform on-the-fly calculations
-    //if(validJets.size() > 0) cout << "  Testing " << validJets.size() << " jets..." << endl; 
+    //if(validJets.size() > 0) cout << "  Testing " << validJets.size() << " jets..." << endl;
     for(Index vJet_i=0, evt_i=0; vJet_i<validJets.size(); vJet_i++)
     {
       // For each jet, calculate corrected secondary vertex mass (calculate for valid jets only)
         jet_msv_quickCorr[evt_i] = calculateJetMSVQuickCorrection(evt_i);
-	//if(jet_msv_quickCorr[evt_i] != 0) cout << "    TEST: Jet msv: " << m_jet_msv[evt_i] << "   Jet MSVQCorr: " << jet_msv_quickCorr[evt_i] << endl; 
-	//if(jet_msv_quickCorr[evt_i] != 0 && m_jet_msv[evt_i] == 0) cout << "    TEST: Jet msv: " << m_jet_msv[evt_i] << "   Jet MSVQCorr: " << jet_msv_quickCorr[evt_i] << endl; 
+        // if(jet_msv_quickCorr[evt_i] != 0) cout << "    TEST: Jet msv: " << m_jet_msv[evt_i] << "   Jet MSVQCorr: " << jet_msv_quickCorr[evt_i] << endl;
+        // if(jet_msv_quickCorr[evt_i] != 0 && m_jet_msv[evt_i] == 0) cout << "    TEST: Jet msv: " << m_jet_msv[evt_i] << "   Jet MSVQCorr: " << jet_msv_quickCorr[evt_i] << endl;
 
       // Jet is HF if it passes the CSV operating point and has a reconstructed secondary vertex.
         evt_i = validJets[vJet_i];  // Set the evt_i to the validJet's index within the EventHandler.
@@ -448,11 +448,20 @@ void EventHandler::evalCriteria()
         lMCJets[vJet_i] = fabs(m_jet_hadflv[evt_i])!=5 && fabs(m_jet_hadflv[evt_i])!=4;
     }
 
+  // For each flavor tag, calculate an event weight based on jet tagging efficiency and tagging data/mc scalefactors.
+  // See link for method used: https://twiki.cern.ch/twiki/bin/view/CMS/BTagSFMethods#1a_Event_reweighting_using_scale
+    jetTagEvtWeight["NoHF"] = calculateJetTagEvtWeight("NoHF");
+    jetTagEvtWeight["SVT" ] = calculateJetTagEvtWeight("SVT" );
+    jetTagEvtWeight["CSVL"] = calculateJetTagEvtWeight("CSVL");
+    jetTagEvtWeight["CSVM"] = calculateJetTagEvtWeight("CSVM");
+    jetTagEvtWeight["CSVT"] = calculateJetTagEvtWeight("CSVT");
+    jetTagEvtWeight["CSVS"] = calculateJetTagEvtWeight("CSVS");
+
   // Kick function if not using DY. Otherwise, check for origin from Z->tautau
     if(!usingDY) return;
     zBosonFromTaus = (m_zdecayMode==3);
 
-//    if(isZpJEvent) printJets();
+  //  if(isZpJEvent) printJets();
 
 }
 
@@ -470,12 +479,18 @@ void EventHandler::resetSelectionVariables()
       = hasValidZBosonMass = zBosonFromTaus = hasValidMET
       = isZpJEvent = isZHFEvent = hasBJet = hasCJet = false;
     leadBJet = leadCJet = 200;
-//    validMuons.clear();
-//    validElectrons.clear();
+  //  validMuons.clear();
+  //  validElectrons.clear();
     validLeptons.clear();
     validJets.clear();
     evtWeight = 1.0;
     jet_msv_quickCorr.fill(-1.0);
+    jetTagEvtWeight["NoHF"] = 1.0;
+    jetTagEvtWeight["SVT" ] = 1.0;
+    jetTagEvtWeight["CSVL"] = 1.0;
+    jetTagEvtWeight["CSVM"] = 1.0;
+    jetTagEvtWeight["CSVT"] = 1.0;
+    jetTagEvtWeight["CSVS"] = 1.0;
 }
 
 
@@ -511,7 +526,39 @@ float EventHandler::calculateJetMSVQuickCorrection(int jet_i)
     TVector3 secVtxRelPos(secVtxPos-priVtxPos);
   // Secondary vertex momentum that is transverse to the vertex position vector relative to the PV: = rsv x psv / |rsv|
     float secVtxPtSq = (secVtxRelPos.Mag2() > 0 ? secVtxRelPos.Cross(secVtxMom).Mag2()/secVtxRelPos.Mag2() : 0);
-        
-    //ROOT.TMath.Sqrt(sv_mass*sv_mass + sv_pt2) + ROOT.TMath.Sqrt(sv_pt2) 
+
+    //ROOT.TMath.Sqrt(sv_mass*sv_mass + sv_pt2) + ROOT.TMath.Sqrt(sv_pt2)
     return sqrt(m_jet_msv[jet_i]*m_jet_msv[jet_i] + secVtxPtSq) + sqrt(secVtxPtSq);
+}
+
+
+float EventHandler::calculateJetTagEvtWeight(string opPt)
+{ // For given flavor tag, calculate an event weight based on jet tagging efficiency and tagging data/mc scalefactors.
+  // See link for method used: https://twiki.cern.ch/twiki/bin/view/CMS/BTagSFMethods#1a_Event_reweighting_using_scale
+    float probData = 1.0;
+    float probMC   = 1.0;
+  // For each valid jet...
+    for(Index vJet_i=0, jet_i=0; vJet_i<validJets.size(); vJet_i++)
+    {
+        jet_i = validJets[vJet_i]; // Get jet_i, the valid jet's actual index within the raw array.
+
+      // Get the jet flavor.
+        char flv = 'l';
+        switch(abs(m_jet_hadflv[jet_i]))
+        {  case 5 : flv = 'b'; break;
+           case 4 : flv = 'c'; break;
+           default: flv = 'l';
+        }
+      // Get the jet tagging efficiency and SF
+        float jetEff = anCfg.jetTagWeight.getJetEff(flv, opPt, m_jet_pt[jet_i], m_jet_eta[jet_i]);
+        float jetSF  = anCfg.jetTagWeight.getJetSF (flv, opPt, m_jet_pt[jet_i], m_jet_eta[jet_i]);
+
+      // Get whether this jet was tagged or not.
+        bool tagged = HFJets[opPt][vJet_i];
+
+      // Factor into probability values.
+        probData *= (tagged ? jetEff*jetSF : 1.0-jetEff*jetSF );
+        probMC   *= (tagged ? jetEff       : 1.0-jetEff       );
+    }
+    return probData/probMC;
 }

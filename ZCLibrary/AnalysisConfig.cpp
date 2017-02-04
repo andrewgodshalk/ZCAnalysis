@@ -19,22 +19,22 @@ using std::cout;     using std::endl;   using std::stringstream;
 using std::string;   using std::pair;   using std::vector;
 
 AnalysisConfig::AnalysisConfig(TString fnc)
-: ConfigReader(fnc)
+: ConfigReader(fnc), jetTagWeight()
 {
   // Open and read in config file
-//    setWeight["dy"     ] = pt.get<float>("DATASET WEIGHTS.dy"     );
-//    setWeight["ww"     ] = pt.get<float>("DATASET WEIGHTS.ww"     );
-//    setWeight["wz"     ] = pt.get<float>("DATASET WEIGHTS.wz"     );
-//    setWeight["zz"     ] = pt.get<float>("DATASET WEIGHTS.zz"     );
-//    setWeight["tthad"  ] = pt.get<float>("DATASET WEIGHTS.tthad"  );
-//    setWeight["ttlep"  ] = pt.get<float>("DATASET WEIGHTS.ttlep"  );
-//    setWeight["ttsemi" ] = pt.get<float>("DATASET WEIGHTS.ttsemi" );
-//    setWeight["t_s"    ] = pt.get<float>("DATASET WEIGHTS.t_s"    );
-//    setWeight["t_t"    ] = pt.get<float>("DATASET WEIGHTS.t_t"    );
-//    setWeight["t_tw"   ] = pt.get<float>("DATASET WEIGHTS.t_tw"   );
-//    setWeight["tbar_s" ] = pt.get<float>("DATASET WEIGHTS.tbar_s" );
-//    setWeight["tbar_t" ] = pt.get<float>("DATASET WEIGHTS.tbar_t" );
-//    setWeight["tbar_tw"] = pt.get<float>("DATASET WEIGHTS.tbar_tw");
+    // setWeight["dy"     ] = pt.get<float>("DATASET WEIGHTS.dy"     );
+    // setWeight["ww"     ] = pt.get<float>("DATASET WEIGHTS.ww"     );
+    // setWeight["wz"     ] = pt.get<float>("DATASET WEIGHTS.wz"     );
+    // setWeight["zz"     ] = pt.get<float>("DATASET WEIGHTS.zz"     );
+    // setWeight["tthad"  ] = pt.get<float>("DATASET WEIGHTS.tthad"  );
+    // setWeight["ttlep"  ] = pt.get<float>("DATASET WEIGHTS.ttlep"  );
+    // setWeight["ttsemi" ] = pt.get<float>("DATASET WEIGHTS.ttsemi" );
+    // setWeight["t_s"    ] = pt.get<float>("DATASET WEIGHTS.t_s"    );
+    // setWeight["t_t"    ] = pt.get<float>("DATASET WEIGHTS.t_t"    );
+    // setWeight["t_tw"   ] = pt.get<float>("DATASET WEIGHTS.t_tw"   );
+    // setWeight["tbar_s" ] = pt.get<float>("DATASET WEIGHTS.tbar_s" );
+    // setWeight["tbar_t" ] = pt.get<float>("DATASET WEIGHTS.tbar_t" );
+    // setWeight["tbar_tw"] = pt.get<float>("DATASET WEIGHTS.tbar_tw");
 
     setWeight["dy"     ] = pt.get<float>("DATASET WEIGHTS.dy"     );
     setWeight["ww"     ] = pt.get<float>("DATASET WEIGHTS.ww"     );
@@ -92,9 +92,6 @@ AnalysisConfig::AnalysisConfig(TString fnc)
     string binStr_jet_eta     = pt.get<string>("DIFFERENTIAL ANALYSIS.jet_eta_bins"    );
     string binStr_dilepton_pt = pt.get<string>("DIFFERENTIAL ANALYSIS.dilepton_pt_bins");
 
-  // Close config file.
-
-
   // Complete processing on config file variables.
     processTriggerString( muonTriggers  , triggerStr_muon    );
     processTriggerString( elecTriggers  , triggerStr_elec    );
@@ -125,9 +122,6 @@ AnalysisConfig::AnalysisConfig(TString fnc)
                                                    pt.get<string>("LEPTON SFS.elec_sf_trk_type" ),
                                                    pt.get<string>("LEPTON SFS.elec_sf_trk_pref" )
                                        );
-
-cout << "  TEST: AnalsysisConfig: lepSF[\"elec_sf_trk\"] initialized." << endl;
-
     lepSFs["elec_sf_id"  ] = LeptonSFData( jsonDir+pt.get<string>("LEPTON SFS.elec_sf_id_file"  ),
                                                    pt.get<string>("LEPTON SFS.elec_sf_id_type"  ),
                                                    pt.get<string>("LEPTON SFS.elec_sf_id_pref"  )
@@ -140,6 +134,12 @@ cout << "  TEST: AnalsysisConfig: lepSF[\"elec_sf_trk\"] initialized." << endl;
                                                    pt.get<string>("LEPTON SFS.elec_sf_trig_type"),
                                                    pt.get<string>("LEPTON SFS.elec_sf_trig_pref")
                                        );
+
+  // Set up JetTagWeight
+    btagEffFile = pt.get<string>("BTAGGING.btag_eff_file");
+    btagSFFile  = pt.get<string>("BTAGGING.btag_sf_file");
+    jetTagWeight.setSFFile(btagSFFile);
+    jetTagWeight.setEffFile(btagEffFile);
 }
 
 

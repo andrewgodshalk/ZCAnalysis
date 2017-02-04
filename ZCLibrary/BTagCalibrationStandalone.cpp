@@ -3,6 +3,7 @@
 #include <exception>
 #include <algorithm>
 #include <sstream>
+#include <TF1.h>
 
 
 BTagEntry::Parameters::Parameters(
@@ -48,10 +49,10 @@ BTagEntry::BTagEntry(const std::string &csvLine)
     vec.push_back(token);
   }
   if (vec.size() != 11) {
-std::cerr << "ERROR in BTagCalibration: "
-          << "Invalid csv line; num tokens != 11: "
-          << csvLine;
-throw std::exception();
+    std::cerr << "ERROR in BTagCalibration: "
+              << "Invalid csv line; num tokens != 11: "
+              << csvLine;
+    throw std::exception();
   }
 
   // clean string values
@@ -66,26 +67,26 @@ throw std::exception();
   formula = vec[10];
   TF1 f1("", formula.c_str());  // compile formula to check validity
   if (f1.IsZombie()) {
-std::cerr << "ERROR in BTagCalibration: "
-          << "Invalid csv line; formula does not compile: "
-          << csvLine;
-throw std::exception();
+    std::cerr << "ERROR in BTagCalibration: "
+              << "Invalid csv line; formula does not compile: "
+              << csvLine;
+    throw std::exception();
   }
 
   // make parameters
   unsigned op = stoi(vec[0]);
   if (op > 3) {
-std::cerr << "ERROR in BTagCalibration: "
-          << "Invalid csv line; OperatingPoint > 3: "
-          << csvLine;
-throw std::exception();
+    std::cerr << "ERROR in BTagCalibration: "
+              << "Invalid csv line; OperatingPoint > 3: "
+              << csvLine;
+    throw std::exception();
   }
   unsigned jf = stoi(vec[3]);
   if (jf > 2) {
-std::cerr << "ERROR in BTagCalibration: "
-          << "Invalid csv line; JetFlavor > 2: "
-          << csvLine;
-throw std::exception();
+    std::cerr << "ERROR in BTagCalibration: "
+              << "Invalid csv line; JetFlavor > 2: "
+              << csvLine;
+    throw std::exception();
   }
   params = BTagEntry::Parameters(
     BTagEntry::OperatingPoint(op),
@@ -107,22 +108,45 @@ BTagEntry::BTagEntry(const std::string &func, BTagEntry::Parameters p):
 {
   TF1 f1("", formula.c_str());  // compile formula to check validity
   if (f1.IsZombie()) {
-std::cerr << "ERROR in BTagCalibration: "
-          << "Invalid func string; formula does not compile: "
-          << func;
-throw std::exception();
+    std::cerr << "ERROR in BTagCalibration: "
+              << "Invalid func string; formula does not compile: "
+              << func;
+    throw std::exception();
   }
 }
 
 BTagEntry::BTagEntry(const TF1* func, BTagEntry::Parameters p):
-  formula(std::string(func->GetExpFormula("p").Data())),
+  formula(std::string(func->GetExpFormula("p").Data())),     // PROBLEM, SINCE USING DIFF VERSION OF ROOT ON HOME COMPUTER.
+  // formula(std::string(func->GetExpFormula().Data())),
   params(p)
 {
+  // // ADDED BY ANDREW GODSHALK for older version of ROOT w/o option flag...
+  // // Get parameters from formula.
+  //   int nPar = func->GetNpar();
+  // // For each parameter
+  //   std::cout << formula << std::endl;
+  //   for(int i=0; i<nPar; i++)
+  //   { // Set up string represenation of parameter ( "[i]" ) and the parameter itself.
+  //       std::string parRep(TString::Format("[%i]", i                     ).Data());
+  //       std::string parVal(TString::Format("(%f)", func->GetParameter(i) ).Data());
+  //     // While you're able to find more occurances of the parameter representation...
+  //       unsigned int strLocation = formula.find(parRep);
+  //       while(strLocation != std::string::npos)
+  //       { // Replace [#] with the actual parameter
+  //           std::string form_before_replace = formula.substr(0, strLocation);
+  //           std::string form_after_replace  = formula.substr(strLocation+3);
+  //           formula = form_before_replace + parVal + form_after_replace;
+  //         // Find next occurance
+  //           strLocation = formula.find(parRep, strLocation);
+  //       }
+  //       std::cout << formula << std::endl;
+  //   }
+
   if (func->IsZombie()) {
-std::cerr << "ERROR in BTagCalibration: "
-          << "Invalid TF1 function; function is zombie: "
-          << func->GetName();
-throw std::exception();
+    std::cerr << "ERROR in BTagCalibration: "
+              << "Invalid TF1 function; function is zombie: "
+              << func->GetName();
+    throw std::exception();
   }
 }
 
@@ -216,10 +240,10 @@ BTagEntry::BTagEntry(const TH1* hist, BTagEntry::Parameters p):
   // compile formula to check validity
   TF1 f1("", formula.c_str());
   if (f1.IsZombie()) {
-std::cerr << "ERROR in BTagCalibration: "
-          << "Invalid histogram; formula does not compile (>150 bins?): "
-          << hist->GetName();
-throw std::exception();
+    std::cerr << "ERROR in BTagCalibration: "
+              << "Invalid histogram; formula does not compile (>150 bins?): "
+              << hist->GetName();
+    throw std::exception();
   }
 }
 
@@ -282,10 +306,10 @@ BTagCalibration::BTagCalibration(const std::string &taggr,
 {
   std::ifstream ifs(filename);
   if (!ifs.good()) {
-std::cerr << "ERROR in BTagCalibration: "
-          << "input file not available: "
-          << filename;
-throw std::exception();
+    std::cerr << "ERROR in BTagCalibration: "
+              << "input file not available: "
+              << filename;
+    throw std::exception();
   }
   readCSV(ifs);
   ifs.close();
@@ -301,10 +325,10 @@ const std::vector<BTagEntry>& BTagCalibration::getEntries(
 {
   std::string tok = token(par);
   if (!data_.count(tok)) {
-std::cerr << "ERROR in BTagCalibration: "
-          << "(OperatingPoint, measurementType, sysType) not available: "
-          << tok;
-throw std::exception();
+    std::cerr << "ERROR in BTagCalibration: "
+              << "(OperatingPoint, measurementType, sysType) not available: "
+              << tok;
+    throw std::exception();
   }
   return data_.at(tok);
 }
@@ -424,10 +448,10 @@ BTagCalibrationReader::BTagCalibrationReaderImpl::BTagCalibrationReaderImpl(
 {
   for (const std::string & ost : otherSysTypes) {
     if (otherSysTypeReaders_.count(ost)) {
-std::cerr << "ERROR in BTagCalibration: "
-            << "Every otherSysType should only be given once. Duplicate: "
-            << ost;
-throw std::exception();
+    std::cerr << "ERROR in BTagCalibration: "
+                << "Every otherSysType should only be given once. Duplicate: "
+                << ost;
+    throw std::exception();
     }
     otherSysTypeReaders_[ost] = std::auto_ptr<BTagCalibrationReaderImpl>(
         new BTagCalibrationReaderImpl(op, ost)
@@ -441,10 +465,10 @@ void BTagCalibrationReader::BTagCalibrationReaderImpl::load(
                                              std::string measurementType)
 {
   if (tmpData_[jf].size()) {
-std::cerr << "ERROR in BTagCalibration: "
-          << "Data for this jet-flavor is already loaded: "
-          << jf;
-throw std::exception();
+    std::cerr << "ERROR in BTagCalibration: "
+              << "Data for this jet-flavor is already loaded: "
+              << jf;
+    throw std::exception();
   }
 
   BTagEntry::Parameters params(op_, measurementType, sysType_);
@@ -542,10 +566,10 @@ double BTagCalibrationReader::BTagCalibrationReaderImpl::eval_auto_bounds(
 
   // get sys SF (and maybe return)
   if (!otherSysTypeReaders_.count(sys)) {
-std::cerr << "ERROR in BTagCalibration: "
-        << "sysType not available (maybe not loaded?): "
-        << sys;
-throw std::exception();
+    std::cerr << "ERROR in BTagCalibration: "
+            << "sysType not available (maybe not loaded?): "
+            << sys;
+    throw std::exception();
   }
   double sf_err = otherSysTypeReaders_.at(sys)->eval(jf, eta, pt_for_eval, discr);
   if (!is_out_of_bounds) {
@@ -630,5 +654,3 @@ std::pair<float, float> BTagCalibrationReader::min_max_pt(BTagEntry::JetFlavor j
 {
   return pimpl->min_max_pt(jf, eta, discr);
 }
-
-

@@ -8,7 +8,7 @@
  Modified: 2015-11-09  godshalk
 
  Class designed to contain and provide standard variables for Z+c Analysis code.
- 
+
  Child class of ConfigReader.h. Takes a ini-like configuration file with the
  desired variables to be entered.
 
@@ -19,9 +19,10 @@
 #include <string>
 #include <vector>
 #include <TString.h>
-#include "../ZCLibrary/ConfigReader.h"
-#include "../ZCLibrary/LeptonSFData.h"
-#include "../ZCLibrary/LumiJSONReader.h"
+#include "ConfigReader.h"
+#include "JetTagWeight.h"
+#include "LeptonSFData.h"
+#include "LumiJSONReader.h"
 
 class AnalysisConfig : public ConfigReader
 {
@@ -54,6 +55,8 @@ class AnalysisConfig : public ConfigReader
     float                                jetEtaMax              ;
     bool                                 jsonSelect             ;
     std::string                          jsonFile               ;
+    std::string                          btagEffFile            ;
+    std::string                          btagSFFile             ;
     std::vector<std::string>             muonTriggers           ;
     std::vector<std::string>             elecTriggers           ;
     std::vector<std::pair<float,float> > jetPtBins              ;
@@ -63,8 +66,9 @@ class AnalysisConfig : public ConfigReader
     std::map<std::string, LeptonSFData> lepSFs;  // List of lepton scale factor storage objects, input from json files.
 
     LumiJSONReader lumiJSON;
+    JetTagWeight   jetTagWeight;
 
-  private: 
+  private:
     void processBinString(std::vector<std::pair<float,float> >&, std::string&);  // For processing input string of bin variables. Outputs set of pairs with integrated pair first.
     void processTriggerString(std::vector<std::string>&, std::string&);              // For processing input string of trigger numbers.
 

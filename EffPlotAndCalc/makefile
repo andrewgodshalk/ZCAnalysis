@@ -16,14 +16,14 @@ ROOTFLAGS=`root-config --cflags --glibs`
 CFLAGS := -g -Wall -std=c++11 -fdiagnostics-color $(BOOSTLIB) $(ROOTFLAGS)
 INC := -I $(HDRDIR)
 
-$(TARGET): $(OBJECTS)
-	@echo " Linking..."
-	@echo " $(CC) $^ -o $(TARGET) $(BOOSTLIB) $(ROOTFLAGS)"; $(CC) $^ -o $(TARGET) $(BOOSTLIB) $(ROOTFLAGS)
-
 $(BUILDDIR)/%.o: $(SRCDIR)/%.$(SRCEXT) $(HDRDIR)/%.$(HDREXT)
 	@mkdir -p $(BUILDDIR)
 	@mkdir -p $(TARGETDIR)
 	@echo " $(CC) $(CFLAGS) $(INC) -c -o $@ $<"; $(CC) $(CFLAGS) $(INC) -c -o $@ $<
+
+$(TARGET): $(OBJECTS)
+	@echo " Linking..."
+	@echo " $(CC) $^ -o $(TARGET) $(BOOSTLIB) $(ROOTFLAGS)"; $(CC) $^ -o $(TARGET) $(BOOSTLIB) $(ROOTFLAGS)
 
 clean:
 	@echo " Cleaning...";
