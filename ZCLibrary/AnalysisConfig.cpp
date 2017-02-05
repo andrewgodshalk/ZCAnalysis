@@ -138,7 +138,7 @@ AnalysisConfig::AnalysisConfig(TString fnc)
   // Set up JetTagWeight
     btagEffFile = pt.get<string>("BTAGGING.btag_eff_file");
     btagSFFile  = pt.get<string>("BTAGGING.btag_sf_file");
-    jetTagWeight.setSFFile(btagSFFile);
+    jetTagWeight.setSFFile( btagSFFile );
     jetTagWeight.setEffFile(btagEffFile);
 }
 
