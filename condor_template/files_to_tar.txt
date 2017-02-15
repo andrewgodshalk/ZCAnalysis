@@ -3,4 +3,4 @@ dsList.txt
 zcAC.ini
 zcNPC.ini
 ../zcControlPlotConfig_default.ini
-../ZCLibrary/data/leptonSF
+../ZCLibrary/data/

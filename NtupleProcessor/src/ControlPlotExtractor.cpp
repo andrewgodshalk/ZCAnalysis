@@ -157,7 +157,7 @@ void ControlPlotExtractor::fillHistos()
     {
       // Select for Z events with at least one HF jet.
         if(!evt.hasHFJets[hfLabel]) continue;
-        cout << "    ControlPlotExtractor(" << options << ")::fillHistos(): Found Z+HF Event. Weighting w/ " << evt.jetTagEvtWeight[hfLabel.Data()] << endl;
+        //cout << "    ControlPlotExtractor(" << options << ")::fillHistos(): Found Z+HF Event. Weighting w/ " << evt.jetTagEvtWeight[hfLabel.Data()] << endl;
         nEvents[TString("Valid Z+HF Event(")+hfLabel+")"]++;
         fillAllObjectHistograms(TString("zhf_")+hfLabel, evt.jetTagEvtWeight[hfLabel.Data()]);
 

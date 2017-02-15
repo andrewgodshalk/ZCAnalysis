@@ -30,7 +30,8 @@ echo $file
 rm NtupleProcessor.exe
 rm -r NtupleProcessor
 rm ZCLibrary/ -r
-rm zcAC_*
-rm zcNPC_*
+rm zcAC*
+rm zcNPC*
+rm dsList.txt
 rm zcfiles.tgz
 rm zcControlPlotConfig_default.ini

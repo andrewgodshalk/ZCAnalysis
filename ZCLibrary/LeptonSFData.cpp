@@ -76,7 +76,7 @@ LeptonSFData::LeptonSFData(string fn, string lt, string bp, bool efcb)
             jsonTreePopulated_ = true;
         }
     }
-    cout << "    LeptonSFData(): reached end of constructor." << endl;
+    //cout << "    LeptonSFData(): reached end of constructor." << endl;
 }
 
 
