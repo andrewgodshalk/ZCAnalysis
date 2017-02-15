@@ -69,8 +69,8 @@ ControlPlotMaker::ControlPlotMaker(TString fnac, TString fni, TString fno, TStri
     outputFile = fileList[fnOutput];
 
   // For the Zuu, then Zee plots...
-    vector<string> decayChain = {"Zuu"};
-    //vector<string> decayChain = {"Zuu", "Zee"};
+    //vector<string> decayChain = {"Zuu"};
+    vector<string> decayChain = {"Zuu", "Zee"};
     for(int ds_i=0; ds_i<1; ds_i++)
     {   cout << "  ControlPlotMaker::ControlPlotMaker(): Processing decay chain: " << decayChain[ds_i] << endl;
 
