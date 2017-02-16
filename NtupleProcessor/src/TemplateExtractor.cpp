@@ -67,14 +67,20 @@ void TemplateExtractor::fillHistos()
     nEvents["Entries Analyzed"]++;
 
   // Select for Z events with at least one jet and with the MET cut.
+    if(!evt.inJSON && !usingSim) return;
+    if( (selectingZee && evt.isElTriggered) || (selectingZuu && evt.isMuTriggered)) nEvents["Triggered"]++;
+    else return;
     if(!evt.isZpJEvent || !evt.hasValidMET) return;
 
- // If using a DY, check starting conditions to see if a certain type of event is desired.
+  // Set up sign for negatively weighted events.
+    double evtWeight = (evt.evtWeight < 0 ? -1.0 : 1.0);
+
+  // If using a DY, check starting conditions to see if a certain type of event is desired.
     if(usingDY)
     {   if(selectingZtautau  && !evt.zBosonFromTaus        ) return;
         else if( selectingZb && !evt.hasBJet               ) return;
-        else if( selectingZc && !evt.hasCJet               ) return;
-        else if( selectingZl && (evt.hasBJet||evt.hasCJet) ) return;
+        else if( selectingZc && (evt.hasBJet||!evt.hasCJet)) return;
+        else if( selectingZl && (evt.hasBJet|| evt.hasCJet)) return;
     }
     nEvents["Valid Z+j Event w/ MET cut"]++;
 
