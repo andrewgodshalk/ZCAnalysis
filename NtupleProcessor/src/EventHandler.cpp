@@ -397,15 +397,15 @@ void EventHandler::evalCriteria()
     }
 
   // If there are valid jets, make some vectors to contain their heavy flavor tagging properties.
-    if(validJets.size()>0)
-    {
+    //if(validJets.size()>0)
+    //{
         HFJets["CSVS"] = vector<bool>(validJets.size(), false);   hasHFJets["CSVS"] = false;
         HFJets["CSVT"] = vector<bool>(validJets.size(), false);   hasHFJets["CSVT"] = false;
         HFJets["CSVM"] = vector<bool>(validJets.size(), false);   hasHFJets["CSVM"] = false;
         HFJets["CSVL"] = vector<bool>(validJets.size(), false);   hasHFJets["CSVL"] = false;
         HFJets["SVT" ] = vector<bool>(validJets.size(), false);   hasHFJets["SVT" ] = false;
         HFJets["NoHF"] = vector<bool>(validJets.size(), false);   hasHFJets["NoHF"] = false;
-    }
+    //}
 
   // Check HF Tagging info for all valid jets and perform on-the-fly calculations
     //if(validJets.size() > 0) cout << "  Testing " << validJets.size() << " jets..." << endl;
@@ -450,12 +450,12 @@ void EventHandler::evalCriteria()
 
   // For each flavor tag, calculate an event weight based on jet tagging efficiency and tagging data/mc scalefactors.
   // See link for method used: https://twiki.cern.ch/twiki/bin/view/CMS/BTagSFMethods#1a_Event_reweighting_using_scale
-    jetTagEvtWeight["NoHF"] = calculateJetTagEvtWeight("NoHF");
-    jetTagEvtWeight["SVT" ] = calculateJetTagEvtWeight("SVT" );
-    jetTagEvtWeight["CSVL"] = calculateJetTagEvtWeight("CSVL");
-    jetTagEvtWeight["CSVM"] = calculateJetTagEvtWeight("CSVM");
-    jetTagEvtWeight["CSVT"] = calculateJetTagEvtWeight("CSVT");
-    jetTagEvtWeight["CSVS"] = calculateJetTagEvtWeight("CSVS");
+    if(hasHFJets["NoHF"]) jetTagEvtWeight["NoHF"] = calculateJetTagEvtWeight("NoHF");
+    if(hasHFJets["SVT" ]) jetTagEvtWeight["SVT" ] = calculateJetTagEvtWeight("SVT" );
+    if(hasHFJets["CSVL"]) jetTagEvtWeight["CSVL"] = calculateJetTagEvtWeight("CSVL");
+    if(hasHFJets["CSVM"]) jetTagEvtWeight["CSVM"] = calculateJetTagEvtWeight("CSVM");
+    if(hasHFJets["CSVT"]) jetTagEvtWeight["CSVT"] = calculateJetTagEvtWeight("CSVT");
+    if(hasHFJets["CSVS"]) jetTagEvtWeight["CSVS"] = calculateJetTagEvtWeight("CSVS");
 
   // Kick function if not using DY. Otherwise, check for origin from Z->tautau
     if(!usingDY) return;
@@ -538,6 +538,7 @@ float EventHandler::calculateJetTagEvtWeight(string opPt)
     float probData = 1.0;
     float probMC   = 1.0;
   // For each valid jet...
+    //cout << "  For " << validJets.size() << " jets: ";
     for(Index vJet_i=0, jet_i=0; vJet_i<validJets.size(); vJet_i++)
     {
         jet_i = validJets[vJet_i]; // Get jet_i, the valid jet's actual index within the raw array.
@@ -559,6 +560,9 @@ float EventHandler::calculateJetTagEvtWeight(string opPt)
       // Factor into probability values.
         probData *= (tagged ? jetEff*jetSF : 1.0-jetEff*jetSF );
         probMC   *= (tagged ? jetEff       : 1.0-jetEff       );
+	//cout << vJet_i << "(" << jet_i << "){"<<jetEff<<","<<jetSF<<"}"<<(tagged?'t':'n') << " ";
     }
-    return probData/probMC;
+    float wt = probData/probMC;
+    //cout << "\n  jetTagEvtWeight calculated for " << opPt << ": " << wt << endl;
+    return wt;
 }

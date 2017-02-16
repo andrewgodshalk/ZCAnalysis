@@ -7,6 +7,7 @@ JetTagWeight.cpp
 ------------------------------------------------------------------------------*/
 
 #include "JetTagWeight.h"   // Class header
+#include <iostream>
 #include <string>
 #include <iostream>
 #include "TFile.h"
@@ -32,6 +33,7 @@ JetTagWeight::JetTagWeight()
 
 bool JetTagWeight::setEffFile(const string& fn)
 {
+    cout << "  JetTagWeight: << Loading Efficiency plots from file: " << fn << "...";
     fn_eff_ = fn;
     TFile* effFile = TFile::Open(fn_eff_.c_str());
     histHolder_->cd();
@@ -39,15 +41,17 @@ bool JetTagWeight::setEffFile(const string& fn)
         for( string& op : opPt_)
         {   TString plot_name = TString::Format("h_%cJetTagEff_%s", f, op.c_str());
             jetTagEff_[f][op] = (TH2F*) effFile->Get(plot_name.Data())->Clone((plot_name+"_clone").Data());
+            //cout << "    " << jetTagEff_[f][op]->GetName() << endl;
         }
     effFile->Close();
-  // Check that all histograms are still loaded.
     for( char& f : flavor_)
         for( string& op : opPt_)
             cout << "JetTagWeight::setEffFile(" << fn << "): Loaded from file: " << jetTagEff_[f][op]->GetName() << endl;
     effLoaded_ = true;
+    cout << "  Complete!" << endl; 
     return true;
 }
+
 
 bool JetTagWeight::setSFFile( const string& fn)
 {
@@ -66,20 +70,26 @@ bool JetTagWeight::setSFFile( const string& fn)
 
 float JetTagWeight::getJetEff(char flv, string opPt, float pt, float eta)
 {
-    cout << TString::Format("JetTagWeight::getJetEff(%c, %s, %f, %f)", flv, opPt.c_str(), pt, eta) << endl;
+    // cout << TString::Format("JetTagWeight::getJetEff(%c, %s, %f, %f)", flv, opPt.c_str(), pt, eta) << endl;
     float eff = 1.0;
     if(effLoaded_)
     {   //cout << "    ...loading eff from " << jetTagEff_[flv][opPt]->GetTitle() << "..." << endl;
         int globalBinNum = jetTagEff_[flv][opPt]->FindBin(pt, eta);
         eff = jetTagEff_[flv][opPt]->GetBinContent(globalBinNum);
+        //cout << "    ...from file: " << eff << endl;
     }
     return eff;
 }
 
 float JetTagWeight::getJetSF(char flv, string opPt, float pt, float eta, string type)
 {
+    //cout << "  Looking for jet sf: flv=" << flv << ", opPt=" << opPt << ", pt=" << pt << ", eta=" << eta << endl;
     float sf = 1.0;
     if(sfLoaded_ && opPt != "SVT" && opPt != "NoHF")
-        btagCalibReader_[opPt].eval_auto_bounds(type, flvMap_[flv], eta, pt);
+    {
+        sf = btagCalibReader_[opPt].eval_auto_bounds(type, flvMap_[flv], eta, pt);
+        //cout << "    ...from file: " << sf << endl;
+    }
+
     return sf;
 }

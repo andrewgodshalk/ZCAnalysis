@@ -1,7 +1,9 @@
 # Make file for ZCAnalysis/ControlPlotMaker package
 
-CC := g++-4.9
+#CC := g++-4.9
+CC := g++
 SRCDIR := src
+LIBDIR := ../ZCLibrary
 HDRDIR := include
 BUILDDIR := build
 TARGETDIR := bin

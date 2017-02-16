@@ -31,13 +31,13 @@ private:
     void saveToFile(); // Saves the histograms and the log to file.
     void makePhysicsObjectHistograms(TString, TString);                             // Makes a set of histograms for all objects using inputs: histogram name prefix, label modification
     void makePhysicsObjectHistograms(TString, TString, TString, bool split=false);  // Makes a set of histograms using inputs: object type, histogram name prefix, label modification, split by object option.
-    void fillEventHistograms    (TString, bool split=true);
-    void fillMuonHistograms     (TString, bool split=true);
-    void fillElectronHistograms (TString, bool split=true);
-    void fillDileptonHistograms (TString);  // Fills all histograms for the object that match the given prefix.
-    void fillMETHistograms      (TString);
-    void fillJetHistograms      (TString);
-    void fillAllObjectHistograms(TString);
+    void fillEventHistograms    (TString, float wt=1.0, bool split=true);
+    void fillMuonHistograms     (TString, float wt=1.0, bool split=true);
+    void fillElectronHistograms (TString, float wt=1.0, bool split=true);
+    void fillDileptonHistograms (TString, float wt=1.0);  // Fills all histograms for the object that match the given prefix.
+    void fillMETHistograms      (TString, float wt=1.0);
+    void fillJetHistograms      (TString, float wt=1.0);
+    void fillAllObjectHistograms(TString, float wt=1.0);
 
     static ControlPlotConfig cfg;
 
