@@ -24,9 +24,9 @@ NtupleProcessor::NtupleProcessor(TString ds, TString nf, TString nl, TString fnp
     cout << "  NtupleProcessor: Created.\n"
             "    Ntuple Processing Config File: " << fnpc << "\n"
             "    Ntuple File:                   " << fileString << "\n"
-	    "    Ntuple Label:                  " << ntupleLabel << "\n"
+            "    Ntuple Label:                  " << ntupleLabel << "\n"
             "    Dataset:                       " << dataset   << "\n"
-	    "    Options:                       " << options   << "\n"
+            "    Options:                       " << options   << "\n"
          << endl;
 
   // Extract options

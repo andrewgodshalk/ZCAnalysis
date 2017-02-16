@@ -20,7 +20,8 @@ taken from BTVPOG's first recommendation at:
 #include <string>
 #include <vector>
 #include "BTagCalibrationStandalone.h"
-#include <TH2F.h>
+#include "TH2F.h"
+#include "TDirectory.h"
 
 class JetTagWeight
 {
@@ -38,6 +39,9 @@ class JetTagWeight
     std::string fn_btag_sf_;
     bool effLoaded_;
     bool sfLoaded_;
+    TDirectory *histHolder_;    // Directory created to store histograms.
+      // If not specified, cloned histograms will create themselves in their
+      // parent histo's TFile directory and cease existing when the file is closed.
 
     BTagCalibration btagCalib_;
     std::map<std::string, BTagCalibrationReader> btagCalibReader_;
