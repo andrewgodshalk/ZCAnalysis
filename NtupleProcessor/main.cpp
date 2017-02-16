@@ -13,10 +13,12 @@ Handles command line arguments.
 #include <iostream>                 // stdlib
 #include <string>
 #include <vector>
-#include "TApplication.h"
 #include <TFile.h>                  // ROOT class headers
 #include <TString.h>
 #include <TTree.h>
+#include "TApplication.h"
+#include "TROOT.h"
+#include "TRint.h"
 #include <boost/program_options/options_description.hpp>
 #include <boost/program_options/parsers.hpp>
 #include <boost/program_options/variables_map.hpp>
@@ -34,6 +36,11 @@ int main(int argc, char* argv[])
   // Needed to make sure ROOT libraries "link correctly. Receive seg faults while trying to use TH2F in LeptonSFData otherwise.
   // Recommendation found at link: https://root.cern.ch/phpBB3/viewtopic.php?f=3&t=18101&p=76968#p76968
   //  TApplication a("a", 0, 0); // just to make sure that the autoloading of ROOT libraries works
+
+  // New recommendation from https://root.cern.ch/phpBB3/viewtopic.php?t=9838, https://root.cern.ch/doc/master/classTROOT.html
+    // TRint *theApp = new TRint("ROOT example", &argc, argv);
+    // APIanalyzer mainWindow(gClient->GetRoot(),600,500,theApp.Argc(), theApp.Argv());
+    // theApp->Run();
 
   // Record the time main starts processing.
     TString ts_mainBegin  = timeStamp();
@@ -72,7 +79,7 @@ int main(int argc, char* argv[])
       //"st_s","st_t_4f_lep","st_t_5f_lep","stbar_t_4f_lep","stbar_t_5f_lep","stbar_tw_5f_nohad","stbar_tw_5f","st_tw_5f_nohad","st_tw_5f",
       //"elec_c","elec_d_1of8","elec_d_2of8","elec_d_3of8","elec_d_4of8","elec_d_5of8","elec_d_6of8","elec_d_7of8","elec_d_8of8",
       //"muon_c","muon_d_1of6","muon_d_2of6","muon_d_3of6","muon_d_4of6","muon_d_5of6","muon_d_6of6",
-      //"tt_lep_1of2","tt_lep_2of2","tt_1of5","tt_2of5","tt_3of5","tt_4of5","tt_5of5","ww","wzz","wz","zz" 
+      //"tt_lep_1of2","tt_lep_2of2","tt_1of5","tt_2of5","tt_3of5","tt_4of5","tt_5of5","ww","wzz","wz","zz"
     };
 
   // Process command line input.

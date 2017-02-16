@@ -8,12 +8,16 @@ JetTagWeight.cpp
 
 #include "JetTagWeight.h"   // Class header
 #include <string>
-#include <TFile.h>
+#include <iostream>
+#include "TFile.h"
+#include "TString.h"
 
 using std::string;
+using std::cout;   using std::endl;
 
 JetTagWeight::JetTagWeight()
-: fn_eff_(""), fn_btag_sf_(""), effLoaded_(false), sfLoaded_(false)
+: fn_eff_(""), fn_btag_sf_(""), effLoaded_(false), sfLoaded_(false),
+  histHolder_(new TDirectory("JetTagWeight_histHolder_", "JetTagWeight Histogram Holder"))
 { // Set up maps from my labels to BTV's enums.
     opPtMap_ =  { {"NoHF", BTagEntry::OP_LOOSE}, {"SVT",  BTagEntry::OP_LOOSE },
                   {"CSVL", BTagEntry::OP_LOOSE}, {"CSVM", BTagEntry::OP_MEDIUM},
@@ -30,12 +34,17 @@ bool JetTagWeight::setEffFile(const string& fn)
 {
     fn_eff_ = fn;
     TFile* effFile = TFile::Open(fn_eff_.c_str());
+    histHolder_->cd();
     for( char& f : flavor_)
         for( string& op : opPt_)
         {   TString plot_name = TString::Format("h_%cJetTagEff_%s", f, op.c_str());
             jetTagEff_[f][op] = (TH2F*) effFile->Get(plot_name.Data())->Clone((plot_name+"_clone").Data());
         }
     effFile->Close();
+  // Check that all histograms are still loaded.
+    for( char& f : flavor_)
+        for( string& op : opPt_)
+            cout << "JetTagWeight::setEffFile(" << fn << "): Loaded from file: " << jetTagEff_[f][op]->GetName() << endl;
     effLoaded_ = true;
     return true;
 }
@@ -57,9 +66,11 @@ bool JetTagWeight::setSFFile( const string& fn)
 
 float JetTagWeight::getJetEff(char flv, string opPt, float pt, float eta)
 {
+    cout << TString::Format("JetTagWeight::getJetEff(%c, %s, %f, %f)", flv, opPt.c_str(), pt, eta) << endl;
     float eff = 1.0;
     if(effLoaded_)
-    {   int globalBinNum = jetTagEff_[flv][opPt]->FindBin(pt, eta);
+    {   //cout << "    ...loading eff from " << jetTagEff_[flv][opPt]->GetTitle() << "..." << endl;
+        int globalBinNum = jetTagEff_[flv][opPt]->FindBin(pt, eta);
         eff = jetTagEff_[flv][opPt]->GetBinContent(globalBinNum);
     }
     return eff;

@@ -4,7 +4,7 @@
 CC=g++-4.9
 #CFLAGS=-std=c++14 -c -Wall
 CFLAGS=-c -Wall -fdiagnostics-color
-ROOTFLAGS=`root-config --cflags --glibs`
+ROOTFLAGS=`root-config --cflags --glibs --libs`
 OBJDIR=NtupleProcessor/obj
 OBJS=$(OBJDIR)/main.o $(OBJDIR)/NtupleProcessor.o $(OBJDIR)/NtupleProcConfig.o $(OBJDIR)/TreeIterator.o $(OBJDIR)/EventHandler.o $(OBJDIR)/ControlPlotExtractor.o $(OBJDIR)/TemplateExtractor.o $(OBJDIR)/EffPlotExtractor.o $(OBJDIR)/AnalysisConfig.o $(OBJDIR)/ControlPlotConfig.o $(OBJDIR)/LeptonSFData.o $(OBJDIR)/LumiJSONReader.o $(OBJDIR)/BTagCalibrationStandalone.o $(OBJDIR)/JetTagWeight.o
 HDRDIR=NtupleProcessor/interface
