@@ -14,6 +14,7 @@
 #include <TDirectory.h>
 #include <TH1F.h>
 #include <TH2F.h>
+#include "TMath.h"
 #include "../interface/ControlPlotExtractor.h"
 
 using std::stringstream;   using std::string;     using std::cout;   using std::vector;
@@ -82,24 +83,22 @@ ControlPlotExtractor::ControlPlotExtractor(EventHandler& eh, TDirectory* d, TStr
 
 void ControlPlotExtractor::fillHistos()
 {
-
-//cout << "   ControlPlotExtractor::fillHistos(): BEGIN (Event = " << nEvents["Entries Analyzed"] << ", w/ options " << options << ")";
-
+    //cout << "   ControlPlotExtractor::fillHistos(): BEGIN (Event = " << nEvents["Entries Analyzed"] << ", w/ options " << options << ")";
     nEvents["Entries Analyzed"]++;
 
     evtWt = 1.0;
-/*    if(usingSim)
+  /*if(usingSim)
     {
         if(selectingZuu) evtWt = evt.m_wt_diMuon;
         if(selectingZee) evtWt = evt.m_wt_diEle;
     }
-*/
+  */
 
   // If event isn't in JSON and isn't a simulation event, move on to the next event.
     if(!evt.inJSON && !usingSim) return;
     nEvents["Pass JSON"]++;
 
- // If using a DY, check starting conditions to see if a certain type of event is desired.
+  // If using a DY, check starting conditions to see if a certain type of event is desired.
     if(usingDY)
     {   if(selectingZtautau  && !evt.zBosonFromTaus          ) return;
         else if( selectingZb && !evt.hasBJet                 ) return;
@@ -157,15 +156,21 @@ void ControlPlotExtractor::fillHistos()
     {
       // Select for Z events with at least one HF jet.
         if(!evt.hasHFJets[hfLabel]) continue;
-        //cout << "    ControlPlotExtractor(" << options << ")::fillHistos(): Found Z+HF Event. Weighting w/ " << evt.jetTagEvtWeight[hfLabel.Data()] << endl;
+        double jetWt = evt.jetTagEvtWeight[hfLabel.Data()];
+        // if(jetWt != 1) cout << "    ControlPlotExtractor(" << options << ")::fillHistos(): Found Z+HF Event (" << evt.m_event << "). Weighting w/ " << jetWt << endl;
+        if(TMath::IsNaN(jetWt))
+        {   cout << "    ControlPlotExtractor(" << options << ")::fillHistos(): Found Z+HF Event (" << evt.m_event << "). Weighting w/ " << jetWt << endl;
+            double secondaryJetWeight = evt.calculateJetTagEvtWeight(hfLabel.Data(), true);
+            cout << endl;
+        }
         nEvents[TString("Valid Z+HF Event(")+hfLabel+")"]++;
-        fillAllObjectHistograms(TString("zhf_")+hfLabel, evt.jetTagEvtWeight[hfLabel.Data()]);
+        fillAllObjectHistograms(TString("zhf_")+hfLabel, jetWt);
 
       // Select for Z events with at least one HF jet and with the MET cut.
         if(!evt.hasValidMET) continue;
         //cout << "    ControlPlotExtractor(" << options << ")::fillHistos(): Found Z+HF Event w/ min MET." << endl;
         nEvents[TString("Valid Z+HF Event w/ MET cut (")+hfLabel+")"]++;
-        fillAllObjectHistograms(TString("zhfmet_")+hfLabel, evt.jetTagEvtWeight[hfLabel.Data()]);
+        fillAllObjectHistograms(TString("zhfmet_")+hfLabel, jetWt);
     }
 }
 

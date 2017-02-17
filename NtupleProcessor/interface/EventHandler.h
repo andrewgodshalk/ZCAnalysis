@@ -48,7 +48,7 @@ public:
     void printJets();                             // Test function that prints jets and their properties.
     float calculatePUReweight(int);
     float calculateJetMSVQuickCorrection(int);
-    float calculateJetTagEvtWeight(std::string);
+    float calculateJetTagEvtWeight(std::string, bool debug=false);
 
   // Running Variables
     TString options;         // Options input with TreeIterator.

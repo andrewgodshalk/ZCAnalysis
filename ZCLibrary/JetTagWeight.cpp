@@ -17,7 +17,7 @@ using std::string;
 using std::cout;   using std::endl;
 
 JetTagWeight::JetTagWeight()
-: fn_eff_(""), fn_btag_sf_(""), effLoaded_(false), sfLoaded_(false),
+: fn_eff_(""), fn_btag_sf_(""), effLoaded_(false), effPtMin_(-1), effPtMax_(-1), effEtaMin_(-1), effEtaMax_(-1), sfLoaded_(false),
   histHolder_(new TDirectory("JetTagWeight_histHolder_", "JetTagWeight Histogram Holder"))
 { // Set up maps from my labels to BTV's enums.
     opPtMap_ =  { {"NoHF", BTagEntry::OP_LOOSE}, {"SVT",  BTagEntry::OP_LOOSE },
@@ -48,7 +48,12 @@ bool JetTagWeight::setEffFile(const string& fn)
         for( string& op : opPt_)
             cout << "JetTagWeight::setEffFile(" << fn << "): Loaded from file: " << jetTagEff_[f][op]->GetName() << endl;
     effLoaded_ = true;
-    cout << "  Complete!" << endl; 
+    effPtMin_  = jetTagEff_['l']["CSVT"]->GetXaxis()->GetXmin();
+    effPtMax_  = jetTagEff_['l']["CSVT"]->GetXaxis()->GetXmax();
+    effEtaMin_ = jetTagEff_['l']["CSVT"]->GetYaxis()->GetXmin();
+    effEtaMax_ = jetTagEff_['l']["CSVT"]->GetYaxis()->GetXmax();
+    cout << TString::Format("    (Loaded dimensions: {pt}x{eta} = {%f,%f}x{%f,%f})", effPtMin_, effPtMax_, effEtaMin_, effEtaMax_) << endl;
+    cout << "  Complete!" << endl;
     return true;
 }
 
@@ -74,7 +79,13 @@ float JetTagWeight::getJetEff(char flv, string opPt, float pt, float eta)
     float eff = 1.0;
     if(effLoaded_)
     {   //cout << "    ...loading eff from " << jetTagEff_[flv][opPt]->GetTitle() << "..." << endl;
+      // Check to see that pt, eta are within bounds of eff bins. If not, use last viable bin.
         int globalBinNum = jetTagEff_[flv][opPt]->FindBin(pt, eta);
+        if( pt  < effPtMin_ ) { pt  = effPtMin_ +0.001; globalBinNum = jetTagEff_[flv][opPt]->FindBin(pt, eta); }
+        if( pt  > effPtMax_ ) { pt  = effPtMax_ -0.001; globalBinNum = jetTagEff_[flv][opPt]->FindBin(pt, eta); }
+        if( eta < effEtaMin_) { eta = effEtaMin_+0.001; globalBinNum = jetTagEff_[flv][opPt]->FindBin(pt, eta); }
+        if( eta > effEtaMax_) { eta = effEtaMax_-0.001; globalBinNum = jetTagEff_[flv][opPt]->FindBin(pt, eta); }
+      // Load efficiency
         eff = jetTagEff_[flv][opPt]->GetBinContent(globalBinNum);
         //cout << "    ...from file: " << eff << endl;
     }
@@ -86,8 +97,7 @@ float JetTagWeight::getJetSF(char flv, string opPt, float pt, float eta, string 
     //cout << "  Looking for jet sf: flv=" << flv << ", opPt=" << opPt << ", pt=" << pt << ", eta=" << eta << endl;
     float sf = 1.0;
     if(sfLoaded_ && opPt != "SVT" && opPt != "NoHF")
-    {
-        sf = btagCalibReader_[opPt].eval_auto_bounds(type, flvMap_[flv], eta, pt);
+    {   sf = btagCalibReader_[opPt].eval_auto_bounds(type, flvMap_[flv], eta, pt);
         //cout << "    ...from file: " << sf << endl;
     }
 

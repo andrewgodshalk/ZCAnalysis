@@ -532,13 +532,14 @@ float EventHandler::calculateJetMSVQuickCorrection(int jet_i)
 }
 
 
-float EventHandler::calculateJetTagEvtWeight(string opPt)
+float EventHandler::calculateJetTagEvtWeight(string opPt, bool debug)
 { // For given flavor tag, calculate an event weight based on jet tagging efficiency and tagging data/mc scalefactors.
   // See link for method used: https://twiki.cern.ch/twiki/bin/view/CMS/BTagSFMethods#1a_Event_reweighting_using_scale
     float probData = 1.0;
     float probMC   = 1.0;
   // For each valid jet...
-    //cout << "  For " << validJets.size() << " jets: ";
+    if(debug) cout << "      For " << validJets.size() << " jets: ";
+    if(debug) cout << "\n      f vi(ei){eff,sf}tag pt eta PD PM";
     for(Index vJet_i=0, jet_i=0; vJet_i<validJets.size(); vJet_i++)
     {
         jet_i = validJets[vJet_i]; // Get jet_i, the valid jet's actual index within the raw array.
@@ -560,9 +561,10 @@ float EventHandler::calculateJetTagEvtWeight(string opPt)
       // Factor into probability values.
         probData *= (tagged ? jetEff*jetSF : 1.0-jetEff*jetSF );
         probMC   *= (tagged ? jetEff       : 1.0-jetEff       );
-	//cout << vJet_i << "(" << jet_i << "){"<<jetEff<<","<<jetSF<<"}"<<(tagged?'t':'n') << " ";
+        if(debug) cout << "\n      " << flv << " " << vJet_i << "(" << jet_i << "){"<<jetEff<<","<<jetSF<<"}"<<(tagged?'t':'n') << " "
+        << setprecision(2) << m_jet_pt[jet_i] << " " << m_jet_eta[jet_i] << " --> " << probData << " / " << probMC;
     }
     float wt = probData/probMC;
-    //cout << "\n  jetTagEvtWeight calculated for " << opPt << ": " << wt << endl;
+    if(debug) cout << "\n      jetTagEvtWeight calculated for " << opPt << ": " << wt << std::fixed << endl;
     return wt;
 }

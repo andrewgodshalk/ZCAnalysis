@@ -38,6 +38,10 @@ class JetTagWeight
     std::string fn_eff_;
     std::string fn_btag_sf_;
     bool effLoaded_;
+    float effPtMin_ ;  // Boundaries for efficiency histogram
+    float effPtMax_ ;
+    float effEtaMin_;
+    float effEtaMax_;
     bool sfLoaded_;
     TDirectory *histHolder_;    // Directory created to store histograms.
       // If not specified, cloned histograms will create themselves in their
