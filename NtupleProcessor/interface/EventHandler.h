@@ -135,13 +135,15 @@ public:
   // Jet Selection Variables
     std::vector<Index> validJets;       // lists all "valid" jets from standard cuts.
     // subsequent vectors contain true/false conditions of jets as ordered in above validjets vector.
+    // HF-tagged/SVT tagged jets
     std::map<TString, std::vector<bool> >    HFJets;
     std::map<TString, bool>               hasHFJets;
+    std::map<TString, Index>              leadHFJet;
+    // MC truth information
     std::vector<bool>                       bMCJets;
     std::vector<bool>                       cMCJets;
     std::vector<bool>                       lMCJets;
     Index leadBJet, leadCJet;
-    std::map<TString, Index> leadHFJet;
 
   // Extra data
     long patEventsAnalyzed;     // Number of events that were processed to make the Ntuple.

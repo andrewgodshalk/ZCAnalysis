@@ -41,10 +41,13 @@ private:
 
     static ControlPlotConfig cfg;
 
+    std::map<TString, TDirectory*> subDirMap;   // Map of all subdirectories of hDir containing histograms.
+
   // Labels for split histograms
     static const std::vector<TString> multName ;
     static const std::vector<TString> multTitle;
     static const std::vector<TString> HFTags;
+    static const std::vector<TString> SVType;
     //static const vector<TString> numLabel = {"_1st", "_2nd", "_3rd", "_4th", "_5th", "_6th", "_7th", "_8th", "_9th"};
 
     TString csvOpPt       ;
@@ -64,7 +67,7 @@ private:
     std::map<TString, count> nEvents;
 
     float evtWt;
-    
+
 };
 
 #endif

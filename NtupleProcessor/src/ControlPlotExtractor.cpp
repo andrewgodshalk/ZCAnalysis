@@ -30,6 +30,7 @@ const vector<TString> ControlPlotExtractor::multName  = {"", "_ld"  , "_sl"     
 const vector<TString> ControlPlotExtractor::multTitle = {"", "Lead ", "Sub-lead ", "Extra "};
 
 const vector<TString> ControlPlotExtractor::HFTags    = {"NoHF", "SVT", "CSVL", "CSVM", "CSVT", "CSVS"};
+const vector<TString> ControlPlotExtractor::SVType    = {"pfSV", "pfISV", "qcSV", "cISV", "cISVf", "cISVp"};
 
 ControlPlotExtractor::ControlPlotExtractor(EventHandler& eh, TDirectory* d, TString o) : HistogramExtractor(eh, d, o)
 {
@@ -73,10 +74,11 @@ ControlPlotExtractor::ControlPlotExtractor(EventHandler& eh, TDirectory* d, TStr
     makePhysicsObjectHistograms(            "zpjmet" , "(Z+jet w/ MET cut)"               );
 
     for(const TString& hfLabel : ControlPlotExtractor::HFTags)
-    {
-        makePhysicsObjectHistograms(            TString("zhf_"   )+hfLabel , TString("(Z+HF) "           )+"("+hfLabel+")"                );
+    {   makePhysicsObjectHistograms(            TString("zhf_"   )+hfLabel , TString("(Z+HF) "           )+"("+hfLabel+")"                );
         makePhysicsObjectHistograms("hfjet"   , TString("zhf_"   )+hfLabel , TString("(Z+HF) "           )+"("+hfLabel+")" , true         );
-        makePhysicsObjectHistograms(            TString("zhfmet_")+hfLabel , TString("(Z+HF w/ MET cut) ")+"("+hfLabel+")"                );
+    }
+    for(const TString& hfLabel : ControlPlotExtractor::HFTags)
+    {   makePhysicsObjectHistograms(            TString("zhfmet_")+hfLabel , TString("(Z+HF w/ MET cut) ")+"("+hfLabel+")"                );
         makePhysicsObjectHistograms("hfjet"   , TString("zhfmet_")+hfLabel , TString("(Z+HF w/ MET cut) ")+"("+hfLabel+")" , true         );
     }
 }
@@ -182,7 +184,9 @@ void ControlPlotExtractor::saveToFile()
   // Move to this plotter's directory, then save each file to the directory or overwrite.
     cout << "   ControlPlotExtractor::saveToFile(): TEST: Saving to file: " << hDir->GetPath() << endl;
     hDir->cd();
-    for(const auto& hist : h) hist.second->Write("", TObject::kOverwrite);
+    hDir->Write();
+    // for(const auto& hist : h) hist.second->Write("", TObject::kOverwrite);
+    // for(const auto& hist : h) hist.second->Write("", TObject::kOverwrite);
     cout << "ControlPlotExtractor Cut Table\n"
             "------------------------------\n";
     for( auto& n : nEvents ) cout << "   " << setw(40) << n.first << "  " << n.second << "\n";
@@ -204,7 +208,17 @@ void ControlPlotExtractor::makePhysicsObjectHistograms(TString poLabel, TString 
   // Unset splitting if working with objects that should be singular.
     if(poLabel == "met" || poLabel == "dilepton" || poLabel == "event") split = false;
 
+  // Set up the output directory for the histograms
     hDir->cd();     // Move to this extractor's output directory to initialize the histograms.
+    // Move to the directory set up for this prefix, or create it if it doesn't already exist.
+    TDirectory *subDir;
+    hDir->GetObject(prefix, subDir);
+    if(!subDir)
+    {   subDir = hDir->mkdir(prefix);
+        subDirMap[prefix] = subDir;
+    }
+    subDir->cd();
+
     TString histoName, histoTitle;
     int numBins;   float binMin, binMax;
   // Set up key to retrieve histogram information from config file map.
@@ -235,9 +249,10 @@ void ControlPlotExtractor::makePhysicsObjectHistograms(TString poLabel, TString 
             //cout << "    ControlPlotExtractor::ControlPlotExtractor(): Creating histogram " << histoName << " w/ title: " << (multTitle[i]+histoTitle) << endl;
             h[histoName] = new TH1F(histoName, multTitle[i]+histoTitle, numBins, binMin, binMax);
             h[histoName]->Sumw2();
-            hDir->WriteTObject(h[histoName], 0, "Overwrite");
+          //  subDir->WriteTObject(h[histoName], 0, "Overwrite");
         } while( splitThis && (i++)<3);
     }
+    hDir->cd();
 }
 
 void ControlPlotExtractor::fillEventHistograms(TString prefix, float wt, bool split)
@@ -348,10 +363,17 @@ void ControlPlotExtractor::fillJetHistograms(TString prefix, float wt)
         h[prefix+"_jet"+multName[j]+"_msv_new"       ]->Fill(evt.m_jet_msv_new        [i], evt.evtWeight*wt);
         h[prefix+"_jet"+multName[j]+"_msv_inc"       ]->Fill(evt.m_jet_msv_inc        [i], evt.evtWeight*wt);
         h[prefix+"_jet"+multName[j]+"_msv_corr"      ]->Fill(evt.m_jet_vtxMassCorr_IVF[i], evt.evtWeight*wt);
-	if(evt.m_jet_vtxCat_IVF[i] == 0)
-            h[prefix+"_jet"+multName[j]+"_msv_corrFull"  ]->Fill(evt.m_jet_vtxMassCorr_IVF[i], evt.evtWeight*wt);
-	if(evt.m_jet_vtxCat_IVF[i] == 1)
-            h[prefix+"_jet"+multName[j]+"_msv_corrPseudo"]->Fill(evt.m_jet_vtxMassCorr_IVF[i], evt.evtWeight*wt);
+        h[prefix+"_jet"+multName[j]+"_msv_corr_zm"   ]->Fill(evt.m_jet_vtxMassCorr_IVF[i], evt.evtWeight*wt);
+        if(evt.m_jet_vtxCat_IVF[i] == 0)
+        {
+            h[prefix+"_jet"+multName[j]+"_msv_corrFull"   ]->Fill(evt.m_jet_vtxMassCorr_IVF[i], evt.evtWeight*wt);
+            h[prefix+"_jet"+multName[j]+"_msv_corrFull_zm"]->Fill(evt.m_jet_vtxMassCorr_IVF[i], evt.evtWeight*wt);
+        }
+        if(evt.m_jet_vtxCat_IVF[i] == 1)
+        {
+            h[prefix+"_jet"+multName[j]+"_msv_corrPseudo"   ]->Fill(evt.m_jet_vtxMassCorr_IVF[i], evt.evtWeight*wt);
+            h[prefix+"_jet"+multName[j]+"_msv_corrPseudo_zm"]->Fill(evt.m_jet_vtxMassCorr_IVF[i], evt.evtWeight*wt);
+        }
     }
     if(!prefix.Contains("hf")) return;
     objsEntered = 0;      // Keeps track of how many objects you've entered for labeling purposes
@@ -371,10 +393,17 @@ void ControlPlotExtractor::fillJetHistograms(TString prefix, float wt)
         h[prefix+"_hfjet_msv_new"       ]->Fill(evt.m_jet_msv_new        [i], evt.evtWeight*wt);
         h[prefix+"_hfjet_msv_inc"       ]->Fill(evt.m_jet_msv_inc        [i], evt.evtWeight*wt);
         h[prefix+"_hfjet_msv_corr"      ]->Fill(evt.m_jet_vtxMassCorr_IVF[i], evt.evtWeight*wt);
-	if(evt.m_jet_vtxCat_IVF[i] == 0)
-            h[prefix+"_hfjet_msv_corrFull"  ]->Fill(evt.m_jet_vtxMassCorr_IVF[i], evt.evtWeight*wt);
-	if(evt.m_jet_vtxCat_IVF[i] == 1)
-            h[prefix+"_hfjet_msv_corrPseudo"]->Fill(evt.m_jet_vtxMassCorr_IVF[i], evt.evtWeight*wt);
+        h[prefix+"_hfjet_msv_corr_zm"   ]->Fill(evt.m_jet_vtxMassCorr_IVF[i], evt.evtWeight*wt);
+        if(evt.m_jet_vtxCat_IVF[i] == 0)
+        {
+            h[prefix+"_hfjet_msv_corrFull"   ]->Fill(evt.m_jet_vtxMassCorr_IVF[i], evt.evtWeight*wt);
+            h[prefix+"_hfjet_msv_corrFull_zm"]->Fill(evt.m_jet_vtxMassCorr_IVF[i], evt.evtWeight*wt);
+        }
+        if(evt.m_jet_vtxCat_IVF[i] == 1)
+        {
+            h[prefix+"_hfjet_msv_corrPseudo"   ]->Fill(evt.m_jet_vtxMassCorr_IVF[i], evt.evtWeight*wt);
+            h[prefix+"_hfjet_msv_corrPseudo_zm"]->Fill(evt.m_jet_vtxMassCorr_IVF[i], evt.evtWeight*wt);
+        }
       // Select for lead/sublead/extra histograms
         int j = min(++objsEntered, 3);
         h[prefix+"_hfjet"+multName[j]+"_pt"   ]->Fill(evt.m_jet_pt [k], evt.evtWeight*wt);

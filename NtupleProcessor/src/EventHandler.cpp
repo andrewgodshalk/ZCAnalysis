@@ -78,10 +78,10 @@ bool EventHandler::mapTree(TTree* tree)
         "Jet_vtxPosX",
         "Jet_vtxPosY",
         "Jet_vtxPosZ",
-	"Jet_vtxCat_IVF",
-	"Jet_vtxMassCorr_IVF",
-	"Jet_newVtxMass",
-	"Jet_incVtxMass",
+        "Jet_vtxCat_IVF",
+        "Jet_vtxMassCorr_IVF",
+        "Jet_newVtxMass",
+        "Jet_incVtxMass",
         "evt"        ,
         "htJet30"    ,
         "mhtJet30"   ,
@@ -101,12 +101,12 @@ bool EventHandler::mapTree(TTree* tree)
     };
     if(usingSim)
     {
-        branches_to_reactivate.push_back("puWeight");
-        branches_to_reactivate.push_back("genWeight");
-        branches_to_reactivate.push_back("Jet_mcFlavour");
+        branches_to_reactivate.push_back("puWeight"         );
+        branches_to_reactivate.push_back("genWeight"        );
+        branches_to_reactivate.push_back("Jet_mcFlavour"    );
         branches_to_reactivate.push_back("Jet_partonFlavour");
         branches_to_reactivate.push_back("Jet_hadronFlavour");
-        branches_to_reactivate.push_back("lheNj"        );
+        branches_to_reactivate.push_back("lheNj"            );
     }
 
   // Reactivate branches specified above, as well as branches for triggers named in the analysis config.
@@ -210,8 +210,8 @@ bool EventHandler::mapTree(TTree* tree)
     tree->SetBranchAddress( "met_phi"    , &m_MET_phi   );
     tree->SetBranchAddress( "met_sumEt"  , &m_MET_sumet );
     tree->SetBranchAddress( "htJet30"    , &m_ht        );
-    tree->SetBranchAddress( "mhtJet30"   , &m_mht_phi   );
-    tree->SetBranchAddress( "mhtPhiJet30", &m_mht       );
+    tree->SetBranchAddress( "mhtJet30"   , &m_mht       );
+    tree->SetBranchAddress( "mhtPhiJet30", &m_mht_phi   );
 
   //  temp_branch->GetLeaf( "met_rawPt"  )->SetAddress( &m_MET_sig   );
 
