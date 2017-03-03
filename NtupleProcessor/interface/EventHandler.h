@@ -69,6 +69,10 @@ public:
     float m_jet_vtx_x[maxNumJets];
     float m_jet_vtx_y[maxNumJets];
     float m_jet_vtx_z[maxNumJets];
+    float m_jet_vtxCat_IVF[maxNumJets];
+    float m_jet_vtxMassCorr_IVF[maxNumJets];
+    float m_jet_msv_new[maxNumJets];
+    float m_jet_msv_inc[maxNumJets];
     int   m_npv_array ;
     float m_pv_x[maxNumJets];
     float m_pv_y[maxNumJets];

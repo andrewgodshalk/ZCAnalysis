@@ -244,7 +244,10 @@ void ControlPlotExtractor::fillEventHistograms(TString prefix, float wt, bool sp
 {
     //cout << "  fillEventHistograms(" << prefix << ")" << endl;
     //cout << "    filling : " << prefix+"_event_npv" << endl;
-    h[prefix+"_event_npv"]->Fill(evt.m_nPVs, evt.evtWeight*wt);
+    h[prefix+"_event_npv"   ]->Fill(evt.m_nPVs   , evt.evtWeight*wt);
+    h[prefix+"_event_ht"    ]->Fill(evt.m_ht     , evt.evtWeight*wt);
+    h[prefix+"_event_mht"   ]->Fill(evt.m_mht    , evt.evtWeight*wt);
+    h[prefix+"_event_mhtphi"]->Fill(evt.m_mht_phi, evt.evtWeight*wt);
 }
 
 void ControlPlotExtractor::fillMuonHistograms(TString prefix, float wt, bool split)
@@ -296,13 +299,14 @@ void ControlPlotExtractor::fillElectronHistograms(TString prefix, float wt, bool
 
 void ControlPlotExtractor::fillDileptonHistograms(TString prefix, float wt)
 {
-    h[prefix+"_dilepton_mass"  ]->Fill(evt.m_Z_mass, evt.evtWeight*wt);
-    h[prefix+"_dilepton_pt"    ]->Fill(evt.m_Z_pt  , evt.evtWeight*wt);
-    h[prefix+"_dilepton_eta"   ]->Fill(evt.m_Z_eta , evt.evtWeight*wt);
-    h[prefix+"_dilepton_phi"   ]->Fill(evt.m_Z_phi , evt.evtWeight*wt);
-    h[prefix+"_dilepton_DelR"  ]->Fill(evt.Z_DelR  , evt.evtWeight*wt);
-    h[prefix+"_dilepton_DelEta"]->Fill(evt.Z_DelEta, evt.evtWeight*wt);
-    h[prefix+"_dilepton_DelPhi"]->Fill(evt.Z_DelPhi, evt.evtWeight*wt);
+    h[prefix+"_dilepton_mass"   ]->Fill(evt.m_Z_mass, evt.evtWeight*wt);
+    h[prefix+"_dilepton_mass_zm"]->Fill(evt.m_Z_mass, evt.evtWeight*wt);
+    h[prefix+"_dilepton_pt"     ]->Fill(evt.m_Z_pt  , evt.evtWeight*wt);
+    h[prefix+"_dilepton_eta"    ]->Fill(evt.m_Z_eta , evt.evtWeight*wt);
+    h[prefix+"_dilepton_phi"    ]->Fill(evt.m_Z_phi , evt.evtWeight*wt);
+    h[prefix+"_dilepton_DelR"   ]->Fill(evt.Z_DelR  , evt.evtWeight*wt);
+    h[prefix+"_dilepton_DelEta" ]->Fill(evt.Z_DelEta, evt.evtWeight*wt);
+    h[prefix+"_dilepton_DelPhi" ]->Fill(evt.Z_DelPhi, evt.evtWeight*wt);
 }
 
 void ControlPlotExtractor::fillMETHistograms(TString prefix, float wt)
@@ -319,13 +323,21 @@ void ControlPlotExtractor::fillJetHistograms(TString prefix, float wt)
     int objsEntered = 0;      // Keeps track of how many objects you've entered for labeling purposes
     for(Index i : evt.validJets)
     { // Fill general histograms
-        h[prefix+"_jet_pt"   ]->Fill(evt.m_jet_pt [i]        , evt.evtWeight*wt);
-        h[prefix+"_jet_eta"  ]->Fill(evt.m_jet_eta[i]        , evt.evtWeight*wt);
-        h[prefix+"_jet_phi"  ]->Fill(evt.m_jet_phi[i]        , evt.evtWeight*wt);
-        h[prefix+"_jet_csv"  ]->Fill(evt.m_jet_csv[i]        , evt.evtWeight*wt);
-        h[prefix+"_jet_msv"  ]->Fill(evt.m_jet_msv[i]        , evt.evtWeight*wt);
-        h[prefix+"_jet_msvqc"]->Fill(evt.jet_msv_quickCorr[i], evt.evtWeight*wt);
-      // Select for lead/sublead/extra histograms
+        h[prefix+"_jet_pt"            ]->Fill(evt.m_jet_pt [i]          , evt.evtWeight*wt);
+        h[prefix+"_jet_eta"           ]->Fill(evt.m_jet_eta[i]          , evt.evtWeight*wt);
+        h[prefix+"_jet_phi"           ]->Fill(evt.m_jet_phi[i]          , evt.evtWeight*wt);
+        h[prefix+"_jet_csv"           ]->Fill(evt.m_jet_csv[i]          , evt.evtWeight*wt);
+        h[prefix+"_jet_msv"           ]->Fill(evt.m_jet_msv[i]          , evt.evtWeight*wt);
+        h[prefix+"_jet_msvqc"         ]->Fill(evt.jet_msv_quickCorr  [i], evt.evtWeight*wt);
+        h[prefix+"_jet_msv_new"       ]->Fill(evt.m_jet_msv_new        [i], evt.evtWeight*wt);
+        h[prefix+"_jet_msv_inc"       ]->Fill(evt.m_jet_msv_inc        [i], evt.evtWeight*wt);
+        h[prefix+"_jet_msv_corr"      ]->Fill(evt.m_jet_vtxMassCorr_IVF[i], evt.evtWeight*wt);
+	if(evt.m_jet_vtxCat_IVF[i] == 0)
+            h[prefix+"_jet_msv_corrFull"  ]->Fill(evt.m_jet_vtxMassCorr_IVF[i], evt.evtWeight*wt);
+	if(evt.m_jet_vtxCat_IVF[i] == 1)
+            h[prefix+"_jet_msv_corrPseudo"]->Fill(evt.m_jet_vtxMassCorr_IVF[i], evt.evtWeight*wt);
+
+     // Select for lead/sublead/extra histograms
         int j = min(++objsEntered, 3);
         h[prefix+"_jet"+multName[j]+"_pt"   ]->Fill(evt.m_jet_pt [i], evt.evtWeight*wt);
         h[prefix+"_jet"+multName[j]+"_eta"  ]->Fill(evt.m_jet_eta[i], evt.evtWeight*wt);
@@ -333,6 +345,13 @@ void ControlPlotExtractor::fillJetHistograms(TString prefix, float wt)
         h[prefix+"_jet"+multName[j]+"_csv"  ]->Fill(evt.m_jet_csv[i], evt.evtWeight*wt);
         h[prefix+"_jet"+multName[j]+"_msv"  ]->Fill(evt.m_jet_msv[i], evt.evtWeight*wt);
         h[prefix+"_jet"+multName[j]+"_msvqc"]->Fill(evt.jet_msv_quickCorr[i], evt.evtWeight*wt);
+        h[prefix+"_jet"+multName[j]+"_msv_new"       ]->Fill(evt.m_jet_msv_new        [i], evt.evtWeight*wt);
+        h[prefix+"_jet"+multName[j]+"_msv_inc"       ]->Fill(evt.m_jet_msv_inc        [i], evt.evtWeight*wt);
+        h[prefix+"_jet"+multName[j]+"_msv_corr"      ]->Fill(evt.m_jet_vtxMassCorr_IVF[i], evt.evtWeight*wt);
+	if(evt.m_jet_vtxCat_IVF[i] == 0)
+            h[prefix+"_jet"+multName[j]+"_msv_corrFull"  ]->Fill(evt.m_jet_vtxMassCorr_IVF[i], evt.evtWeight*wt);
+	if(evt.m_jet_vtxCat_IVF[i] == 1)
+            h[prefix+"_jet"+multName[j]+"_msv_corrPseudo"]->Fill(evt.m_jet_vtxMassCorr_IVF[i], evt.evtWeight*wt);
     }
     if(!prefix.Contains("hf")) return;
     objsEntered = 0;      // Keeps track of how many objects you've entered for labeling purposes
@@ -349,6 +368,13 @@ void ControlPlotExtractor::fillJetHistograms(TString prefix, float wt)
         h[prefix+"_hfjet_csv"  ]->Fill(evt.m_jet_csv[k], evt.evtWeight*wt);
         h[prefix+"_hfjet_msv"  ]->Fill(evt.m_jet_msv[k], evt.evtWeight*wt);
         h[prefix+"_hfjet_msvqc"]->Fill(evt.jet_msv_quickCorr[k], evt.evtWeight*wt);
+        h[prefix+"_hfjet_msv_new"       ]->Fill(evt.m_jet_msv_new        [i], evt.evtWeight*wt);
+        h[prefix+"_hfjet_msv_inc"       ]->Fill(evt.m_jet_msv_inc        [i], evt.evtWeight*wt);
+        h[prefix+"_hfjet_msv_corr"      ]->Fill(evt.m_jet_vtxMassCorr_IVF[i], evt.evtWeight*wt);
+	if(evt.m_jet_vtxCat_IVF[i] == 0)
+            h[prefix+"_hfjet_msv_corrFull"  ]->Fill(evt.m_jet_vtxMassCorr_IVF[i], evt.evtWeight*wt);
+	if(evt.m_jet_vtxCat_IVF[i] == 1)
+            h[prefix+"_hfjet_msv_corrPseudo"]->Fill(evt.m_jet_vtxMassCorr_IVF[i], evt.evtWeight*wt);
       // Select for lead/sublead/extra histograms
         int j = min(++objsEntered, 3);
         h[prefix+"_hfjet"+multName[j]+"_pt"   ]->Fill(evt.m_jet_pt [k], evt.evtWeight*wt);
@@ -357,6 +383,13 @@ void ControlPlotExtractor::fillJetHistograms(TString prefix, float wt)
         h[prefix+"_hfjet"+multName[j]+"_csv"  ]->Fill(evt.m_jet_csv[k], evt.evtWeight*wt);
         h[prefix+"_hfjet"+multName[j]+"_msv"  ]->Fill(evt.m_jet_msv[k], evt.evtWeight*wt);
         h[prefix+"_hfjet"+multName[j]+"_msvqc"]->Fill(evt.jet_msv_quickCorr[k], evt.evtWeight*wt);
+        h[prefix+"_hfjet"+multName[j]+"_msv_new"       ]->Fill(evt.m_jet_msv_new        [i], evt.evtWeight*wt);
+        h[prefix+"_hfjet"+multName[j]+"_msv_inc"       ]->Fill(evt.m_jet_msv_inc        [i], evt.evtWeight*wt);
+        h[prefix+"_hfjet"+multName[j]+"_msv_corr"      ]->Fill(evt.m_jet_vtxMassCorr_IVF[i], evt.evtWeight*wt);
+	if(evt.m_jet_vtxCat_IVF[i] == 0)
+            h[prefix+"_hfjet"+multName[j]+"_msv_corrFull"  ]->Fill(evt.m_jet_vtxMassCorr_IVF[i], evt.evtWeight*wt);
+	if(evt.m_jet_vtxCat_IVF[i] == 1)
+            h[prefix+"_hfjet"+multName[j]+"_msv_corrPseudo"]->Fill(evt.m_jet_vtxMassCorr_IVF[i], evt.evtWeight*wt);
     }
     h[prefix+"_hfjet_mult"]->Fill(objsEntered, evt.evtWeight*wt);     // Fill hf mult with the number of hf jets entered.
 }

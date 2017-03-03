@@ -5,7 +5,7 @@ source /cvmfs/cms.cern.ch/cmsset_default.sh
 export SCRAM_ARCH="slc6_amd64_gcc530" 
 cd ${_CONDOR_SCRATCH_DIR} 
 pwd 
-cd /uscms_data/d2/godshalk/root6SetupDir/CMSSW_8_0_19/src 
+cd /uscms_data/d2/godshalk/root6SetupDir/CMSSW_8_0_25/src 
 eval `scramv1 runtime -sh` 
 cd - 
 tar -zxf zcfiles.tgz 

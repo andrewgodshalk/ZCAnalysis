@@ -78,6 +78,10 @@ bool EventHandler::mapTree(TTree* tree)
         "Jet_vtxPosX",
         "Jet_vtxPosY",
         "Jet_vtxPosZ",
+	"Jet_vtxCat_IVF",
+	"Jet_vtxMassCorr_IVF",
+	"Jet_newVtxMass",
+	"Jet_incVtxMass",
         "evt"        ,
         "htJet30"    ,
         "mhtJet30"   ,
@@ -178,6 +182,10 @@ bool EventHandler::mapTree(TTree* tree)
     tree->SetBranchAddress( "Jet_vtxPosX", m_jet_vtx_x  );
     tree->SetBranchAddress( "Jet_vtxPosY", m_jet_vtx_y  );
     tree->SetBranchAddress( "Jet_vtxPosZ", m_jet_vtx_z  );
+    tree->SetBranchAddress( "Jet_vtxCat_IVF"     , m_jet_vtxCat_IVF     );
+    tree->SetBranchAddress( "Jet_vtxMassCorr_IVF", m_jet_vtxMassCorr_IVF);
+    tree->SetBranchAddress( "Jet_newVtxMass"     , m_jet_msv_new        );
+    tree->SetBranchAddress( "Jet_incVtxMass"     , m_jet_msv_inc        );
     tree->SetBranchAddress("nprimaryVertices" , &m_npv_array );
     tree->SetBranchAddress("primaryVertices_x",  m_pv_x      );
     tree->SetBranchAddress("primaryVertices_y",  m_pv_y      );
