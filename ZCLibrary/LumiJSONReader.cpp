@@ -2,7 +2,7 @@
 //
 //
 // 2017-01-19 godshalk
-// 
+//
 
 #include <cctype>
 #include <fstream>
@@ -30,7 +30,7 @@ void LumiJSONReader::setFile(string fn)
     json_file = fn;
   // Read in file contents
     ifstream input_file;
-    input_file.open(json_file); 
+    input_file.open(json_file);
     if(!input_file.is_open()) {cout << " ERROR: Unable to open json file: " << json_file << endl; return;}
     string rawJSON = "";
     string line;
@@ -54,7 +54,7 @@ bool LumiJSONReader::isInJSON(int nRun, int nLumi)
     //cout << " TEST: LUMIREADER IS CHECKING " << nRun << "," << nLumi << endl;
     if(runsAndLumis.find(nRun) == runsAndLumis.end()) return false;  // If the run number isn't in the list, return false.
     for( auto& min_max : runsAndLumis[nRun] )  // For each range for this run number...
-	if( min_max.first <= nLumi && nLumi <= min_max.second ) return true;  // If the lumi number is in range, return true.
+        if( min_max.first <= nLumi && nLumi <= min_max.second ) return true;  // If the lumi number is in range, return true.
     return false;
 }
 
@@ -70,17 +70,17 @@ void LumiJSONReader::extractRunAndLumis(str_iter& sIter)
 }
 
 void LumiJSONReader::addLumiRangesToList(int runNumber, str_iter& sIter)
-{ // Iter begins at first [ of list of lumis 
+{ // Iter begins at first [ of list of lumis
     sIter++;   // Move past the first [
     while(*sIter!=']') // While the list of ranges has not ended...
     {   while(*sIter!='[') sIter++; // Find the beginning of the next list.
-	addLumiRangeToList(runNumber, sIter);
-    }    
+        addLumiRangeToList(runNumber, sIter);
+    }
 }
 
 void LumiJSONReader::addLumiRangeToList(int runNumber, str_iter& sIter)
 { // Iter starts at first '[' of range.
-     sIter++;  // Move to the first number (should be right after '[')    
+     sIter++;  // Move to the first number (should be right after '[')
      int rangeBegin = getNumberFromString(sIter, ',');
      findNextDigit(sIter);  // Find the second number in the range.
      int rangeEnd   = getNumberFromString(sIter, ']');
@@ -95,4 +95,3 @@ int LumiJSONReader::getNumberFromString(str_iter& sIter, char delim)
     sIter++;
     return stoi(string(runStrBegin, sIter));
 }
-
