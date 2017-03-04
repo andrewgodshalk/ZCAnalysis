@@ -32,6 +32,7 @@ private:
 
   // Labels for split histograms
     static const std::vector<TString> HFTags;
+    static const std::vector<TString> SVTypes;
 
     TString csvOpPt       ;
     TString diffVariable  ;

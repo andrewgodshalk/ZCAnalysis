@@ -34,7 +34,8 @@ private:
 
   // Labels for split histograms
     static const std::vector<TString> HFTags;
-    //static const vector<TString> numLabel = {"_1st", "_2nd", "_3rd", "_4th", "_5th", "_6th", "_7th", "_8th", "_9th"};
+    static const std::vector<TString> SVTypes;
+
     std::map<TString, std::vector<float> > SFb_errors;
     static const std::vector<float> sf_b_ptmin;
     static const std::vector<float> sf_b_ptmax;

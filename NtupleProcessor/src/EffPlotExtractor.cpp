@@ -1,6 +1,6 @@
 /*
   EffPlotExtractor.cpp
- 
+
    Created on: May 19, 2015
        Author: godshalk
 
@@ -24,7 +24,8 @@ using std::endl;           using std::ofstream;   using std::setw;   using std::
 using std::map;
 typedef unsigned int Index;
 
-const vector<TString> EffPlotExtractor::HFTags = {"NoHF", "SVT", "CSVL", "CSVM", "CSVT", "CSVS"};
+const vector<TString> EffPlotExtractor::HFTags = {"NoHF", "CSVL", "CSVM", "CSVT", "CSVS"};
+const vector<TString> EffPlotExtractor::SVTypes= {"noSV", "pfSV", "pfISV", "qcSV", "cISV", "cISVf", "cISVp"};
 
 const vector<float> EffPlotExtractor::sf_b_ptmin = { 20, 30, 40, 50, 60, 70,  80, 100, 120, 160, 210, 260, 320, 400, 500, 600 };
 const vector<float> EffPlotExtractor::sf_b_ptmax = { 30, 40, 50, 60, 70, 80, 100, 120, 160, 210, 260, 320, 400, 500, 600, 800 };
@@ -62,10 +63,11 @@ EffPlotExtractor::EffPlotExtractor(EventHandler& eh, TDirectory* d, TString o) :
 //    nEvents["Valid Z+j Event"            ] = 0;  // Counters no longer important
     nEvents["Valid Z+j Event w/ MET cut" ] = 0;
     nJets  ["Valid Jets"                 ] = 0;     // For per-jet efficiency studies
-    for(const TString& hfLabel : EffPlotExtractor::HFTags)
+    for(    const TString& hfLabel : EffPlotExtractor::HFTags )
+        for(const TString& svLabel : EffPlotExtractor::SVTypes)
     {   //nEvents[TString("Valid Z+HF Event("            )+hfLabel+")"] = 0;   Counter no longer important.
-        nEvents[TString("Valid Z+HF Event w/ MET cut (")+hfLabel+")"] = 0;
-        nJets  [TString("Valid HF Jets ("              )+hfLabel+")"] = 0;
+        nEvents[TString("Valid Z+HF Event w/ MET cut (")+hfLabel+","+svLabel+")"] = 0;
+        nJets  [TString("Valid HF Jets ("              )+hfLabel+","+svLabel+")"] = 0;
     }
 
   // Extract options
@@ -78,13 +80,13 @@ EffPlotExtractor::EffPlotExtractor(EventHandler& eh, TDirectory* d, TString o) :
     selectingZb      = (options.Contains("Zb"        , TString::kIgnoreCase) ? true : false);
     selectingZtautau = (options.Contains("Ztautau"   , TString::kIgnoreCase) ? true : false);
 
-cout << " EffPlotExtractor: CREATED!!" << endl;
+  // cout << " EffPlotExtractor: CREATED!!" << endl;
 
   // Set up a template histogram based on what type of file is specified in options.
     hDir->cd();     // Move to this extractor's output directory to initialize the histograms.
-    TH1* tempEvtHisto = new TH1F( "n_evts", "Event Tagging Eff. vs. Lead Taggd Jet p_{T}" ";Lead Tagged Jet p_{T} (GeV)" ";Tagging Eff.", 600,  0, 600); tempEvtHisto->Sumw2();
-    TH1* tempJetHisto = new TH1F( "n_jets"  , "Jet Tagging Eff. vs. Jet p_{T}"            ";Jet p_{T} (GeV)"             ";Tagging Eff.", 600,  0, 600); tempJetHisto->Sumw2();
-    TH1* tempJet2DHisto = new TH2F( "n_jets_2D"  , "Jet Tagging Eff. vs. Jet p_{T} vs. Eta"  ";Jet p_{T} (GeV)"             ";Eta"      , 600, 0, 600, 60,  -3.0, 3.0); tempJet2DHisto->Sumw2();
+    TH1* tempEvtHisto   = new TH1F( "n_evts"     , "Event Tagging Eff. vs. Lead Taggd Jet p_{T}" ";Lead Tagged Jet p_{T} (GeV)" ";Tagging Eff.", 600, 0, 600); tempEvtHisto->Sumw2();
+    TH1* tempJetHisto   = new TH1F( "n_jets"     , "Jet Tagging Eff. vs. Jet p_{T}"              ";Jet p_{T} (GeV)"             ";Tagging Eff.", 600, 0, 600); tempJetHisto->Sumw2();
+    TH1* tempJet2DHisto = new TH2F( "n_jets_2D"  , "Jet Tagging Eff. vs. Jet p_{T} vs. Eta"      ";Jet p_{T} (GeV)"             ";Eta"         , 600, 0, 600, 60,  -3.0, 3.0); tempJet2DHisto->Sumw2();
 
   // Clone the template into necessary histograms.
     TString taggedTitle  = "nt";    // = "Number Tagged"
@@ -106,22 +108,23 @@ cout << " EffPlotExtractor: CREATED!!" << endl;
             h[fullJet2DTitle] = (TH2F*)tempJet2DHisto->Clone(fullJet2DTitle); // Make a histogram to contain results from f jets.
         }
     }
-    for(const TString& hfLabel : EffPlotExtractor::HFTags)  // For each HFTag...
+    for(    const TString& hfLabel : EffPlotExtractor::HFTags )
+        for(const TString& svLabel : EffPlotExtractor::SVTypes)
     {
-        TString genEvtTitle   = taggedTitle+"_Evt_"   +hfLabel;
-        TString genJetTitle   = taggedTitle+"_Jet_"   +hfLabel;
-        TString genJet2DTitle = taggedTitle+"_Jet_2D_"+hfLabel;
+        TString genEvtTitle   = taggedTitle+"_Evt_"   +hfLabel+svLabel;
+        TString genJetTitle   = taggedTitle+"_Jet_"   +hfLabel+svLabel;
+        TString genJet2DTitle = taggedTitle+"_Jet_2D_"+hfLabel+svLabel;
         h[genEvtTitle] = (TH1F*)tempEvtHisto->Clone(genEvtTitle);   // Make a histogram for all tagged events.
         h[genJetTitle] = (TH1F*)tempJetHisto->Clone(genJetTitle);   // Make a histogram for all jets.
         h[genJet2DTitle] = (TH2F*)tempJet2DHisto->Clone(genJet2DTitle);   // Make a histogram for all jets.
         if(usingDY && (selectingZb || selectingZc || selectingZl))
         {   // If using DY and working with a non-TauTau event...
-            TString fullEvtTagTitle    = taggedTitle+"_"+evtFlavTitle+"_"+hfLabel;    // Make a histogram that contains the results from tagged Z+f events.
-            TString fullJetTagTitle    = taggedTitle+"_"+jetFlavTitle+"_"+hfLabel;    // Make a histogram that contains the results from tagged f jets.
-            TString fullJetTag2DTitle  = taggedTitle+"_"+jetFlavTitle+"_2D_"+hfLabel;    // Make a histogram that contains the results from tagged f jets.
-            h[fullEvtTagTitle        ] = (TH1F*)tempEvtHisto  ->Clone(fullEvtTagTitle  );
-            h[fullJetTagTitle        ] = (TH1F*)tempJetHisto  ->Clone(fullJetTagTitle  );
-            h[fullJetTag2DTitle      ] = (TH2F*)tempJet2DHisto->Clone(fullJetTag2DTitle);
+            TString fullEvtTagTitle    = taggedTitle+"_"+evtFlavTitle+"_"   +hfLabel+svLabel;    // Make a histogram that contains the results from tagged Z+f events.
+            TString fullJetTagTitle    = taggedTitle+"_"+jetFlavTitle+"_"   +hfLabel+svLabel;    // Make a histogram that contains the results from tagged f jets.
+            TString fullJetTag2DTitle  = taggedTitle+"_"+jetFlavTitle+"_2D_"+hfLabel+svLabel;    // Make a histogram that contains the results from tagged f jets.
+            h[fullEvtTagTitle  ] = (TH1F*)tempEvtHisto  ->Clone(fullEvtTagTitle  );
+            h[fullJetTagTitle  ] = (TH1F*)tempJetHisto  ->Clone(fullJetTagTitle  );
+            h[fullJetTag2DTitle] = (TH2F*)tempJet2DHisto->Clone(fullJetTag2DTitle);
         }
     }
     delete tempEvtHisto;
@@ -160,13 +163,12 @@ void EffPlotExtractor::fillHistos()
     if(usingDY)
     {
         if(selectingZb)
-        {   h["n_ZbEvents"]->Fill(evt.m_jet_pt[evt.validJets[evt.leadBJet]], evtWeight);           // Fill for by-evt eff.
+        {   h["n_ZbEvents"]->Fill(evt.m_jet_pt[evt.validJets[evt.leadBJet]], evtWeight);  // Fill for by-evt eff.
             for(Index i=0; i<evt.validJets.size(); i++)                                   // Cycle over valid jets
-                if(evt.bMCJets[i])                                                          //   Store jet pt value if jet is valid b jet
-	        {
-                    h["n_bJets"]->Fill(evt.m_jet_pt[evt.validJets[i]], evtWeight);
+                if(evt.bMCJets[i])                                                        //   Store jet pt value if jet is valid b jet
+                {   h["n_bJets"]->Fill(evt.m_jet_pt[evt.validJets[i]], evtWeight);
                     ((TH2*)h["n_bJets_2D"])->Fill(evt.m_jet_pt[evt.validJets[i]], evt.m_jet_eta[evt.validJets[i]], evtWeight);
-		}
+                }
         }
         if(selectingZc)
         {   h["n_ZcEvents"]->Fill(evt.m_jet_pt[evt.validJets[evt.leadCJet]], evtWeight);
@@ -174,7 +176,7 @@ void EffPlotExtractor::fillHistos()
                 if(evt.cMCJets[i])
                 {   h["n_cJets"]->Fill(evt.m_jet_pt[evt.validJets[i]], evtWeight);
                     ((TH2*)h["n_cJets_2D"])->Fill(evt.m_jet_pt[evt.validJets[i]], evt.m_jet_eta[evt.validJets[i]], evtWeight);
-		}
+                }
         }
         if(selectingZl)
         {   h["n_ZlEvents"]->Fill(evt.m_jet_pt[evt.validJets[0]], evtWeight);
@@ -182,22 +184,23 @@ void EffPlotExtractor::fillHistos()
                 if(evt.lMCJets[i])
                 {   h["n_lJets"]->Fill(evt.m_jet_pt[evt.validJets[i]], evtWeight);
                     ((TH2*)h["n_lJets_2D"])->Fill(evt.m_jet_pt[evt.validJets[i]], evt.m_jet_eta[evt.validJets[i]], evtWeight);
-		}
+                }
         }
     }
 
-    for(const TString& hfLabel : EffPlotExtractor::HFTags)
+    for(    const TString& hfLabel : EffPlotExtractor::HFTags )
+        for(const TString& svLabel : EffPlotExtractor::SVTypes)
     {
       // Select for Z events with at least one HF jet and with the MET cut.
-        if(!evt.hasHFJets[hfLabel]) continue;
-        nEvents[TString("Valid Z+HF Event w/ MET cut (")+hfLabel+")"]++;
-        h[TString("nt_Evt_")+hfLabel]->Fill(evt.m_jet_pt[evt.validJets[evt.leadHFJet[hfLabel]]], evtWeight);
+        if(!evt.hasHFJets[hfLabel][svLabel]) continue;
+        nEvents[TString("Valid Z+HF Event w/ MET cut (")+hfLabel+","+svLabel+")"]++;
+        h[TString("nt_Evt_")+hfLabel+svLabel]->Fill(evt.m_jet_pt[evt.validJets[evt.leadHFJet[hfLabel][svLabel]]], evtWeight);
         for(Index i = 0; i<evt.validJets.size(); i++)       // Cycle over all jets and fill when appropriate.
-            if(evt.HFJets[hfLabel][i])  // If jet is of this HF variety...
+            if(evt.HFJets[hfLabel][svLabel][i])  // If jet is of this HF variety...
             {
-                nJets[TString("Valid HF Jets (")+hfLabel+")"]++;                    // Increment appropriate counter
-                h[TString("nt_Jet_"  )+hfLabel]->Fill(evt.m_jet_pt[evt.validJets[i]], evtWeight); // Add jet by pt to appropriate histogram.
-                ((TH2*)h[TString("nt_Jet_2D_")+hfLabel])->Fill(evt.m_jet_pt[evt.validJets[i]], evt.m_jet_eta[evt.validJets[i]], evtWeight); // Add jet by pt to appropriate histogram.
+                nJets[TString("Valid HF Jets (")+hfLabel+","+svLabel+")"]++; // Increment appropriate counter
+                h[TString("nt_Jet_"  )+hfLabel+svLabel]->Fill(evt.m_jet_pt[evt.validJets[i]], evtWeight); // Add jet by pt to appropriate histogram.
+                ((TH2*)h[TString("nt_Jet_2D_")+hfLabel+svLabel])->Fill(evt.m_jet_pt[evt.validJets[i]], evt.m_jet_eta[evt.validJets[i]], evtWeight); // Add jet by pt to appropriate histogram.
             }
         if(usingDY)
         {
@@ -209,46 +212,46 @@ void EffPlotExtractor::fillHistos()
             {
                 jet_pt  = evt.m_jet_pt [evt.validJets[evt.leadBJet]];
                 jet_eta = evt.m_jet_eta[evt.validJets[evt.leadBJet]];
-                h[TString("nt_ZbEvents_"   )+hfLabel]->Fill(jet_pt, evtWeight         );
+                h[TString("nt_ZbEvents_"   )+hfLabel+svLabel]->Fill(jet_pt, evtWeight);
                 //((TH2*)h[TString("nt_ZbEvents_2D_")+hfLabel])->Fill(jet_pt, jet_eta);
                 for(Index i = 0; i<evt.validJets.size(); i++)       // Cycle over all jets and fill when appropriate.
                 {
                     if(!evt.bMCJets[i]) continue;
-                    nJets[TString("Valid HF Jets (")+hfLabel+")"]++;
+                    nJets[TString("Valid HF Jets (")+hfLabel+","+svLabel+")"]++;
                     jet_pt  = evt.m_jet_pt [evt.validJets[i]];
                     jet_eta = evt.m_jet_eta[evt.validJets[i]];
-                    h[TString("nt_bJets_")+hfLabel]           ->Fill(jet_pt         , evtWeight);
-                    ((TH2*)h[TString("nt_bJets_2D_")+hfLabel])->Fill(jet_pt, jet_eta, evtWeight);
+                    h[TString("nt_bJets_")+hfLabel+svLabel]           ->Fill(jet_pt         , evtWeight);
+                    ((TH2*)h[TString("nt_bJets_2D_")+hfLabel+svLabel])->Fill(jet_pt, jet_eta, evtWeight);
                 }
             }
             if(selectingZc)
             {
                 jet_pt  = evt.m_jet_pt [evt.validJets[evt.leadCJet]];
                 jet_eta = evt.m_jet_eta[evt.validJets[evt.leadCJet]];
-                h[TString("nt_ZcEvents_"   )+hfLabel]->Fill(jet_pt          , evtWeight);
+                h[TString("nt_ZcEvents_"   )+hfLabel+svLabel]->Fill(jet_pt, evtWeight);
                 //((TH2*)h[TString("nt_ZcEvents_2D_")+hfLabel])->Fill(jet_pt, jet_eta , evtWeight);
                 for(Index i = 0; i<evt.validJets.size(); i++)       // Cycle over all jets and fill when appropriate.
                 {
                     if(!evt.cMCJets[i]) continue;
-                    nJets[TString("Valid HF Jets (")+hfLabel+")"]++;
+                    nJets[TString("Valid HF Jets (")+hfLabel+","+svLabel+")"]++;
                     jet_pt  = evt.m_jet_pt [evt.validJets[i]];
                     jet_eta = evt.m_jet_eta[evt.validJets[i]];
-                    h[TString("nt_cJets_"   )+hfLabel        ]->Fill(jet_pt         , evtWeight);
-                    ((TH2*)h[TString("nt_cJets_2D_")+hfLabel        ])->Fill(jet_pt, jet_eta);
+                    h[TString("nt_cJets_"   )+hfLabel+svLabel       ] ->Fill(jet_pt         , evtWeight);
+                    ((TH2*)h[TString("nt_cJets_2D_")+hfLabel+svLabel])->Fill(jet_pt, jet_eta);
                 }
             }
             if(selectingZl)
             {
-                h[TString("nt_ZlEvents_"   )+hfLabel]->Fill(evt.m_jet_pt [evt.validJets[0]] , evtWeight);
+                h[TString("nt_ZlEvents_")+hfLabel+svLabel]->Fill(evt.m_jet_pt [evt.validJets[0]] , evtWeight);
                 //((TH2*)h[TString("nt_ZlEvents_2D_")+hfLabel])->Fill(evt.m_jet_eta[evt.validJets[0]] , evtWeight);
                 for(Index i = 0; i<evt.validJets.size(); i++)       // Cycle over all jets and fill when appropriate.
                 {
                     if(!evt.lMCJets[i]) continue;
-                    nJets[TString("Valid HF Jets (")+hfLabel+")"]++;
+                    nJets[TString("Valid HF Jets (")+hfLabel+","+svLabel+")"]++;
                     jet_pt  = evt.m_jet_pt [evt.validJets[i]];
                     jet_eta = evt.m_jet_eta[evt.validJets[i]];
-                    h[TString("nt_lJets_"   )+hfLabel]->Fill(jet_pt         , evtWeight);
-                    ((TH2*)h[TString("nt_lJets_2D_")+hfLabel])->Fill(jet_pt, jet_eta, evtWeight);
+                    h[TString("nt_lJets_"   )+hfLabel+svLabel]->Fill(jet_pt         , evtWeight);
+                    ((TH2*)h[TString("nt_lJets_2D_")+hfLabel+svLabel])->Fill(jet_pt, jet_eta, evtWeight);
                 }
             }
         }
@@ -261,7 +264,7 @@ void EffPlotExtractor::saveToFile()
 
 // Last minute counter.
 //    nEvents["Candidates from Ntupler"    ] += evt.entriesInNtuple;
-    nEvents["Candidates from Ntupler"    ] = 0;
+    nEvents["Candidates from Ntupler"] = 0;
 
   // Move to this plotter's directory, then save each file to the directory or overwrite.
     cout << "   EffPlotExtractor::saveToFile(): TEST: Saving to file: " << hDir->GetPath() << endl;
@@ -277,7 +280,8 @@ void EffPlotExtractor::saveToFile()
 
 
 float EffPlotExtractor::sf_b_eq(const TString& hfLabel, const float& x)
-{ // Equation taken directly from https://twiki.cern.ch/twiki/pub/CMS/BtagRecommendation53X/SFb-pt_payload_Moriond13.txt
+{ /// 2016 - NOT APPRPPRIATE
+  // Equation taken directly from https://twiki.cern.ch/twiki/pub/CMS/BtagRecommendation53X/SFb-pt_payload_Moriond13.txt
   // Cited from page https://twiki.cern.ch/twiki/bin/viewauth/CMS/BtagRecommendation53X
   // x = jet_pt
 
@@ -294,7 +298,7 @@ float EffPlotExtractor::sf_b_eq(const TString& hfLabel, const float& x)
 }
 
 float EffPlotExtractor::sf_b_error(const TString& hfLabel, const float& pt)
-{
+{ /// 2016 - NOT APPRPPRIATE
   // If not worrying about errors, return 0.
     if(errorType == 0) return 0;
 

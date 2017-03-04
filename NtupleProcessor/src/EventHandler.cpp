@@ -22,6 +22,9 @@ using std::cout;   using std::endl;   using std::vector;   using std::swap;
 using std::setw;   using std::setprecision;
 using std::sqrt;   using std::string;
 
+const vector<TString> EventHandler::HFTags = {"NoHF", "CSVL", "CSVM", "CSVT", "CSVS"};
+const vector<TString> EventHandler::SVType = {"noSV", "oldSV", "pfSV", "pfISV", "qcSV", "cISV", "cISVf", "cISVp"};
+
 EventHandler::EventHandler(TString fnac, TString o) : anCfg(fnac), options(o)
 {
   // Check the option to see if we're working with Simulation or Data
@@ -36,12 +39,43 @@ EventHandler::EventHandler(TString fnac, TString o) : anCfg(fnac), options(o)
     patEventsAnalyzed = 0;
     entriesInNtuple   = 0;
 
-    jet_msv_quickCorr.fill(-1.0);
+    for(int i=0; i<maxNumJets; i++) jet_msv_quickCorr[i] = -10.0;
+    // jet_msv_quickCorr.fill(-1.0);
     evtWeight = 1.0;
 
   // Set up trigger map objects to the same size as the list of triggers specified for selection in the analysis config file.
     m_muon_trig = vector<int>(anCfg.muonTriggers.size(), 0);
     m_elec_trig = vector<int>(anCfg.elecTriggers.size(), 0);
+
+  // Hard code in some pointers for HF/SV usage, because who has time for config files?
+    HFTagDiscrimVar["NoHF"] = m_jet_csv;
+    HFTagDiscrimVar["CSVL"] = m_jet_csv;
+    HFTagDiscrimVar["CSVM"] = m_jet_csv;
+    HFTagDiscrimVar["CSVT"] = m_jet_csv;
+    HFTagDiscrimVar["CSVS"] = m_jet_csv;
+    HFTagDiscrimOP ["NoHF"] = anCfg.stdCSVOpPts["NoHF"];
+    HFTagDiscrimOP ["CSVL"] = anCfg.stdCSVOpPts["CSVL"];
+    HFTagDiscrimOP ["CSVM"] = anCfg.stdCSVOpPts["CSVM"];
+    HFTagDiscrimOP ["CSVT"] = anCfg.stdCSVOpPts["CSVT"];
+    HFTagDiscrimOP ["CSVS"] = anCfg.stdCSVOpPts["CSVS"];
+
+    SVVariable["noSV" ] = m_jet_msv             ;
+    SVVariable["oldSV"] = m_jet_msv             ;
+    SVVariable["pfSV" ] = m_jet_msv_new         ;
+    SVVariable["pfISV"] = m_jet_msv_inc         ;
+    SVVariable["qcSV" ] = jet_msv_quickCorr     ;
+    SVVariable["cISV" ] = m_jet_vtxMassCorr_IVF ;
+    SVVariable["cISVf"] = m_jet_vtxMassCorr_IVF ;
+    SVVariable["cISVp"] = m_jet_vtxMassCorr_IVF ;
+    SVMinimumVal["noSV" ] = anCfg. noSVT ;
+    SVMinimumVal["oldSV"] = anCfg.minSVT ;
+    SVMinimumVal["pfSV" ] = anCfg.minSVT ;
+    SVMinimumVal["pfISV"] = anCfg.minSVT ;
+    SVMinimumVal["qcSV" ] = anCfg.minSVT ;
+    SVMinimumVal["cISV" ] = anCfg.minSVT ;
+    SVMinimumVal["cISVf"] = anCfg.minSVT ;
+    SVMinimumVal["cISVp"] = anCfg.minSVT ;
+
 }
 
 bool EventHandler::mapTree(TTree* tree)
@@ -404,16 +438,12 @@ void EventHandler::evalCriteria()
         validJets.push_back(lowPtIndex);
     }
 
-  // If there are valid jets, make some vectors to contain their heavy flavor tagging properties.
-    //if(validJets.size()>0)
-    //{
-        HFJets["CSVS"] = vector<bool>(validJets.size(), false);   hasHFJets["CSVS"] = false;
-        HFJets["CSVT"] = vector<bool>(validJets.size(), false);   hasHFJets["CSVT"] = false;
-        HFJets["CSVM"] = vector<bool>(validJets.size(), false);   hasHFJets["CSVM"] = false;
-        HFJets["CSVL"] = vector<bool>(validJets.size(), false);   hasHFJets["CSVL"] = false;
-        HFJets["SVT" ] = vector<bool>(validJets.size(), false);   hasHFJets["SVT" ] = false;
-        HFJets["NoHF"] = vector<bool>(validJets.size(), false);   hasHFJets["NoHF"] = false;
-    //}
+    for(auto& svType : SVType)
+        for(auto& hfTag : HFTags)
+            {   HFJets   [hfTag][svType] = vector<bool>(validJets.size(), false);
+                hasHFJets[hfTag][svType] = false;
+                leadHFJet[hfTag][svType] = -1;
+            }
 
   // Check HF Tagging info for all valid jets and perform on-the-fly calculations
     //if(validJets.size() > 0) cout << "  Testing " << validJets.size() << " jets..." << endl;
@@ -426,15 +456,21 @@ void EventHandler::evalCriteria()
 
       // Jet is HF if it passes the CSV operating point and has a reconstructed secondary vertex.
         evt_i = validJets[vJet_i];  // Set the evt_i to the validJet's index within the EventHandler.
-        if(m_jet_csv[evt_i] < anCfg.stdCSVOpPts["NoHF"]) cout << "   csv sub-NoHF: "  << m_jet_csv[evt_i] << " < " << anCfg.stdCSVOpPts["NoHF"] << endl;
-        if(m_jet_msv[evt_i] < anCfg.noSVT)               cout << "   csv sub-noSVT: " << m_jet_msv[evt_i] << " < " << anCfg.minSVT              << endl;
-
-        if(m_jet_csv[evt_i]>=anCfg.stdCSVOpPts["NoHF"] && m_jet_msv[evt_i] >=anCfg. noSVT) { HFJets["NoHF"][vJet_i]=true; if(!hasHFJets["NoHF"]) leadHFJet["NoHF"]=vJet_i; hasHFJets["NoHF"] = true; } else continue;
-        if(m_jet_csv[evt_i]>=anCfg.stdCSVOpPts["SVT" ] && m_jet_msv[evt_i] > anCfg.minSVT) { HFJets["SVT" ][vJet_i]=true; if(!hasHFJets["SVT" ]) leadHFJet["SVT" ]=vJet_i; hasHFJets["SVT" ] = true; } else continue;
-        if(m_jet_csv[evt_i]>=anCfg.stdCSVOpPts["CSVL"] && m_jet_msv[evt_i] > anCfg.minSVT) { HFJets["CSVL"][vJet_i]=true; if(!hasHFJets["CSVL"]) leadHFJet["CSVL"]=vJet_i; hasHFJets["CSVL"] = true; } else continue;
-        if(m_jet_csv[evt_i]>=anCfg.stdCSVOpPts["CSVM"] && m_jet_msv[evt_i] > anCfg.minSVT) { HFJets["CSVM"][vJet_i]=true; if(!hasHFJets["CSVM"]) leadHFJet["CSVM"]=vJet_i; hasHFJets["CSVM"] = true; } else continue;
-        if(m_jet_csv[evt_i]>=anCfg.stdCSVOpPts["CSVT"] && m_jet_msv[evt_i] > anCfg.minSVT) { HFJets["CSVT"][vJet_i]=true; if(!hasHFJets["CSVT"]) leadHFJet["CSVT"]=vJet_i; hasHFJets["CSVT"] = true; } else continue;
-        if(m_jet_csv[evt_i]>=anCfg.stdCSVOpPts["CSVS"] && m_jet_msv[evt_i] > anCfg.minSVT) { HFJets["CSVS"][vJet_i]=true; if(!hasHFJets["CSVS"]) leadHFJet["CSVS"]=vJet_i; hasHFJets["CSVS"] = true; } else continue;
+        for(auto& svType : SVType)
+            for(auto& hfTag : HFTags)
+                if(HFTagDiscrimVar[hfTag][evt_i] >= HFTagDiscrimOP[hfTag] && SVVariable[svType][evt_i] >= SVMinimumVal[svType])
+                { // Unfortunate hardcoded checking: check the vertex category of the corrected secondary vertices, if the svType is appropriate.
+                  // cISVf = full SV reco'd (==0)
+                  // cISVp = psuedo vertex (==1)
+                    if(svType == "cISVf" && m_jet_vtxCat_IVF[evt_i] != 0) continue;
+                    if(svType == "cISVp" && m_jet_vtxCat_IVF[evt_i] != 1) continue;
+                  // Set HFSVtag Variables.
+                    HFJets[hfTag][svType][vJet_i] = true;
+                    if(!hasHFJets[hfTag][svType])
+                    {   leadHFJet[hfTag][svType] = vJet_i;
+                        hasHFJets[hfTag][svType] = true;
+                    }
+                }
     }
 
   // Combine a few of the checks into a couple of comprehensive variables.
@@ -458,18 +494,14 @@ void EventHandler::evalCriteria()
 
   // For each flavor tag, calculate an event weight based on jet tagging efficiency and tagging data/mc scalefactors.
   // See link for method used: https://twiki.cern.ch/twiki/bin/view/CMS/BTagSFMethods#1a_Event_reweighting_using_scale
-    if(hasHFJets["NoHF"]) jetTagEvtWeight["NoHF"] = calculateJetTagEvtWeight("NoHF");
-    if(hasHFJets["SVT" ]) jetTagEvtWeight["SVT" ] = calculateJetTagEvtWeight("SVT" );
-    if(hasHFJets["CSVL"]) jetTagEvtWeight["CSVL"] = calculateJetTagEvtWeight("CSVL");
-    if(hasHFJets["CSVM"]) jetTagEvtWeight["CSVM"] = calculateJetTagEvtWeight("CSVM");
-    if(hasHFJets["CSVT"]) jetTagEvtWeight["CSVT"] = calculateJetTagEvtWeight("CSVT");
-    if(hasHFJets["CSVS"]) jetTagEvtWeight["CSVS"] = calculateJetTagEvtWeight("CSVS");
+    for(auto& hfTag : HFTags) for(auto& svType : SVType)
+        if(hasHFJets[hfTag][svType]) jetTagEvtWeight[hfTag][svType] = calculateJetTagEvtWeight(hfTag.Data(), svType.Data());
 
   // Kick function if not using DY. Otherwise, check for origin from Z->tautau
     if(!usingDY) return;
     zBosonFromTaus = (m_zdecayMode==3);
 
-  //  if(isZpJEvent) printJets();
+    // if(isZpJEvent) printJets();
 
 }
 
@@ -492,13 +524,8 @@ void EventHandler::resetSelectionVariables()
     validLeptons.clear();
     validJets.clear();
     evtWeight = 1.0;
-    jet_msv_quickCorr.fill(-1.0);
-    jetTagEvtWeight["NoHF"] = 1.0;
-    jetTagEvtWeight["SVT" ] = 1.0;
-    jetTagEvtWeight["CSVL"] = 1.0;
-    jetTagEvtWeight["CSVM"] = 1.0;
-    jetTagEvtWeight["CSVT"] = 1.0;
-    jetTagEvtWeight["CSVS"] = 1.0;
+    for(int i=0; i<maxNumJets; i++) jet_msv_quickCorr[i] = -10.0;
+    for( auto& hftag : HFTags) for( auto& svtype : SVType) jetTagEvtWeight[hftag][svtype] = 1.0;
 }
 
 
@@ -540,14 +567,15 @@ float EventHandler::calculateJetMSVQuickCorrection(int jet_i)
 }
 
 
-float EventHandler::calculateJetTagEvtWeight(string opPt, bool debug)
+float EventHandler::calculateJetTagEvtWeight(string hfOpPt, string svOpPt, bool debug)
 { // For given flavor tag, calculate an event weight based on jet tagging efficiency and tagging data/mc scalefactors.
   // See link for method used: https://twiki.cern.ch/twiki/bin/view/CMS/BTagSFMethods#1a_Event_reweighting_using_scale
+  // MODIFIED 2017-03-03 - Currently doesn't take into account differing SV operating points. Just uses standard msv OP.
     float probData = 1.0;
     float probMC   = 1.0;
   // For each valid jet...
     if(debug) cout << "      For " << validJets.size() << " jets: ";
-    if(debug) cout << "\n      f vi(ei){eff,sf}tag pt eta PD PM";
+    if(debug) cout << "\n      f vi(ei){eff,sf}tag pt eta hftagVal hfTagOP svVal svOP -->PD PM";
     for(Index vJet_i=0, jet_i=0; vJet_i<validJets.size(); vJet_i++)
     {
         jet_i = validJets[vJet_i]; // Get jet_i, the valid jet's actual index within the raw array.
@@ -560,19 +588,27 @@ float EventHandler::calculateJetTagEvtWeight(string opPt, bool debug)
            default: flv = 'l';
         }
       // Get the jet tagging efficiency and SF
-        float jetEff = anCfg.jetTagWeight.getJetEff(flv, opPt, m_jet_pt[jet_i], m_jet_eta[jet_i]);
-        float jetSF  = anCfg.jetTagWeight.getJetSF (flv, opPt, m_jet_pt[jet_i], m_jet_eta[jet_i]);
+        float jetEff = anCfg.jetTagWeight.getJetEff(flv, hfOpPt, m_jet_pt[jet_i], m_jet_eta[jet_i]);
+        float jetSF  = anCfg.jetTagWeight.getJetSF (flv, hfOpPt, m_jet_pt[jet_i], m_jet_eta[jet_i]);
 
       // Get whether this jet was tagged or not.
-        bool tagged = HFJets[opPt][vJet_i];
+        bool tagged = HFJets[hfOpPt][svOpPt][vJet_i];
 
       // Factor into probability values.
         probData *= (tagged ? jetEff*jetSF : 1.0-jetEff*jetSF );
         probMC   *= (tagged ? jetEff       : 1.0-jetEff       );
         if(debug) cout << "\n      " << flv << " " << vJet_i << "(" << jet_i << "){"<<jetEff<<","<<jetSF<<"}"<<(tagged?'t':'n') << " "
-        << setprecision(2) << m_jet_pt[jet_i] << " " << m_jet_eta[jet_i] << " --> " << probData << " / " << probMC;
+        << setprecision(2) << m_jet_pt[jet_i] << " " << m_jet_eta[jet_i] << " "
+        << HFTagDiscrimVar[hfOpPt][jet_i] << " " << HFTagDiscrimOP[hfOpPt] << " "
+        << SVVariable[svOpPt][jet_i] << " " << SVMinimumVal[svOpPt] << " "
+        << " --> " << probData << " / " << probMC;
     }
     float wt = probData/probMC;
-    if(debug) cout << "\n      jetTagEvtWeight calculated for " << opPt << ": " << wt << std::fixed << endl;
+    if(debug) cout << "\n      jetTagEvtWeight calculated for " << hfOpPt << ": " << svOpPt << ": " << wt << std::fixed << endl;
+
+/////////////// TO FIX: 2017-03-03 TEMPORARY SOLUTION: Set wt to zero until new jet eff. histograms w/ sv selection created.
+    if(TMath::IsNaN(wt) && svOpPt != "noSV") wt = 1.0;
+///////////////
+
     return wt;
 }

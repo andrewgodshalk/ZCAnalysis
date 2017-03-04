@@ -40,6 +40,9 @@ public:
 
     AnalysisConfig anCfg;
 
+    static const std::vector<TString> HFTags;
+    static const std::vector<TString> SVType;
+
   // Methods
     bool mapTree(TTree*);                         // Maps class variables to an input TTree.
     void evalCriteria();                          // Evaluates the class' list of event selection criteria
@@ -48,7 +51,7 @@ public:
     void printJets();                             // Test function that prints jets and their properties.
     float calculatePUReweight(int);
     float calculateJetMSVQuickCorrection(int);
-    float calculateJetTagEvtWeight(std::string, bool debug=false);
+    float calculateJetTagEvtWeight(std::string, std::string, bool debug=false);
 
   // Running Variables
     TString options;         // Options input with TreeIterator.
@@ -98,9 +101,10 @@ public:
 
 // Calculated variables
     float Z_DelR, Z_DelPhi, Z_DelEta;
-    std::array<float, maxNumJets> jet_msv_quickCorr;
+    // std::array<float, maxNumJets> jet_msv_quickCorr;
+    float jet_msv_quickCorr[maxNumJets];
     float evtWeight;
-    std::map<std::string, float> jetTagEvtWeight;    // Additional event weight calculated for each tagging operating point.
+    std::map< TString, std::map<TString, float> > jetTagEvtWeight;    // Additional event weight calculated for each hf/sv operating point.
 
   // Selection Variables
     bool usingSim; // Simulation events. For plotting sim-truth information.
@@ -135,15 +139,21 @@ public:
   // Jet Selection Variables
     std::vector<Index> validJets;       // lists all "valid" jets from standard cuts.
     // subsequent vectors contain true/false conditions of jets as ordered in above validjets vector.
-    // HF-tagged/SVT tagged jets
-    std::map<TString, std::vector<bool> >    HFJets;
-    std::map<TString, bool>               hasHFJets;
-    std::map<TString, Index>              leadHFJet;
+    // HF/SVT-tagged jets,
+    std::map<TString, std::map<TString, std::vector<bool> > > HFJets   ;
+    std::map<TString, std::map<TString,              bool > > hasHFJets;
+    std::map<TString, std::map<TString,             Index > > leadHFJet;
     // MC truth information
-    std::vector<bool>                       bMCJets;
-    std::vector<bool>                       cMCJets;
-    std::vector<bool>                       lMCJets;
+    std::vector<bool> bMCJets;
+    std::vector<bool> cMCJets;
+    std::vector<bool> lMCJets;
     Index leadBJet, leadCJet;
+
+  // Variable pointers for checking HFTags and SVMasses.
+    std::map<TString, float*> SVVariable;
+    std::map<TString, float > SVMinimumVal;
+    std::map<TString, float*> HFTagDiscrimVar;
+    std::map<TString, float > HFTagDiscrimOP ;
 
   // Extra data
     long patEventsAnalyzed;     // Number of events that were processed to make the Ntuple.

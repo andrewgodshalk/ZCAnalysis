@@ -1,6 +1,6 @@
 /*
   TemplateExtractor.cpp
- 
+
    Created on: May 19, 2015
        Author: godshalk
  */
@@ -20,7 +20,8 @@ using std::stringstream;   using std::string;     using std::cout;   using std::
 using std::endl;           using std::ofstream;   using std::setw;   using std::min   ;
 typedef unsigned int Index;
 
-const std::vector<TString> TemplateExtractor::HFTags = {"NoHF", "SVT", "CSVL", "CSVM", "CSVT", "CSVS"};
+const vector<TString> TemplateExtractor::HFTags  = {"NoHF", "CSVL", "CSVM", "CSVT", "CSVS"};
+const vector<TString> TemplateExtractor::SVTypes = {"noSV", "oldSV", "pfSV", "pfISV", "qcSV", "cISV", "cISVf", "cISVp"};
 
 
 TemplateExtractor::TemplateExtractor(EventHandler& eh, TDirectory* d, TString o) : HistogramExtractor(eh, d, o), tempPrefix("template_")
@@ -31,8 +32,10 @@ TemplateExtractor::TemplateExtractor(EventHandler& eh, TDirectory* d, TString o)
 
     nEvents["Entries Analyzed"           ] = 0;
     nEvents["Valid Z+j Event w/ MET cut" ] = 0;
-    for(const TString& hfLabel : TemplateExtractor::HFTags)
-        nEvents[TString("Valid Z+HF Event w/ MET cut (")+hfLabel+")"] = 0;
+    for(    const TString& hfLabel : TemplateExtractor::HFTags )
+        for(const TString& svLabel : TemplateExtractor::SVTypes)
+            nEvents[TString("Valid Z+HF Event w/ MET cut (")+hfLabel+","+svLabel+")"] = 0;
+    // cout <<  "   HELLO! " << endl;
 
   // Extract options
     usingSim         = (options.Contains("Sim"       , TString::kIgnoreCase) ? true : false);
@@ -44,25 +47,32 @@ TemplateExtractor::TemplateExtractor(EventHandler& eh, TDirectory* d, TString o)
     selectingZb      = (options.Contains("Zb"        , TString::kIgnoreCase) ? true : false);
     selectingZtautau = (options.Contains("Ztautau"   , TString::kIgnoreCase) ? true : false);
 
-  // Create template histograms (one for each operating point)
+  // Create template histograms (one for each HF operating point and SV type)
     hDir->cd();
-    for(const TString& hfLabel : TemplateExtractor::HFTags)
+    for(    const TString& svLabel : TemplateExtractor::SVTypes)
+        for(const TString& hfLabel : TemplateExtractor::HFTags )
     {
-        TString histLabel_msv   = tempPrefix+"msv_"  +hfLabel;
-        TString histLabel_msvqc = tempPrefix+"msvqc_"+hfLabel;
-        h[histLabel_msv  ] = new TH1F(histLabel_msv  , "Jet M_{SV}; M_{SV} (GeV); Events/Bin", 200, 0, 10);
-        h[histLabel_msvqc] = new TH1F(histLabel_msvqc, "Jet M_{SV,QCorr.}; M_{SV,QCorr.} (GeV); Events/Bin", 200, 0, 10);
-        h[histLabel_msv  ]->Sumw2();
-        h[histLabel_msvqc]->Sumw2();
-        hDir->WriteTObject(h[histLabel_msv  ], 0, "Overwrite");
-        hDir->WriteTObject(h[histLabel_msvqc], 0, "Overwrite");
+        TString histLabel_msv = tempPrefix+svLabel+"_"+hfLabel;
+        // cout << "    TemplateExtractor -> Creating histogram: " << histLabel_msv << endl;
+        // Hard code in all the options, because bleh.
+        if(svLabel == "noSV" ) h[histLabel_msv] = new TH1F(histLabel_msv, "Jet M_{SV} ("+svLabel+","+hfLabel+"); M_{SV} (GeV); Events/Bin", 200, 0, 10);
+        if(svLabel == "oldSV") h[histLabel_msv] = new TH1F(histLabel_msv, "Jet M_{SV} ("+svLabel+","+hfLabel+"); M_{SV} (GeV); Events/Bin", 200, 0, 10);
+        if(svLabel == "pfSV" ) h[histLabel_msv] = new TH1F(histLabel_msv, "Jet M_{SV} ("+svLabel+","+hfLabel+"); M_{SV} (GeV); Events/Bin", 200, 0, 10);
+        if(svLabel == "pfISV") h[histLabel_msv] = new TH1F(histLabel_msv, "Jet M_{SV} ("+svLabel+","+hfLabel+"); M_{SV} (GeV); Events/Bin", 200, 0, 10);
+        if(svLabel == "qcSV" ) h[histLabel_msv] = new TH1F(histLabel_msv, "Jet M_{SV} ("+svLabel+","+hfLabel+"); M_{SV} (GeV); Events/Bin", 200, 0, 10);
+        if(svLabel == "cISV" ) h[histLabel_msv] = new TH1F(histLabel_msv, "Jet M_{SV} ("+svLabel+","+hfLabel+"); M_{SV} (GeV); Events/Bin", 400, 0, 20);
+        if(svLabel == "cISVf") h[histLabel_msv] = new TH1F(histLabel_msv, "Jet M_{SV} ("+svLabel+","+hfLabel+"); M_{SV} (GeV); Events/Bin", 400, 0, 20);
+        if(svLabel == "cISVp") h[histLabel_msv] = new TH1F(histLabel_msv, "Jet M_{SV} ("+svLabel+","+hfLabel+"); M_{SV} (GeV); Events/Bin", 400, 0, 20);
+        h[histLabel_msv]->Sumw2();
+        // hDir->WriteTObject(h[histLabel_msv], 0, "Overwrite");
     }
+    // cout << "    TemplateExtractor -> Setup Complete." << endl;
 }
 
 
 void TemplateExtractor::fillHistos()
 {
-//cout << "   TemplateExtractor::fillHistos(): BEGIN (Event = " << nEvents["Entries Analyzed"] << ", w/ options " << options << ")";
+  //cout << "   TemplateExtractor::fillHistos(): BEGIN (Event = " << nEvents["Entries Analyzed"] << ", w/ options " << options << ")";
 
     nEvents["Entries Analyzed"]++;
 
@@ -84,14 +94,18 @@ void TemplateExtractor::fillHistos()
     }
     nEvents["Valid Z+j Event w/ MET cut"]++;
 
-    for(const TString& hfLabel : TemplateExtractor::HFTags)
+    for(    const TString& svLabel : TemplateExtractor::SVTypes)
+        for(const TString& hfLabel : TemplateExtractor::HFTags )
     {
       // Select for Z events with at least one HF jet.
-        if(!evt.hasHFJets[hfLabel]) continue;
-        nEvents[TString("Valid Z+HF Event w/ MET cut (")+hfLabel+")"]++;
+        if(!evt.hasHFJets[hfLabel][svLabel]) continue;
+        nEvents[TString("Valid Z+HF Event w/ MET cut (")+hfLabel+","+svLabel+")"]++;
       // Fill templates!!
-        h[tempPrefix+"msv_"  +hfLabel]->Fill(evt.m_jet_msv[evt.leadHFJet[hfLabel]]);
-        h[tempPrefix+"msvqc_"+hfLabel]->Fill(evt.jet_msv_quickCorr[evt.leadHFJet[hfLabel]]);
+        // h[tempPrefix+"_"+svLabel+"_"+hfLabel]->Fill(evt.m_jet_msv[evt.leadHFJet[hfLabel]]);
+        h[tempPrefix+svLabel+"_"+hfLabel]->Fill(
+            evt.SVVariable[svLabel][evt.leadHFJet[hfLabel][svLabel]],        // Fill using the appropriately specified variable for this SV
+            evtWeight * evt.jetTagEvtWeight[hfLabel.Data()][svLabel.Data()]  // Fill weighted by event and btag/sv SFs.
+        );
     }
 }
 
@@ -99,15 +113,15 @@ void TemplateExtractor::saveToFile()
 {
 
   // Last minute counter.
-    nEvents["Candidates from Ntupler"    ] = evt.entriesInNtuple;
+    nEvents["Candidates from Ntupler"] = evt.entriesInNtuple;
 
   // Move to this plotter's directory, then save each file to the directory or overwrite.
     cout << "   TemplateExtractor::saveToFile(): TEST: Saving to file: " << hDir->GetPath() << endl;
     hDir->cd();
-    for(const auto& hist : h) hist.second->Write("", TObject::kOverwrite);
+    hDir->Write();
+    // for(const auto& hist : h) hist.second->Write("", TObject::kOverwrite);
     cout << "TemplateExtractor Cut Table\n"
             "------------------------------\n";
     for( auto& n : nEvents ) cout << "   " << setw(40) << n.first << "  " << n.second << "\n";
     cout << endl;
 }
-

@@ -29,8 +29,8 @@ typedef unsigned int Index;
 const vector<TString> ControlPlotExtractor::multName  = {"", "_ld"  , "_sl"      , "_ex"   };
 const vector<TString> ControlPlotExtractor::multTitle = {"", "Lead ", "Sub-lead ", "Extra "};
 
-const vector<TString> ControlPlotExtractor::HFTags    = {"NoHF", "SVT", "CSVL", "CSVM", "CSVT", "CSVS"};
-const vector<TString> ControlPlotExtractor::SVType    = {"pfSV", "pfISV", "qcSV", "cISV", "cISVf", "cISVp"};
+const vector<TString> ControlPlotExtractor::HFTags    = {"NoHF", "CSVL", "CSVM", "CSVT", "CSVS"};
+const vector<TString> ControlPlotExtractor::SVTypes   = {"noSV", "oldSV", "pfSV", "pfISV", "qcSV", "cISV", "cISVf", "cISVp"};
 
 ControlPlotExtractor::ControlPlotExtractor(EventHandler& eh, TDirectory* d, TString o) : HistogramExtractor(eh, d, o)
 {
@@ -47,9 +47,10 @@ ControlPlotExtractor::ControlPlotExtractor(EventHandler& eh, TDirectory* d, TStr
     nEvents["Valid Z+j Event"            ] = 0;
     nEvents["Valid Z+j Event w/ MET cut" ] = 0;
     nEvents["Pass JSON"                  ] = 0;
-    for(const TString& hfLabel : ControlPlotExtractor::HFTags)
-    {   nEvents[TString("Valid Z+HF Event("            )+hfLabel+")"] = 0;
-        nEvents[TString("Valid Z+HF Event w/ MET cut (")+hfLabel+")"] = 0;
+    for(    const TString& hfLabel : ControlPlotExtractor::HFTags )
+        for(const TString& svLabel : ControlPlotExtractor::SVTypes)
+    {   nEvents[TString("Valid Z+HF Event("            )+hfLabel+","+svLabel+")"] = 0;
+        nEvents[TString("Valid Z+HF Event w/ MET cut (")+hfLabel+","+svLabel+")"] = 0;
     }
 
   // Extract options
@@ -73,13 +74,15 @@ ControlPlotExtractor::ControlPlotExtractor(EventHandler& eh, TDirectory* d, TStr
     makePhysicsObjectHistograms(            "zpj"    , "(Z+jet Event)"                    );
     makePhysicsObjectHistograms(            "zpjmet" , "(Z+jet w/ MET cut)"               );
 
-    for(const TString& hfLabel : ControlPlotExtractor::HFTags)
-    {   makePhysicsObjectHistograms(            TString("zhf_"   )+hfLabel , TString("(Z+HF) "           )+"("+hfLabel+")"                );
-        makePhysicsObjectHistograms("hfjet"   , TString("zhf_"   )+hfLabel , TString("(Z+HF) "           )+"("+hfLabel+")" , true         );
+    for(    const TString& hfLabel : ControlPlotExtractor::HFTags )
+        for(const TString& svLabel : ControlPlotExtractor::SVTypes)
+    {   makePhysicsObjectHistograms(            TString("zhf_"   )+hfLabel+svLabel , TString("(Z+HF) "           )+"("+hfLabel+","+svLabel+")"                );
+        makePhysicsObjectHistograms("hfjet"   , TString("zhf_"   )+hfLabel+svLabel , TString("(Z+HF) "           )+"("+hfLabel+","+svLabel+")" , true         );
     }
-    for(const TString& hfLabel : ControlPlotExtractor::HFTags)
-    {   makePhysicsObjectHistograms(            TString("zhfmet_")+hfLabel , TString("(Z+HF w/ MET cut) ")+"("+hfLabel+")"                );
-        makePhysicsObjectHistograms("hfjet"   , TString("zhfmet_")+hfLabel , TString("(Z+HF w/ MET cut) ")+"("+hfLabel+")" , true         );
+    for(    const TString& hfLabel : ControlPlotExtractor::HFTags )
+        for(const TString& svLabel : ControlPlotExtractor::SVTypes)
+    {   makePhysicsObjectHistograms(            TString("zhfmet_")+hfLabel+svLabel , TString("(Z+HF w/ MET cut) ")+"("+hfLabel+","+svLabel+")"                );
+        makePhysicsObjectHistograms("hfjet"   , TString("zhfmet_")+hfLabel+svLabel , TString("(Z+HF w/ MET cut) ")+"("+hfLabel+","+svLabel+")" , true         );
     }
 }
 
@@ -154,32 +157,34 @@ void ControlPlotExtractor::fillHistos()
         fillAllObjectHistograms("zpjmet");
     }
 
-    for(const TString& hfLabel : ControlPlotExtractor::HFTags)
+    for(    const TString& hfLabel : ControlPlotExtractor::HFTags )
+        for(const TString& svLabel : ControlPlotExtractor::SVTypes)
     {
       // Select for Z events with at least one HF jet.
-        if(!evt.hasHFJets[hfLabel]) continue;
-        double jetWt = evt.jetTagEvtWeight[hfLabel.Data()];
+        if(!evt.hasHFJets[hfLabel][svLabel]) continue;
+        double jetWt = evt.jetTagEvtWeight[hfLabel.Data()][svLabel.Data()];
         // if(jetWt != 1) cout << "    ControlPlotExtractor(" << options << ")::fillHistos(): Found Z+HF Event (" << evt.m_event << "). Weighting w/ " << jetWt << endl;
         if(TMath::IsNaN(jetWt))
         {   cout << "    ControlPlotExtractor(" << options << ")::fillHistos(): Found Z+HF Event (" << evt.m_event << "). Weighting w/ " << jetWt << endl;
-            double secondaryJetWeight = evt.calculateJetTagEvtWeight(hfLabel.Data(), true);
+            cout << "      Tagging: " << hfLabel << ", " << svLabel << endl;
+            double secondaryJetWeight = evt.calculateJetTagEvtWeight(hfLabel.Data(), svLabel.Data(), true);
             cout << endl;
         }
-        nEvents[TString("Valid Z+HF Event(")+hfLabel+")"]++;
-        fillAllObjectHistograms(TString("zhf_")+hfLabel, jetWt);
+        nEvents[TString("Valid Z+HF Event(")+hfLabel+","+svLabel+")"]++;
+        fillAllObjectHistograms(TString("zhf_")+hfLabel+svLabel, jetWt);
 
       // Select for Z events with at least one HF jet and with the MET cut.
         if(!evt.hasValidMET) continue;
         //cout << "    ControlPlotExtractor(" << options << ")::fillHistos(): Found Z+HF Event w/ min MET." << endl;
-        nEvents[TString("Valid Z+HF Event w/ MET cut (")+hfLabel+")"]++;
-        fillAllObjectHistograms(TString("zhfmet_")+hfLabel, jetWt);
+        nEvents[TString("Valid Z+HF Event w/ MET cut (")+hfLabel+","+svLabel+")"]++;
+        fillAllObjectHistograms(TString("zhfmet_")+hfLabel+svLabel, jetWt);
     }
 }
 
 void ControlPlotExtractor::saveToFile()
 {
   // Last minute counter.
-    nEvents["Candidates from Ntupler"    ] = evt.entriesInNtuple;
+    nEvents["Candidates from Ntupler"] = evt.entriesInNtuple;
 
   // Move to this plotter's directory, then save each file to the directory or overwrite.
     cout << "   ControlPlotExtractor::saveToFile(): TEST: Saving to file: " << hDir->GetPath() << endl;
@@ -347,9 +352,9 @@ void ControlPlotExtractor::fillJetHistograms(TString prefix, float wt)
         h[prefix+"_jet_msv_new"       ]->Fill(evt.m_jet_msv_new        [i], evt.evtWeight*wt);
         h[prefix+"_jet_msv_inc"       ]->Fill(evt.m_jet_msv_inc        [i], evt.evtWeight*wt);
         h[prefix+"_jet_msv_corr"      ]->Fill(evt.m_jet_vtxMassCorr_IVF[i], evt.evtWeight*wt);
-	if(evt.m_jet_vtxCat_IVF[i] == 0)
+        if(evt.m_jet_vtxCat_IVF[i] == 0)
             h[prefix+"_jet_msv_corrFull"  ]->Fill(evt.m_jet_vtxMassCorr_IVF[i], evt.evtWeight*wt);
-	if(evt.m_jet_vtxCat_IVF[i] == 1)
+        if(evt.m_jet_vtxCat_IVF[i] == 1)
             h[prefix+"_jet_msv_corrPseudo"]->Fill(evt.m_jet_vtxMassCorr_IVF[i], evt.evtWeight*wt);
 
      // Select for lead/sublead/extra histograms
@@ -375,50 +380,59 @@ void ControlPlotExtractor::fillJetHistograms(TString prefix, float wt)
             h[prefix+"_jet"+multName[j]+"_msv_corrPseudo_zm"]->Fill(evt.m_jet_vtxMassCorr_IVF[i], evt.evtWeight*wt);
         }
     }
-    if(!prefix.Contains("hf")) return;
-    objsEntered = 0;      // Keeps track of how many objects you've entered for labeling purposes
-    TString hfTag = prefix(prefix.Length()-4, 4);   // Retrieve HF tag from prefix. Prefix should have form "pfx_CSVT"
-    if(hfTag == "_SVT") hfTag = "SVT";
+    if(!prefix.Contains("zhf")) return;
+    objsEntered = 0;      // Keeps track of how many objects you've entered for lead/sublead/extra labeling
+
+  // Get the hfTag and svType from prefix.
+  // Of some format like "zhf(met)_CSVTpfISV"
+    int hfssStartIndex = (prefix.Contains("zhfmet_") ? 7 : 4);
+    int svssLength = prefix.Length()-hfssStartIndex;
+    TString hfTag  = prefix(hfssStartIndex, 4);
+    TString svType = prefix(hfssStartIndex+4, svssLength);
+
     //cout << hfTag << endl;
     for(int i=0; i<evt.validJets.size(); i++)
     { // Cycle through valid jet listings.
-        if(!evt.HFJets[hfTag][i]) continue;     // If this jet doesn't have the appropriate tag, continue.
+        if(!evt.HFJets[hfTag][svType][i]) continue;     // If this jet doesn't have the appropriate tag, continue.
         Index k = evt.validJets[i];
-        h[prefix+"_hfjet_pt"   ]->Fill(evt.m_jet_pt [k], evt.evtWeight*wt);
-        h[prefix+"_hfjet_eta"  ]->Fill(evt.m_jet_eta[k], evt.evtWeight*wt);
-        h[prefix+"_hfjet_phi"  ]->Fill(evt.m_jet_phi[k], evt.evtWeight*wt);
-        h[prefix+"_hfjet_csv"  ]->Fill(evt.m_jet_csv[k], evt.evtWeight*wt);
-        h[prefix+"_hfjet_msv"  ]->Fill(evt.m_jet_msv[k], evt.evtWeight*wt);
-        h[prefix+"_hfjet_msvqc"]->Fill(evt.jet_msv_quickCorr[k], evt.evtWeight*wt);
-        h[prefix+"_hfjet_msv_new"       ]->Fill(evt.m_jet_msv_new        [i], evt.evtWeight*wt);
-        h[prefix+"_hfjet_msv_inc"       ]->Fill(evt.m_jet_msv_inc        [i], evt.evtWeight*wt);
-        h[prefix+"_hfjet_msv_corr"      ]->Fill(evt.m_jet_vtxMassCorr_IVF[i], evt.evtWeight*wt);
-        h[prefix+"_hfjet_msv_corr_zm"   ]->Fill(evt.m_jet_vtxMassCorr_IVF[i], evt.evtWeight*wt);
-        if(evt.m_jet_vtxCat_IVF[i] == 0)
-        {
-            h[prefix+"_hfjet_msv_corrFull"   ]->Fill(evt.m_jet_vtxMassCorr_IVF[i], evt.evtWeight*wt);
-            h[prefix+"_hfjet_msv_corrFull_zm"]->Fill(evt.m_jet_vtxMassCorr_IVF[i], evt.evtWeight*wt);
+        h[prefix+"_hfjet_pt"         ]->Fill(evt.m_jet_pt             [k], evt.evtWeight*wt);
+        h[prefix+"_hfjet_eta"        ]->Fill(evt.m_jet_eta            [k], evt.evtWeight*wt);
+        h[prefix+"_hfjet_phi"        ]->Fill(evt.m_jet_phi            [k], evt.evtWeight*wt);
+        h[prefix+"_hfjet_csv"        ]->Fill(evt.m_jet_csv            [k], evt.evtWeight*wt);
+        h[prefix+"_hfjet_msv"        ]->Fill(evt.m_jet_msv            [k], evt.evtWeight*wt);
+        h[prefix+"_hfjet_msvqc"      ]->Fill(evt.jet_msv_quickCorr    [k], evt.evtWeight*wt);
+        h[prefix+"_hfjet_msv_new"    ]->Fill(evt.m_jet_msv_new        [k], evt.evtWeight*wt);
+        h[prefix+"_hfjet_msv_inc"    ]->Fill(evt.m_jet_msv_inc        [k], evt.evtWeight*wt);
+        h[prefix+"_hfjet_msv_corr"   ]->Fill(evt.m_jet_vtxMassCorr_IVF[k], evt.evtWeight*wt);
+        h[prefix+"_hfjet_msv_corr_zm"]->Fill(evt.m_jet_vtxMassCorr_IVF[k], evt.evtWeight*wt);
+        if(evt.m_jet_vtxCat_IVF[k] == 0)
+        {   h[prefix+"_hfjet_msv_corrFull"   ]->Fill(evt.m_jet_vtxMassCorr_IVF[k], evt.evtWeight*wt);
+            h[prefix+"_hfjet_msv_corrFull_zm"]->Fill(evt.m_jet_vtxMassCorr_IVF[k], evt.evtWeight*wt);
         }
-        if(evt.m_jet_vtxCat_IVF[i] == 1)
-        {
-            h[prefix+"_hfjet_msv_corrPseudo"   ]->Fill(evt.m_jet_vtxMassCorr_IVF[i], evt.evtWeight*wt);
-            h[prefix+"_hfjet_msv_corrPseudo_zm"]->Fill(evt.m_jet_vtxMassCorr_IVF[i], evt.evtWeight*wt);
+        if(evt.m_jet_vtxCat_IVF[k] == 1)
+        {   h[prefix+"_hfjet_msv_corrPseudo"   ]->Fill(evt.m_jet_vtxMassCorr_IVF[k], evt.evtWeight*wt);
+            h[prefix+"_hfjet_msv_corrPseudo_zm"]->Fill(evt.m_jet_vtxMassCorr_IVF[k], evt.evtWeight*wt);
         }
       // Select for lead/sublead/extra histograms
         int j = min(++objsEntered, 3);
-        h[prefix+"_hfjet"+multName[j]+"_pt"   ]->Fill(evt.m_jet_pt [k], evt.evtWeight*wt);
-        h[prefix+"_hfjet"+multName[j]+"_eta"  ]->Fill(evt.m_jet_eta[k], evt.evtWeight*wt);
-        h[prefix+"_hfjet"+multName[j]+"_phi"  ]->Fill(evt.m_jet_phi[k], evt.evtWeight*wt);
-        h[prefix+"_hfjet"+multName[j]+"_csv"  ]->Fill(evt.m_jet_csv[k], evt.evtWeight*wt);
-        h[prefix+"_hfjet"+multName[j]+"_msv"  ]->Fill(evt.m_jet_msv[k], evt.evtWeight*wt);
-        h[prefix+"_hfjet"+multName[j]+"_msvqc"]->Fill(evt.jet_msv_quickCorr[k], evt.evtWeight*wt);
-        h[prefix+"_hfjet"+multName[j]+"_msv_new"       ]->Fill(evt.m_jet_msv_new        [i], evt.evtWeight*wt);
-        h[prefix+"_hfjet"+multName[j]+"_msv_inc"       ]->Fill(evt.m_jet_msv_inc        [i], evt.evtWeight*wt);
-        h[prefix+"_hfjet"+multName[j]+"_msv_corr"      ]->Fill(evt.m_jet_vtxMassCorr_IVF[i], evt.evtWeight*wt);
-	if(evt.m_jet_vtxCat_IVF[i] == 0)
-            h[prefix+"_hfjet"+multName[j]+"_msv_corrFull"  ]->Fill(evt.m_jet_vtxMassCorr_IVF[i], evt.evtWeight*wt);
-	if(evt.m_jet_vtxCat_IVF[i] == 1)
-            h[prefix+"_hfjet"+multName[j]+"_msv_corrPseudo"]->Fill(evt.m_jet_vtxMassCorr_IVF[i], evt.evtWeight*wt);
+        h[prefix+"_hfjet"+multName[j]+"_pt"         ]->Fill(evt.m_jet_pt             [k], evt.evtWeight*wt);
+        h[prefix+"_hfjet"+multName[j]+"_eta"        ]->Fill(evt.m_jet_eta            [k], evt.evtWeight*wt);
+        h[prefix+"_hfjet"+multName[j]+"_phi"        ]->Fill(evt.m_jet_phi            [k], evt.evtWeight*wt);
+        h[prefix+"_hfjet"+multName[j]+"_csv"        ]->Fill(evt.m_jet_csv            [k], evt.evtWeight*wt);
+        h[prefix+"_hfjet"+multName[j]+"_msv"        ]->Fill(evt.m_jet_msv            [k], evt.evtWeight*wt);
+        h[prefix+"_hfjet"+multName[j]+"_msvqc"      ]->Fill(evt.jet_msv_quickCorr    [k], evt.evtWeight*wt);
+        h[prefix+"_hfjet"+multName[j]+"_msv_new"    ]->Fill(evt.m_jet_msv_new        [k], evt.evtWeight*wt);
+        h[prefix+"_hfjet"+multName[j]+"_msv_inc"    ]->Fill(evt.m_jet_msv_inc        [k], evt.evtWeight*wt);
+        h[prefix+"_hfjet"+multName[j]+"_msv_corr"   ]->Fill(evt.m_jet_vtxMassCorr_IVF[k], evt.evtWeight*wt);
+        h[prefix+"_hfjet"+multName[j]+"_msv_corr_zm"]->Fill(evt.m_jet_vtxMassCorr_IVF[k], evt.evtWeight*wt);
+        if(evt.m_jet_vtxCat_IVF[k] == 0)
+        {   h[prefix+"_hfjet"+multName[j]+"_msv_corrFull"   ]->Fill(evt.m_jet_vtxMassCorr_IVF[k], evt.evtWeight*wt);
+            h[prefix+"_hfjet"+multName[j]+"_msv_corrFull_zm"]->Fill(evt.m_jet_vtxMassCorr_IVF[k], evt.evtWeight*wt);
+        }
+        if(evt.m_jet_vtxCat_IVF[k] == 1)
+        {   h[prefix+"_hfjet"+multName[j]+"_msv_corrPseudo"   ]->Fill(evt.m_jet_vtxMassCorr_IVF[k], evt.evtWeight*wt);
+            h[prefix+"_hfjet"+multName[j]+"_msv_corrPseudo_zm"]->Fill(evt.m_jet_vtxMassCorr_IVF[k], evt.evtWeight*wt);
+        }
     }
     h[prefix+"_hfjet_mult"]->Fill(objsEntered, evt.evtWeight*wt);     // Fill hf mult with the number of hf jets entered.
 }

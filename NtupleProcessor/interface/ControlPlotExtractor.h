@@ -47,7 +47,7 @@ private:
     static const std::vector<TString> multName ;
     static const std::vector<TString> multTitle;
     static const std::vector<TString> HFTags;
-    static const std::vector<TString> SVType;
+    static const std::vector<TString> SVTypes;
     //static const vector<TString> numLabel = {"_1st", "_2nd", "_3rd", "_4th", "_5th", "_6th", "_7th", "_8th", "_9th"};
 
     TString csvOpPt       ;
