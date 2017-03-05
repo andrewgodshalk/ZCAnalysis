@@ -58,7 +58,8 @@ class ControlPlotMaker
     std::vector<std::string> allDatasets;
 
     void setDatasetDir(std::string, std::string);      // Sets up sources and histograms styles;
-    TH1* createStackHisto(std::string&, TString&);   // Sets up a histogram from file given the proper dataset and histogram name.
+    // TH1* createStackHisto(std::string&, TString&);   // Sets up a histogram from file given the proper dataset and histogram name.
+    TH1* createStackHisto(std::string&, TString&, TString&);   // Sets up a histogram from file given the proper dataset and histogram name.
     TH1F* createRatioPlot(TH1F*, TH1F*);
     TH1F* createSimSumPlot(THStack*);
 
