@@ -25,7 +25,7 @@ using std::map;
 typedef unsigned int Index;
 
 const vector<TString> EffPlotExtractor::HFTags = {"NoHF", "CSVL", "CSVM", "CSVT", "CSVS"};
-const vector<TString> EffPlotExtractor::SVTypes= {"noSV", "pfSV", "pfISV", "qcSV", "cISV", "cISVf", "cISVp"};
+const vector<TString> EffPlotExtractor::SVTypes= {"noSV", "oldSV", "pfSV", "pfISV", "qcSV", "cISV", "cISVf", "cISVp"};
 
 const vector<float> EffPlotExtractor::sf_b_ptmin = { 20, 30, 40, 50, 60, 70,  80, 100, 120, 160, 210, 260, 320, 400, 500, 600 };
 const vector<float> EffPlotExtractor::sf_b_ptmax = { 30, 40, 50, 60, 70, 80, 100, 120, 160, 210, 260, 320, 400, 500, 600, 800 };
