@@ -57,13 +57,14 @@ EffPlotAndCalc::EffPlotAndCalc(int argc, char* argv[])
   // Attempt to open input file and output file.
     cout << "  Opening file: " << fn_input_ << "..." << endl;
     f_input_  = TFile::Open(fn_input_ .c_str());
-    cout << "  Output to file: " << fn_output_ << "..." << endl;
+    cout << "  Output to file: " << fn_output_ << "...\n" << endl;
     f_output_ = TFile::Open(fn_output_.c_str(), "RECREATE"); f_output_->cd();
 
   // Set up output histograms
     array<char,3>   flavors = {'l','c','b'};
-    vector<TString> tags    = {"NoHF","SVT","CSVL","CSVM","CSVT", "CSVS"};
-  //  vector<TString> tags    = {"NoHF","SVT","CSVT"};
+    // const vector<TString> svTypes = {"noSV", "oldSV", "pfSV", "pfISV", "qcSV", "cISV", "cISVf", "cISVp"};
+    const vector<TString> svTypes = {"noSV", "pfSV", "pfISV", "qcSV", "cISV", "cISVf", "cISVp"};
+    const vector<TString> tags    = {"NoHF","CSVL","CSVM","CSVT", "CSVS"};
     for( char& f : flavors)
     {   h_nJets[f]  =    (TH2F*) h_temp_ ->Clone(TString::Format("h_n%cJets", f));
         hr_nJets[f] =    (TH2F*) f_input_->Get(  TString::Format("raw_eff_plots/dy/Zuu_Z%c/n_%cJets_2D", f, f))
@@ -71,17 +72,18 @@ EffPlotAndCalc::EffPlotAndCalc(int argc, char* argv[])
         hr_nJets[f]->Add((TH2F*) f_input_->Get(  TString::Format("raw_eff_plots/dy/Zee_Z%c/n_%cJets_2D", f, f)));
       // Rebin plots
         transferContents(hr_nJets[f], h_nJets[f]);
-        for( TString & tag : tags )
-        {
-            h_nTaggedJets [f][tag] =    (TH2F*) h_temp_ ->Clone(TString::Format("h_nt%cJets_%s"                             ,f,tag.Data()));
-            hr_nTaggedJets[f][tag] =    (TH2F*) f_input_->Get(  TString::Format("raw_eff_plots/dy/Zuu_Z%c/nt_%cJets_2D_%s",f,f,tag.Data()))
-                                                        ->Clone(TString::Format("nt_%cJets_2D_%s_comb",f,tag.Data()));
-            hr_nTaggedJets[f][tag]->Add((TH2F*) f_input_->Get(  TString::Format("raw_eff_plots/dy/Zee_Z%c/nt_%cJets_2D_%s",f,f,tag.Data())));
+        for( const TString & tag : tags )
+            for( const TString & sv : svTypes)
+        {   cout << "\tCreating Eff. for conditions: " << f << "," << tag << "," << sv << "..." << endl;
+            h_nTaggedJets [f][tag][sv] =    (TH2F*) h_temp_ ->Clone(TString::Format("h_nt%cJets_%s%s"                             ,f,tag.Data(),sv.Data()));
+            hr_nTaggedJets[f][tag][sv] =    (TH2F*) f_input_->Get(  TString::Format("raw_eff_plots/dy/Zuu_Z%c/nt_%cJets_2D_%s%s",f,f,tag.Data(),sv.Data()))
+                                                        ->Clone(TString::Format("nt_%cJets_2D_%s%s_comb",f,tag.Data(),sv.Data()));
+            hr_nTaggedJets[f][tag][sv]->Add((TH2F*) f_input_->Get(  TString::Format("raw_eff_plots/dy/Zee_Z%c/nt_%cJets_2D_%s%s",f,f,tag.Data(),sv.Data())));
           // Rebin plots
-            transferContents(hr_nTaggedJets [f][tag], h_nTaggedJets[f][tag]);
+            transferContents(hr_nTaggedJets [f][tag][sv], h_nTaggedJets[f][tag][sv]);
           // Make eff plot
-            h_JetTagEff[f][tag] = makeEffPlots(TString::Format("h_%cJetTagEff_%s",f,tag.Data()), h_nTaggedJets[f][tag], h_nJets[f]);
-            printPlotValues(h_JetTagEff[f][tag]);
+            h_JetTagEff[f][tag][sv] = makeEffPlots(TString::Format("h_%cJetTagEff_%s%s",f,tag.Data(),sv.Data()), h_nTaggedJets[f][tag][sv], h_nJets[f]);
+            printPlotValues(h_JetTagEff[f][tag][sv]);
         }
     }
 
@@ -89,9 +91,11 @@ EffPlotAndCalc::EffPlotAndCalc(int argc, char* argv[])
     for( char& f : flavors)
     {   //h_nJets [f]->Write();
         //hr_nJets[f]->Write();
-        for( TString & tag : tags ) h_JetTagEff   [f][tag]->Write();
-        // for( TString & tag : tags ) h_nTaggedJets [f][tag]->Write();
-        // for( TString & tag : tags ) hr_nTaggedJets[f][tag]->Write();
+        for( const TString & tag : tags )
+            for( const TString & sv : svTypes)
+                h_JetTagEff[f][tag][sv]->Write();
+        // for( const TString & tag : tags ) h_nTaggedJets [f][tag]->Write();
+        // for( const TString & tag : tags ) hr_nTaggedJets[f][tag]->Write();
     }
     f_output_->Close();
 

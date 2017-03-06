@@ -43,11 +43,11 @@ private:
     double ptBinBounds_[];
     double etaBinBounds_[];
 
-    std::map<char, TH2F*>  h_nJets;   // h_nJets[Flavor]
-    std::map<char, TH2F*> hr_nJets;   // h_nJets[Flavor]
-    std::map<char, std::map<TString,TH2F*> >  h_nTaggedJets;  // h_nTaggedJets[Flavor][Tag]
-    std::map<char, std::map<TString,TH2F*> > hr_nTaggedJets;  // h_nTaggedJets[Flavor][Tag]
-    std::map<char, std::map<TString,TH2F*> >  h_JetTagEff  ;  // h_JetTagEff[Flavor][Tag]
+    std::map<char, TH2F*> hr_nJets;   // hr_nJets[Flavor]   Storage for plot from root file, with original binning.
+    std::map<char, TH2F*>  h_nJets;   // h_nJets[Flavor]    Storage for new # of jet plots, with new binning.
+    std::map<char, std::map<TString, std::map< TString, TH2F*> > >  h_nTaggedJets;  // h_nTaggedJets[Flavor][Tag][SVType]
+    std::map<char, std::map<TString, std::map< TString, TH2F*> > > hr_nTaggedJets;  // h_nTaggedJets[Flavor][Tag][SVType]
+    std::map<char, std::map<TString, std::map< TString, TH2F*> > >  h_JetTagEff  ;  // h_JetTagEff  [Flavor][Tag][SVType]
     TFile* f_input_;
     TFile* f_output_;
     std::string fn_input_;
