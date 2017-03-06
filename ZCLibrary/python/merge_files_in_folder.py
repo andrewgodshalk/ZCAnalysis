@@ -24,11 +24,17 @@ def merge_file_in_folder(folder) :
         os.system("rm {}".format(fn_combo))
 
   # Create new combo file from all files in folder.
-    os.system("hadd {} {}/*.root".format(fn_combo, folder))
+    print "  Combining files in", folder
+    print "  New file name:", fn_combo
+    hadd_cmd = "hadd {} {}/*.root".format(fn_combo, folder)
+    #hadd_cmd = "hadd %s %s/*.root" % fn_combo, folder
+    print "  Command:", hadd_cmd
+    #os.system("hadd {} {}/*.root".format(fn_combo, folder))
+    os.system(hadd_cmd)
 
 # === MAIN DEF ============================================================
 if __name__ == "__main__" :
     if len(sys.argv) != 2 : print "ERROR: Please specify a directory"
     else :
-        print sys.argv[1]
+        #print sys.argv[1]
         merge_file_in_folder(sys.argv[1])
