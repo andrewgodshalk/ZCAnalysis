@@ -31,7 +31,7 @@ class JetTagWeight
 
     bool  setEffFile(const std::string&);
     bool  setSFFile( const std::string&);
-    float getJetEff( char, std::string opPt, float, float);
+    float getJetEff( char, std::string opPt, std::string svType, float, float);
     float getJetSF ( char, std::string opPt, float, float, std::string type="central");
 
   private:
@@ -54,7 +54,9 @@ class JetTagWeight
     std::map<char, std::string> flvSet_ ;  // Set to load for a given flavor.
     std::vector<char> flavor_;
     std::vector<std::string> opPt_;
-    std::map<char, std::map<std::string, TH2F*> > jetTagEff_;
+    std::vector<std::string> svTypes_;
+    // std::map<char, std::map<std::string, TH2F*> > jetTagEff_;
+    std::map<char, std::map<std::string, std::map<std::string, TH2F*> > > jetTagEff_;
 };
 
 #endif

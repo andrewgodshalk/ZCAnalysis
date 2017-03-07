@@ -23,7 +23,8 @@ using std::setw;   using std::setprecision;
 using std::sqrt;   using std::string;
 
 const vector<TString> EventHandler::HFTags = {"NoHF", "CSVL", "CSVM", "CSVT", "CSVS"};
-const vector<TString> EventHandler::SVType = {"noSV", "oldSV", "pfSV", "pfISV", "qcSV", "cISV", "cISVf", "cISVp"};
+// const vector<TString> EventHandler::SVType = {"noSV", "oldSV", "pfSV", "pfISV", "qcSV", "cISV", "cISVf", "cISVp"};
+const vector<TString> EventHandler::SVType = {"noSV", "pfSV", "pfISV", "qcSV", "cISV", "cISVf", "cISVp"};
 
 EventHandler::EventHandler(TString fnac, TString o) : anCfg(fnac), options(o)
 {
@@ -588,7 +589,7 @@ float EventHandler::calculateJetTagEvtWeight(string hfOpPt, string svOpPt, bool 
            default: flv = 'l';
         }
       // Get the jet tagging efficiency and SF
-        float jetEff = anCfg.jetTagWeight.getJetEff(flv, hfOpPt, m_jet_pt[jet_i], m_jet_eta[jet_i]);
+        float jetEff = anCfg.jetTagWeight.getJetEff(flv, hfOpPt, svOpPt, m_jet_pt[jet_i], m_jet_eta[jet_i]);
         float jetSF  = anCfg.jetTagWeight.getJetSF (flv, hfOpPt, m_jet_pt[jet_i], m_jet_eta[jet_i]);
 
       // Get whether this jet was tagged or not.
