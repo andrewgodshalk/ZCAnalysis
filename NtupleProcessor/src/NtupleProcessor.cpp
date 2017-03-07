@@ -113,21 +113,30 @@ void NtupleProcessor::createHistogramExtractorFromString(TString& inputString)
 
   // Create different options based on dataset.
     vector<TString> dsOptions;
+    vector<TString> effDsOptions;
 
     // For each sim set, split by Zuu and Zee
     if(dataset.Contains("muon") || usingSim) dsOptions.push_back("Zuu");
     if(dataset.Contains("elec") || usingSim) dsOptions.push_back("Zee");
+    effDsOptions = dsOptions;
     // For DY, split by {Zuu, Zee}x{Total, Ztautau, Z+l, Z+c, Z+b}
     if(usingDY)
-    {
-        dsOptions.push_back("Zuu_Ztautau");
-        dsOptions.push_back("Zee_Ztautau");
+    {   // dsOptions.push_back("Zuu_Ztautau");
+        // dsOptions.push_back("Zee_Ztautau");
         dsOptions.push_back("Zuu_Zl"    );
         dsOptions.push_back("Zuu_Zc"    );
         dsOptions.push_back("Zuu_Zb"    );
         dsOptions.push_back("Zee_Zl"    );
         dsOptions.push_back("Zee_Zc"    );
         dsOptions.push_back("Zee_Zb"    );
+    }
+    if(usingSim) // Push back extra datasets for efficiency if using simulation
+    {   effDsOptions.push_back("Zuu_Zl"    );
+        effDsOptions.push_back("Zuu_Zc"    );
+        effDsOptions.push_back("Zuu_Zb"    );
+        effDsOptions.push_back("Zee_Zl"    );
+        effDsOptions.push_back("Zee_Zc"    );
+        effDsOptions.push_back("Zee_Zb"    );
     }
 
     if(inputString == "ControlPlotExtractor")
@@ -163,7 +172,7 @@ void NtupleProcessor::createHistogramExtractorFromString(TString& inputString)
     if(inputString == "EffPlotExtractor")
     {
         TString dirName = "raw_eff_plots/";
-        for(TString dsOp : dsOptions)
+        for(TString dsOp : effDsOptions)
         {
             TString datasetLabel = dataset;
             if(dataset(0,2) == "dy"    ) datasetLabel = "dy"    ;
