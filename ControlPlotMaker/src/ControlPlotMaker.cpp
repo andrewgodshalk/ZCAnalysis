@@ -39,7 +39,7 @@ ControlPlotMaker::ControlPlotMaker(TString fnac, TString fni, TString fno, TStri
   // Set up lists of datasets
   //   //bkgdDatasets = {"zz", "wz", "ww", "ttlep", "ttsemi", "tthad", "t_s", "t_t", "t_tw", "tbar_s", "tbar_t", "tbar_tw"};
     bkgdDatasets = {"zz", "wz", "ww", "tt"};
-    if(splitTauDecayFromDY) bkgdDatasets.push_back("dy_tautau");
+    //if(splitTauDecayFromDY) bkgdDatasets.push_back("dy_tautau");
     if(splitDYByFlavor) sigDatasets = {"dy_Zl", "dy_Zc", "dy_Zb"};
     else                sigDatasets = {"dy"};
     dataDatasets = {"muon", "elec"};
@@ -88,7 +88,7 @@ ControlPlotMaker::ControlPlotMaker(TString fnac, TString fni, TString fno, TStri
 
       // Get list of selection sub directories (from data directory, arbitrarily. Should have same in each directory).
         TList* selectionSubDirList = dsDirectory[allDatasets[0]]->GetListOfKeys();
-        selectionSubDirList->Print();
+        // selectionSubDirList->Print();
 
       // Iterate through sub directories.
         TIter nextSubDir(selectionSubDirList);
@@ -101,7 +101,7 @@ ControlPlotMaker::ControlPlotMaker(TString fnac, TString fni, TString fno, TStri
             selectionSubDir  = outDir->mkdir(selectionDirName);
             selectionSubDir->cd();
             cout << "  ControlPlotMaker::ControlPlotMaker(): Processing selection directory: " << templateSubDir->GetName()
-                 << "(" << templateSubDir->ClassName() << ")"<< endl;
+                 << " (" << templateSubDir->ClassName() << ")"<< endl;
             templateSubDir = dsDirectory[allDatasets[0]]->GetDirectory(selectionDirName);
 
           // Get list of histgrams (from data directory, arbitrarily. Should have same in each directory).
@@ -266,6 +266,7 @@ void ControlPlotMaker::setDatasetDir(string ds, string decayChain)
 TH1* ControlPlotMaker::createStackHisto(string& ds, TString& selectionName, TString& histName)
 { // Sets up a histogram from file given the proper dataset and histogram name.
   // Create a clone to the appropriate histogram,
+    // cout << "      Attempting to retrieve from " << ds << ": " << histName << "..." << endl;
     TH1* h = (TH1*)(dsDirectory[ds]->GetDirectory(selectionName)->Get(histName)->Clone(ds+"_"+histName));
 
   // If hist is at the zhf level, rebin to make it a bit more reasonable.

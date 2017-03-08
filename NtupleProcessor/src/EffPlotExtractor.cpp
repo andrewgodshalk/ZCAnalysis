@@ -208,8 +208,10 @@ void EffPlotExtractor::fillHistos()
             float sfb_wt = 0;
             float sfb_er = 0;       // 2016-02-18 - jets added to histograms, weighted by HFTag SF from https://twiki.cern.ch/twiki/bin/viewauth/CMS/BtagRecommendation53X
             if(selectingZb)
-            {   jet_pt  = evt.m_jet_pt [evt.validJets[evt.leadBJet]];
-                jet_eta = evt.m_jet_eta[evt.validJets[evt.leadBJet]];
+            {   // jet_pt  = evt.m_jet_pt [evt.validJets[evt.leadBJet]];
+                // jet_eta = evt.m_jet_eta[evt.validJets[evt.leadBJet]];
+                jet_pt  = evt.m_jet_pt [evt.validJets[0]];   // Repeated rookie mistake from run I.
+                jet_eta = evt.m_jet_eta[evt.validJets[0]];   // Filled with event's leading jet, not with leading flavored jet.
                 h[TString("nt_ZbEvents_")+hfLabel+svLabel]->Fill(jet_pt, evtWeight*evt_tag_wt);
                 //((TH2*)h[TString("nt_ZbEvents_2D_")+hfLabel])->Fill(jet_pt, jet_eta);
                 for(Index i = 0; i<evt.validJets.size(); i++)       // Cycle over all jets and fill when appropriate.
@@ -222,8 +224,10 @@ void EffPlotExtractor::fillHistos()
                 }
             }
             if(selectingZc)
-            {   jet_pt  = evt.m_jet_pt [evt.validJets[evt.leadCJet]];
-                jet_eta = evt.m_jet_eta[evt.validJets[evt.leadCJet]];
+            {   // jet_pt  = evt.m_jet_pt [evt.validJets[evt.leadCJet]];
+                // jet_eta = evt.m_jet_eta[evt.validJets[evt.leadCJet]];
+                jet_pt  = evt.m_jet_pt [evt.validJets[0]];   // Repeated rookie mistake from run I.
+                jet_eta = evt.m_jet_eta[evt.validJets[0]];   // Filled with event's leading jet, not with leading flavored jet.
                 h[TString("nt_ZcEvents_")+hfLabel+svLabel]->Fill(jet_pt, evtWeight*evt_tag_wt);
                 //((TH2*)h[TString("nt_ZcEvents_2D_")+hfLabel])->Fill(jet_pt, jet_eta , evtWeight);
                 for(Index i = 0; i<evt.validJets.size(); i++)       // Cycle over all jets and fill when appropriate.
@@ -236,7 +240,7 @@ void EffPlotExtractor::fillHistos()
                 }
             }
             if(selectingZl)
-            {   h[TString("nt_ZlEvents_")+hfLabel+svLabel]->Fill(evt.m_jet_pt [evt.validJets[0]] , evtWeight*evt_tag_wt);
+            {   h[TString("nt_ZlEvents_")+hfLabel+svLabel]->Fill(evt.m_jet_pt[evt.validJets[0]] , evtWeight*evt_tag_wt);
                 //((TH2*)h[TString("nt_ZlEvents_2D_")+hfLabel])->Fill(evt.m_jet_eta[evt.validJets[0]] , evtWeight);
                 for(Index i = 0; i<evt.validJets.size(); i++)       // Cycle over all jets and fill when appropriate.
                 {   if(!evt.lMCJets[i]) continue;

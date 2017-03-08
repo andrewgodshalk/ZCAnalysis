@@ -43,7 +43,7 @@ EffPlotAndCalc::EffPlotAndCalc(int argc, char* argv[])
   // Handle commandl line input
     if(!processCommandLineInput(argc, argv)) throw("help");
 
-  // Set up templates for efficiency histograms.
+  // Set up templates for jet efficiency histograms.
     int    nPtBins_  = 7;
     int    nEtaBins_ = 1;
     double ptBinBounds_[]  = {30,50,70,100,140,200,300,670};

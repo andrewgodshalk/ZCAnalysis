@@ -289,6 +289,7 @@ void EventHandler::evalCriteria()
   // Apply puWeight on Sim
     if(usingSim)
         evtWeight*=m_puWeight;
+        // evtWeight*=calculatePUReweight();
 
   // Check JSON if working with a data event.
     if(usingSim) inJSON = false;       // If using simulation, automatically set the JSON variable to false.
