@@ -9,6 +9,19 @@
 
 const bool useDY1J = false;
 
+// const string tempName = "zhfmet_CSVMpfSV_hfjet_ld_msv_new";       const string selectionName = "zhfmet_CSVMpfSV";
+// const string tempName = "zhfmet_CSVMpfISV_hfjet_ld_msv_inc";      const string selectionName = "zhfmet_CSVMpfISV";
+// const string tempName = "zhfmet_CSVMcISV_hfjet_ld_msv_corr";      const string selectionName = "zhfmet_CSVMcISV";
+const string tempName = "zhfmet_CSVMcISV_hfjet_ld_msv_corr_zm";   const string selectionName = "zhfmet_CSVMcISV";
+
+// WEIGHTS: 2017-03-09 DoubleMuonB-H
+const double tt_wt = 0.399686357943681;
+const double ww_wt = 0.540890183560005;
+const double wz_wt = 0.438068552707492;
+const double zz_wt = 0.298051334164614;
+
+
+
 // Spits out date and time, by default in YYYY-MM-DD HH:MM:SS
 string timeStamp(char d = '-', char b = ' ', char t = ':');
 // Spits out date and time, by default in YYYY-MM-DD_HH_MM_SS, for use in filenames
@@ -83,7 +96,6 @@ string templateFitter(TString plotName, TH1F* h_sample, TH1F* h_b, TH1F* h_c, TH
     float nBjet = btemp->Integral();  //btemp->Scale(1.0/nBjet);
     float nCjet = ctemp->Integral();  //ctemp->Scale(1.0/nCjet);
     float nLjet = ltemp->Integral();  //ltemp->Scale(1.0/nLjet);
-    int   nBins = data->GetNbinsX();
     //h_b  ->Scale(0.7*nData/nBjet);
     //h_c  ->Scale(0.2*nData/nCjet);
     //h_l  ->Scale(0.1*nData/nLjet);
@@ -99,6 +111,7 @@ string templateFitter(TString plotName, TH1F* h_sample, TH1F* h_b, TH1F* h_c, TH
     btemp->Rebin(rebin);  //inflateError(btemp);
     ctemp->Rebin(rebin);  //inflateError(ctemp);
     ltemp->Rebin(rebin);  //inflateError(ltemp);
+    int   nBins = data->GetNbinsX();
 
   // Scale templates to data based on approximate fractions.
     //btemp->Scale(0.7*nData/nBjet);
@@ -152,10 +165,11 @@ string templateFitter(TString plotName, TH1F* h_sample, TH1F* h_b, TH1F* h_c, TH
     fit->Constrain(1, 0.00001, 0.99999);
     fit->Constrain(2, 0.00001, 0.99999);
     // Extract the number of bins in data, then Set the range of the fit to exclude first and last (underflow and overflow) bins.
-    fit->SetRangeX(1,nBins);
+    // fit->SetRangeX(1,nBins);
+    fit->SetRangeX(1,nBins*6/20);
 
     for(int i=0; i<=nBins+1; i++)  // Exclude bins w/ negative values in data-bkgd from fitting.
-        if(data->GetBinContent(i)<0)
+        if(data->GetBinContent(i)<0 || btemp->GetBinContent(i)<0 || ctemp->GetBinContent(i)<0 || ltemp->GetBinContent(i)<0)
             fit->ExcludeBin(i);
 
 
@@ -239,9 +253,12 @@ string templateFitter(TString plotName, TH1F* h_sample, TH1F* h_b, TH1F* h_c, TH
     result->Draw("e");
 
   // Create new, filled versions of the templates for the stack
-    TH1F *btempFilled = (TH1F*) btemp->Clone("btemp_filled"); btempFilled->SetFillColor(46);  stackedTemps->Add(btempFilled); //btempFilled->SetLineWidth(0);
-    TH1F *ctempFilled = (TH1F*) ctemp->Clone("ctemp_filled"); ctempFilled->SetFillColor(38);  stackedTemps->Add(ctempFilled); //ctempFilled->SetLineWidth(0);
-    TH1F *ltempFilled = (TH1F*) ltemp->Clone("ltemp_filled"); ltempFilled->SetFillColor(30);  stackedTemps->Add(ltempFilled); //ltempFilled->SetLineWidth(0);
+    TH1F *btempFilled = (TH1F*) btemp->Clone("btemp_filled"); btempFilled->SetFillColor(46);  //btempFilled->SetLineWidth(0);
+    TH1F *ctempFilled = (TH1F*) ctemp->Clone("ctemp_filled"); ctempFilled->SetFillColor(38);  //ctempFilled->SetLineWidth(0);
+    TH1F *ltempFilled = (TH1F*) ltemp->Clone("ltemp_filled"); ltempFilled->SetFillColor(30);  //ltempFilled->SetLineWidth(0);
+    stackedTemps->Add(ltempFilled);
+    stackedTemps->Add(ctempFilled);
+    stackedTemps->Add(btempFilled);
     stackedTemps->Draw("hist E sames");
     data->Draw("hist E sames");  result->Draw("esame");  leg->Draw();
   // Give plot a log axis
@@ -291,7 +308,7 @@ string templateFitter(TString plotName, TH1F* h_sample, TH1F* h_b, TH1F* h_c, TH
   /////////////////////////////////////////////
 
   // Output plots to file
-    TFile plotOutput(TString("fits/") + plotName + ".root", "RECREATE");
+    TFile plotOutput(TString("fits/") + plotName +"_"+ selectionName +".root", "RECREATE");
     seperate_plots   ->Write();
     resultPlot       ->Write();
     resultPlotStacked->Write();
@@ -331,12 +348,12 @@ void getTemplatesFromRunIIFile(TString fn, TH1F*& h_b, TH1F*& h_c, TH1F*& h_l, T
     else
     {
       // Get templates from file for the specified channel
-        inputFile->GetObject("control_plots/dy"  "/"+channel+"_Zb/zhfmet_CSVT_hfjet_ld_msv", hf_b1);
-        inputFile->GetObject("control_plots/dy"  "/"+channel+"_Zc/zhfmet_CSVT_hfjet_ld_msv", hf_c1);
-        inputFile->GetObject("control_plots/dy"  "/"+channel+"_Zl/zhfmet_CSVT_hfjet_ld_msv", hf_l1);
-        if(useDY1J) inputFile->GetObject("control_plots/dy1j""/"+channel+"_Zb/zhfmet_CSVT_hfjet_ld_msv", hf_b2);
-        if(useDY1J) inputFile->GetObject("control_plots/dy1j""/"+channel+"_Zc/zhfmet_CSVT_hfjet_ld_msv", hf_c2);
-        if(useDY1J) inputFile->GetObject("control_plots/dy1j""/"+channel+"_Zl/zhfmet_CSVT_hfjet_ld_msv", hf_l2);
+        inputFile->GetObject("control_plots/dy"  "/"+channel+"_Zb/"+selectionName+"/"+tempName, hf_b1);
+        inputFile->GetObject("control_plots/dy"  "/"+channel+"_Zc/"+selectionName+"/"+tempName, hf_c1);
+        inputFile->GetObject("control_plots/dy"  "/"+channel+"_Zl/"+selectionName+"/"+tempName, hf_l1);
+        // if(useDY1J) inputFile->GetObject("control_plots/dy1j""/"+channel+"_Zb/"+tempName, hf_b2);
+        // if(useDY1J) inputFile->GetObject("control_plots/dy1j""/"+channel+"_Zc/"+tempName, hf_c2);
+        // if(useDY1J) inputFile->GetObject("control_plots/dy1j""/"+channel+"_Zl/"+tempName, hf_l2);
     }
 
   // Add templates together to get final templates
@@ -345,9 +362,9 @@ void getTemplatesFromRunIIFile(TString fn, TH1F*& h_b, TH1F*& h_c, TH1F*& h_l, T
     h_l = (TH1F*) hf_l1->Clone("ltemp");       /*if(channel == "Zll")*/ if(useDY1J) h_l->Add(hf_l2);
 
   // Scale based on input factor.
-//    h_b->Scale(statisticsScale);
-//    h_c->Scale(statisticsScale);
-//    h_l->Scale(statisticsScale);
+  //  h_b->Scale(statisticsScale);
+  //  h_c->Scale(statisticsScale);
+  //  h_l->Scale(statisticsScale);
 
   // Clean up
     delete hf_b1;  delete hf_c1;  delete hf_l1;
@@ -384,17 +401,17 @@ TH1F* getRunIISampleFromFile(TString fn, TString channel)
         if(channel=="Zee") setname = "elec";
         TFile* inputFile = TFile::Open(fn);
         TH1F *h_data ;  // Data histogram to fit.
-        TH1F *h_ttlep;  // Backgrounds to subtract.
+        TH1F *h_tt   ;  // Backgrounds to subtract.
         TH1F *h_ww   ;
         TH1F *h_wz   ;
         TH1F *h_zz   ;
 
       // Get templates from file
-        inputFile->GetObject("control_plots/"+setname+"/"+channel+"/zhfmet_CSVT_hfjet_ld_msv", h_data );   h_data ->Sumw2();
-        inputFile->GetObject("control_plots/tt_lep"   "/"+channel+"/zhfmet_CSVT_hfjet_ld_msv", h_ttlep);   h_ttlep->Sumw2();
-        inputFile->GetObject("control_plots/ww"       "/"+channel+"/zhfmet_CSVT_hfjet_ld_msv", h_ww   );   h_ww   ->Sumw2();
-        inputFile->GetObject("control_plots/wz"       "/"+channel+"/zhfmet_CSVT_hfjet_ld_msv", h_wz   );   h_wz   ->Sumw2();
-        inputFile->GetObject("control_plots/zz"       "/"+channel+"/zhfmet_CSVT_hfjet_ld_msv", h_zz   );   h_zz   ->Sumw2();
+        inputFile->GetObject("control_plots/"+setname+"/"+channel+"/"+selectionName+"/"+tempName, h_data);   h_data->Sumw2();
+        inputFile->GetObject("control_plots/tt"       "/"+channel+"/"+selectionName+"/"+tempName, h_tt  );   h_tt  ->Sumw2();
+        inputFile->GetObject("control_plots/ww"       "/"+channel+"/"+selectionName+"/"+tempName, h_ww  );   h_ww  ->Sumw2();
+        inputFile->GetObject("control_plots/wz"       "/"+channel+"/"+selectionName+"/"+tempName, h_wz  );   h_wz  ->Sumw2();
+        inputFile->GetObject("control_plots/zz"       "/"+channel+"/"+selectionName+"/"+tempName, h_zz  );   h_zz  ->Sumw2();
         cout << h_data->GetTitle() << endl;
 
 
@@ -402,13 +419,13 @@ TH1F* getRunIISampleFromFile(TString fn, TString channel)
         gROOT->cd();
         h_sample = (TH1F*) h_data->Clone("data_m_bkgd_"+channel);  h_sample->Sumw2();
 
-        h_ttlep->Scale(0.0485392103);   h_sample->Add(h_ttlep, -1.0);
-        h_ww   ->Scale(0.3310214179);   h_sample->Add(h_ww   , -1.0);
-        h_wz   ->Scale(0.1347394468);   h_sample->Add(h_wz   , -1.0);
-        h_zz   ->Scale(0.0388934253);   h_sample->Add(h_zz   , -1.0);
+        h_tt->Scale(tt_wt);   h_sample->Add(h_tt, -1.0);
+        h_ww->Scale(ww_wt);   h_sample->Add(h_ww, -1.0);
+        h_wz->Scale(wz_wt);   h_sample->Add(h_wz, -1.0);
+        h_zz->Scale(zz_wt);   h_sample->Add(h_zz, -1.0);
 
         cout << "TEST: Plot numbers dump for channel " << channel << "\n"
-             << "        ttlep: Entries=" << setw(8) << h_ttlep ->GetEntries() << ", Integral=" << setw(8) << h_ttlep ->Integral() << "\n"
+             << "           tt: Entries=" << setw(8) << h_tt    ->GetEntries() << ", Integral=" << setw(8) << h_tt    ->Integral() << "\n"
              << "           ww: Entries=" << setw(8) << h_ww    ->GetEntries() << ", Integral=" << setw(8) << h_ww    ->Integral() << "\n"
              << "           wz: Entries=" << setw(8) << h_wz    ->GetEntries() << ", Integral=" << setw(8) << h_wz    ->Integral() << "\n"
              << "           zz: Entries=" << setw(8) << h_zz    ->GetEntries() << ", Integral=" << setw(8) << h_zz    ->Integral() << "\n"
@@ -418,110 +435,11 @@ TH1F* getRunIISampleFromFile(TString fn, TString channel)
 
 
       // Clean up
-        delete h_data ;   delete h_ttlep;
-        delete h_ww   ;   delete h_wz   ;   delete h_zz;
+        delete h_data ;   delete h_tt;
+        delete h_ww   ;   delete h_wz;   delete h_zz;
         inputFile->Close();
 }
 
     //cout << h_sample->GetTitle() << endl;
     return h_sample;
 }
-
-
-
-
-/*  OLD FUNCTIONS
- *
-
-
-
-TH1F* getSampleFromFile(TString fn)
-{
-    TFile* inputFile = TFile::Open(fn);
-
-  // Pointers to file histograms
-    TH1F *h_sample, *hf_sample;  // Pointer to new histogram and histogram in file.
-
-  // Get templates from file
-    inputFile->GetObject("h_sample", hf_sample);
-    cout << hf_sample->GetTitle() << endl;
-
-  // Add templates together to get final templates
-    gROOT->cd();
-    h_sample = (TH1F*) hf_sample->Clone("data");
-    cout << h_sample->GetTitle() << endl;
-
-  // Clean up
-    inputFile->Close();
-    cout << h_sample->GetTitle() << endl;
-    return h_sample;
-}
-
-void getTemplatesFromFile(TString fn, TH1F*& h_b, TH1F*& h_c, TH1F*& h_l)
-{
-    TFile* inputFile = TFile::Open(fn);
-
-  // Pointers to file histograms
-    TH1F *hf_b, *hf_c, *hf_l;
-
-  // Get templates from file
-    inputFile->GetObject("h_b", hf_b);
-    inputFile->GetObject("h_c", hf_c);
-    inputFile->GetObject("h_l", hf_l);
-
-  // Add templates together to get final templates
-    h_b = (TH1F*) hf_b->Clone("btemp");
-    h_c = (TH1F*) hf_c->Clone("ctemp");
-    h_l = (TH1F*) hf_l->Clone("ltemp");
-
-  // Clean up
-    delete hf_b;  delete hf_c;  delete hf_l;
-
-}
-
-
-void getTemplatesFromOldFile(TH1F*& h_b, TH1F*& h_c, TH1F*& h_l)
-{
-    TFile* inputFile = TFile::Open("/home/godshalk/Work/2016-03-15_ZC_closureTestRedux/svt_csvt_lnl.root");
-
-  // Pointers to file histograms
-    TH1F *hf_b, *hf_c, *hf_l;
-
-  // Get templates from file
-    inputFile->GetObject("bjets", hf_b);
-    inputFile->GetObject("cjets", hf_c);
-    inputFile->GetObject("ljets", hf_l);
-
-  // Add templates together to get final templates
-    h_b = (TH1F*) hf_b->Clone("btemp");
-    h_c = (TH1F*) hf_c->Clone("ctemp");
-    h_l = (TH1F*) hf_l->Clone("ltemp");
-
-  // Clean up
-    delete hf_b;  delete hf_c;  delete hf_l;
-
-}
-
-
-TH1F* getSampleFromOldFile()
-{
-    TFile* inputFile = TFile::Open("/home/godshalk/Work/2016-03-15_ZC_closureTestRedux/svt_csvt_lnl_DYCombo-70-20-10.root");
-
-  // Pointers to file histograms
-    TH1F *h_sample, *hf_sample;  // Pointer to new histogram and histogram in file.
-
-  // Get templates from file
-    inputFile->GetObject("muon", hf_sample);
-    cout << hf_sample->GetTitle() << endl;
-
-  // Add templates together to get final templates
-    gROOT->cd();
-    h_sample = (TH1F*) hf_sample->Clone("data");
-    cout << h_sample->GetTitle() << endl;
-
-  // Clean up
-    inputFile->Close();
-    cout << h_sample->GetTitle() << endl;
-    return h_sample;
-}
-*/

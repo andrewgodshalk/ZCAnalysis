@@ -19,15 +19,10 @@
     int tempScale = 1;
 
     TString fn_input, fn_sample;
-    TString fn_2016RRG = "/home/godshalk/Work/2016-12-07_ZCAnalysis2016_OldCode/raw_cp_merges/2017-02-15_ReReco_dMuG_mm_for_jetEff/zc_rawcp_2017-02-15_ReReco_dMuG_mm.root";
-    // TString fn_2016BCDamc = "raw_cp_merges/2017-02-04_HadFlv_BTagEffAMC_dMuBCD_amc""/zc_rawcp_2017-02-04_HadFlv_BTagEffAMC_dMuBCD_amc"".root";
-    // TString fn_2016BCDmm  = "raw_cp_merges/2017-02-04_HadFlv_BTagEffMM_dMuBCD_mm"  "/zc_rawcp_2017-02-04_HadFlv_BTagEffMM_dMuBCD_mm"  ".root";
-    // TString fn_2016Gamc   = "raw_cp_merges/2017-02-04_HadFlv_BTagEffAMC_dMuG_amc"  "/zc_rawcp_2017-02-04_HadFlv_BTagEffAMC_dMuG_amc"  ".root";
-    // TString fn_2016Gmm    = "raw_cp_merges/2017-02-04_HadFlv_BTagEffMM_dMuG_mm"    "/zc_rawcp_2017-02-04_HadFlv_BTagEffMM_dMuG_mm"    ".root";
-    fn_input = fn_sample = fn_2016RRG;
-    // fn_input = fn_sample = fn_2016BCDmm ;
-    // fn_input = fn_sample = fn_2016Gamc  ;
-    // fn_input = fn_sample = fn_2016Gmm   ;
+
+    // TString fn_2016RR = "/home/godshalk/Work/2016-12-07_ZCAnalysis2016_OldCode/raw_cp_merges/2017-03-06_V25RR_mgJetEff/zc_rawcp_2017-03-06_V25RR_mgJetEff.root";
+    TString fn_2016RR = "/home/godshalk/Work/2016-12-07_ZCAnalysis2016_OldCode/raw_cp_merges/2017-03-06_V25RR_amcJetEff/zc_rawcp_2017-03-06_V25RR_amcJetEff.root";
+    fn_input = fn_sample = fn_2016RR;
   // NOTE: Need to change dataset weights in templateFitter.C for different datasets (getRunIISampleFromFile(), Line 405)
 
   //////////////////////////////////////////////////

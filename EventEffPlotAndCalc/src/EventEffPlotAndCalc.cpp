@@ -49,11 +49,15 @@ EventEffPlotAndCalc::EventEffPlotAndCalc(int argc, char* argv[])
             "===  calcDiffTagEff \n"  << endl;
 
   // Set up templates for jet efficiency histograms.
-    nPtBins_  = 40;
-    double ptBinBounds_[]   = {30, 32, 34, 36, 38, 40, 42, 44, 46, 48, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100,
-                              110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 220, 240, 260, 280, 300,
-                              350, 400, 450, 500, 670};
-    h_temp_ = new TH1F("h_temp","", nPtBins_, ptBinBounds_);  h_temp_->Sumw2();
+  // Old, nonuniform binning (not as pretty)
+    // nPtBins_  = 40;
+    // double ptBinBounds_[]   = {30, 32, 34, 36, 38, 40, 42, 44, 46, 48, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100,
+    //                           110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 220, 240, 260, 280, 300,
+    //                           350, 400, 450, 500, 670};
+    // h_temp_ = new TH1F("h_temp","", nPtBins_, ptBinBounds_);  h_temp_->Sumw2();
+    int maxX = 660;
+    int binWidth = 20;
+    h_temp_ = new TH1F("h_temp","", maxX/binWidth, 0, maxX);  h_temp_->Sumw2();
 
   // Attempt to open input file and output file.
     cout << "  Opening file: " << fn_input_ << "..." << endl;
@@ -77,21 +81,21 @@ EventEffPlotAndCalc::EventEffPlotAndCalc(int argc, char* argv[])
         for( const TString & tag : tags )
             for( const TString & sv : svTypes)
         {   cout << "\tCreating Eff. for conditions: " << f << "," << tag << "," << sv << "..." << endl;
-            h_nTaggedEvts [f][tag][sv] = (TH1F*) h_temp_ ->Clone(TString::Format("h_nt_Z%cEvts_%s%s"                   ,f,tag.Data(),sv.Data()));
-            hr_nTaggedEvts[f][tag][sv] = (TH1F*) f_input_->Get(  TString::Format("raw_eff_plots/dy/Zuu_Z%c/nt_Evt_%s%s",f,tag.Data(),sv.Data()))
-                                                        ->Clone(TString::Format("h_nt_Z%cEvts_%s%s_comb",f,tag.Data(),sv.Data()));
+            h_nTaggedEvts [f][tag][sv] = (TH1F*) h_temp_ ->Clone(TString::Format("h_nt_Z%cEvts_%s%s"                           ,f,tag.Data(),sv.Data()));
+            hr_nTaggedEvts[f][tag][sv] = (TH1F*) f_input_->Get(  TString::Format("raw_eff_plots/dy/Zuu_Z%c/nt_Z%cEvents_%s%s",f,f,tag.Data(),sv.Data()))
+                                                         ->Clone(TString::Format("h_nt_Z%cEvts_%s%s_comb"                      ,f,tag.Data(),sv.Data()));
             // hr_nTaggedEvts[f][tag][sv]->Add((TH1F*) f_input_->Get(  TString::Format("raw_eff_plots/dy/Zee_Z%c/nt_%cJets_2D_%s%s",f,f,tag.Data(),sv.Data())));
           // Rebin plots
             transferContents(hr_nTaggedEvts[f][tag][sv], h_nTaggedEvts[f][tag][sv]);
           // Make eff plot
             h_EvtTagEff[f][tag][sv] = makeEffPlots(TString::Format("h_Z%cEvtTagEff_%s%s",f,tag.Data(),sv.Data()), h_nTaggedEvts[f][tag][sv], h_nEvts[f]);
-            printPlotValues(h_EvtTagEff[f][tag][sv]);
+            //printPlotValues(h_EvtTagEff[f][tag][sv]);
         }
     }
     // Set up histograms from data.
     for( const TString & tag : tags )
         for( const TString & sv : svTypes)
-    {   cout << "\tExtracting Results from Data for conditions: " << tag << "," << sv << "..." << endl;
+    {   // cout << "\tExtracting Results from Data for conditions: " << tag << "," << sv << "..." << endl;
         h_nTaggedEvts_Data [tag][sv] = (TH1F*) h_temp_ ->Clone(TString::Format("h_nt_ZHFEvts_%s%s"                 ,tag.Data(),sv.Data()));
         hr_nTaggedEvts_Data[tag][sv] = (TH1F*) f_input_->Get(  TString::Format("raw_eff_plots/muon/Zuu/nt_Evt_%s%s",tag.Data(),sv.Data()))
                                                        ->Clone(TString::Format("h_nt_ZHFEvts_%s%s_comb"            ,tag.Data(),sv.Data()));
@@ -100,10 +104,10 @@ EventEffPlotAndCalc::EventEffPlotAndCalc(int argc, char* argv[])
         transferContents(hr_nTaggedEvts_Data[tag][sv], h_nTaggedEvts_Data[tag][sv]);
     }
 
-  // Calculate the average efficiency and make presentable efficiency plots.
+  // For each tag/sv, Calculate the average efficiency for each flavor, then make presentable efficiency plots.
     for( const TString & tag : tags )
         for( const TString & sv : svTypes)
-        { for( char& f : flavors) avgEff[f][tag][sv] = calculateAvgEff(h_EvtTagEff['b'][tag][sv], h_nTaggedEvts_Data[tag][sv]);
+        { for( char& f : flavors) avgEff[f][tag][sv] = calculateAvgEff(h_EvtTagEff[f][tag][sv], h_nTaggedEvts_Data[tag][sv]);
           c_combinedEffPlot[tag][sv] = makeCombinedEffPlots(tag, sv, h_EvtTagEff['b'][tag][sv], h_EvtTagEff['c'][tag][sv], h_EvtTagEff['l'][tag][sv]);
         }
 
@@ -164,9 +168,9 @@ void EventEffPlotAndCalc::transferContents(TH1F* h_old, TH1F* h_new)
     // int nBinsYOld = h_old->GetNbinsY();
     int nBinsXNew = h_new->GetNbinsX();
   //   int nBinsYNew = h_new->GetNbinsY();
-    cout << "    " << h_old->GetName() << " -> " << h_new->GetName() << endl;
+    // cout << "    " << h_old->GetName() << " -> " << h_new->GetName() << endl;
     // cout << TString::Format("    Transferring old (%i,%i) into new (%i, %i)...",nBinsXOld,nBinsYOld,nBinsXNew,nBinsYNew) << endl;
-    cout << TString::Format("    Transferring old (%i) into new (%i)...",nBinsXOld,nBinsXNew) << endl;
+    // cout << TString::Format("    Transferring old (%i) into new (%i)...",nBinsXOld,nBinsXNew) << endl;
 
   // Set up histogram to store errors.
     TH1F* h_err = (TH1F*) h_new->Clone("h_err");
@@ -245,7 +249,7 @@ void EventEffPlotAndCalc::printPlotValues(TH1F* h)
 TCanvas* EventEffPlotAndCalc::makeCombinedEffPlots(TString tag, TString sv, TH1F* ho_b, TH1F* ho_c, TH1F* ho_l)
 { // Takes three efficiency plots and a data distribution of the differential
   // variable. Plots the three plots on a canvas.
-    cout << "Drawing combined efficiency plot for tag/sv: " << tag << "/" << sv << endl;
+    // cout << "Drawing combined efficiency plot for tag/sv: " << tag << "/" << sv << endl;
     TCanvas* plot = new TCanvas(TString("effPlot_")+tag+sv, TString("effPlot_")+tag+sv);
     plot->cd();
     TH1F* h_beff = (TH1F*) ho_b->Clone("h_beff");
@@ -262,14 +266,16 @@ TCanvas* EventEffPlotAndCalc::makeCombinedEffPlots(TString tag, TString sv, TH1F
     plot->SetLogy();
 
   // Draw them histos.
+    h_beff->GetXaxis()->SetTitle("Lead HF Jet p_{T} (GeV)");
+    h_beff->GetYaxis()->SetTitle("Event Selection Efficiency");
     h_beff->Draw("hist PE");
     h_ceff->Draw("hist PE sames");
     h_leff->Draw("hist PE sames");
 
   // Set up legend labels
-    TString bLegLabel = TString::Format("Z+b (avg: %0.3f#pm%0.3f)", avgEff['b'][tag][sv].first, avgEff['b'][tag][sv].second);
-    TString cLegLabel = TString::Format("Z+c (avg: %0.3f#pm%0.3f)", avgEff['c'][tag][sv].first, avgEff['b'][tag][sv].second);
-    TString lLegLabel = TString::Format("Z+l (avg: %0.3f#pm%0.3f)", avgEff['l'][tag][sv].first, avgEff['b'][tag][sv].second);
+    TString bLegLabel = TString::Format("Z+b (avg: %0.5f#pm%0.5f)", avgEff['b'][tag][sv].first, avgEff['b'][tag][sv].second);
+    TString cLegLabel = TString::Format("Z+c (avg: %0.5f#pm%0.5f)", avgEff['c'][tag][sv].first, avgEff['c'][tag][sv].second);
+    TString lLegLabel = TString::Format("Z+l (avg: %0.5f#pm%0.5f)", avgEff['l'][tag][sv].first, avgEff['l'][tag][sv].second);
 
   // The legend continues
     TLegend *leg = new TLegend(0.5,0.15,0.95,0.35);
@@ -300,14 +306,15 @@ std::pair<double, double> EventEffPlotAndCalc::calculateAvgEff(TH1F* h_eff, TH1F
 
   // Clone the data histogram and normalize to 1.
     TH1F* h_wt = (TH1F*) ho_wt->Clone("h_wt");
-    ho_wt->Scale(1.0/wtIntegral);
+    h_wt->Scale(1.0/wtIntegral);
 
   // Iterate through bins, adding the appropriate values to each term.
     int bins = h_wt->GetNbinsX();
     for(int i=1; i<=bins; i++)
     {
-        bin_eff   = h_eff->GetBinContent(i);   bin_err   = h_eff->GetBinError  (i);
-        bin_wt    = h_wt ->GetBinContent(i);   bin_wterr = h_wt ->GetBinError  (i)/wtIntegral;
+        bin_eff   = h_eff->GetBinContent(i);   bin_err   = (bin_eff == 0 ? 0 : h_eff->GetBinError(i));
+        bin_wt    = h_wt ->GetBinContent(i);   bin_wterr = h_wt ->GetBinError(i); ///wtIntegral;
+        // cout << " BIN WEIGHT TEST: " << ho_wt->GetBinContent(i) << "+-" << ho_wt->GetBinError(i) << " --> " << bin_wt << "+-" << bin_wterr << endl;
         eff  += bin_eff*bin_wt   ;
         err1 += bin_err*bin_wt   ;
         err2 += bin_eff*bin_wterr;
