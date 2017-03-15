@@ -316,7 +316,7 @@ void EventHandler::evalCriteria()
     if(!isElTriggered && !isMuTriggered) return;
 
   // Check for the proper number or leptons. Kick if neither.
-    if( m_nLeps<2 ) return;
+    // if( m_nLeps<2 ) return;
 
   // Lepton selection
     // **************PROBLEM AREA*********************

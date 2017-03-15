@@ -13,6 +13,8 @@ NtupleProcessor.cpp
 #include "../interface/NtupleProcessor.h"
 #include "../interface/ControlPlotExtractor.h"
 #include "../interface/EffPlotExtractor.h"
+#include "../interface/JetEffPlotExtractor.h"
+#include "../interface/EventEffPlotExtractor.h"
 #include "../interface/TemplateExtractor.h"
 
 using std::cout;   using std::endl;   using std::vector;   using std::ifstream;
@@ -114,11 +116,13 @@ void NtupleProcessor::createHistogramExtractorFromString(TString& inputString)
   // Create different options based on dataset.
     vector<TString> dsOptions;
     vector<TString> effDsOptions;
+    vector<TString> jetEffDsOptions;
 
     // For each sim set, split by Zuu and Zee
     if(dataset.Contains("muon") || usingSim) dsOptions.push_back("Zuu");
     if(dataset.Contains("elec") || usingSim) dsOptions.push_back("Zee");
     effDsOptions = dsOptions;
+    jetEffDsOptions = dsOptions;
     // For DY, split by {Zuu, Zee}x{Total, Ztautau, Z+l, Z+c, Z+b}
     if(usingDY)
     {   // dsOptions.push_back("Zuu_Ztautau");
@@ -219,6 +223,68 @@ void NtupleProcessor::createHistogramExtractorFromString(TString& inputString)
             }
 
             hExtractors[dirName] = new TemplateExtractor(eHandler, outDir, options+dsOp);
+        }
+    }
+
+    if(inputString == "JetEffPlotExtractor")
+    {
+        TString dirName = "raw_jet_eff_plots/";
+        for(TString dsOp : jetEffDsOptions)
+        {
+            TString datasetLabel = dataset;
+            if(dataset(0,2) == "dy"    ) datasetLabel = "dy"    ;
+            if(dataset(0,4) == "dy1j"  ) datasetLabel = "dy1j"  ;
+            // if(dataset(0,4) == "dy1j"  ) datasetLabel = "dy"  ;
+            if(dataset(0,4) == "muon"  ) datasetLabel = "muon"  ;
+            if(dataset(0,4) == "elec"  ) datasetLabel = "elec"  ;
+            if(dataset(0,3) == "tt"    ) datasetLabel = "tt"    ;
+            if(dataset(0,6) == "tt_lep") datasetLabel = "tt_lep";
+            TString newDirName = dirName+datasetLabel+"/"+dsOp;
+            cout << "  NtupleProcessor::createHistogramExtractorFromString: Adding EffPlotExtractor (" << newDirName << ")" << endl;
+
+          // Check if desired directory already exists. If not, create it.
+            cout << "    Checking file: " << outputFile->GetName() << endl;
+            TDirectory* outDir = outputFile->GetDirectory(newDirName);
+            if(outDir) cout << "     Found directory: " << outDir->GetName() << endl;
+            else {     cout << "     Directory " << newDirName << " not found in file. Creating new directory." << endl;
+                outputFile->mkdir(newDirName);
+                outDir = outputFile->GetDirectory(newDirName);
+                if(outDir) cout << "     Directory created: " << outDir->GetName() << endl;
+                else       cout << "     Directory " << newDirName << " still not working. Fix your code." << endl;
+            }
+
+            hExtractors[newDirName] = new JetEffPlotExtractor(eHandler, outDir, options+dsOp);
+        }
+    }
+
+    if(inputString == "EventEffPlotExtractor")
+    {
+        TString dirName = "raw_event_eff_plots/";
+        for(TString dsOp : effDsOptions)
+        {
+            TString datasetLabel = dataset;
+            if(dataset(0,2) == "dy"    ) datasetLabel = "dy"    ;
+            if(dataset(0,4) == "dy1j"  ) datasetLabel = "dy1j"  ;
+            // if(dataset(0,4) == "dy1j"  ) datasetLabel = "dy"  ;
+            if(dataset(0,4) == "muon"  ) datasetLabel = "muon"  ;
+            if(dataset(0,4) == "elec"  ) datasetLabel = "elec"  ;
+            if(dataset(0,3) == "tt"    ) datasetLabel = "tt"    ;
+            if(dataset(0,6) == "tt_lep") datasetLabel = "tt_lep";
+            TString newDirName = dirName+datasetLabel+"/"+dsOp;
+            cout << "  NtupleProcessor::createHistogramExtractorFromString: Adding EffPlotExtractor (" << newDirName << ")" << endl;
+
+          // Check if desired directory already exists. If not, create it.
+            cout << "    Checking file: " << outputFile->GetName() << endl;
+            TDirectory* outDir = outputFile->GetDirectory(newDirName);
+            if(outDir) cout << "     Found directory: " << outDir->GetName() << endl;
+            else {     cout << "     Directory " << newDirName << " not found in file. Creating new directory." << endl;
+                outputFile->mkdir(newDirName);
+                outDir = outputFile->GetDirectory(newDirName);
+                if(outDir) cout << "     Directory created: " << outDir->GetName() << endl;
+                else       cout << "     Directory " << newDirName << " still not working. Fix your code." << endl;
+            }
+
+            hExtractors[newDirName] = new EventEffPlotExtractor(eHandler, outDir, options+dsOp);
         }
     }
 }
