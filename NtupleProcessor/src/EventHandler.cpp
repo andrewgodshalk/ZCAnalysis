@@ -89,24 +89,26 @@ bool EventHandler::mapTree(TTree* tree)
 
     TBranch * temp_branch;  // Temporary branch to get at members of struct-branches.
 
+  // Check to see if VType fix branches are included in Ntuple.
+    bool hasVtypeFix = tree->GetListOfBranches()->FindObject("Vtype_new");
+    if(hasVtypeFix) cout << "  [EH]: VTYPE FIX FIELDS FOUND." << endl;
+    else            cout << "  [EH]: VTYPE FIX FIELDS NOT FOUND." << endl;
+
   // Deactivate all branches, reactivate as necessary.
     tree->SetBranchStatus("*",0);
     vector<TString> branches_to_reactivate = {
-      //  "Vtype"      , "nallMuons"         , "nallElectrons"     , "nallJets"          ,
-      //  "V*"         , "allMuon_pt"        , "allElectron_pt"    , "allJet_pt"         ,
-      //  "zdecayMode" , "allMuon_eta"       , "allElectron_eta"   , "allJet_eta"        ,
-      //  "EVENT*"     , "allMuon_phi"       , "allElectron_phi"   , "allJet_phi"        ,
-        // "MET*"      , "allMuon_charge"    , "allElectron_charge", "allJet_csv"        ,
-                      // "allMuon_pfCorrIso" ,                       "allJet_vtxMass"    ,
-      //  "triggerFlags",                                            "allJet_flavour"    ,
-      //  "weightTrig2012DiEle",
-      //  "weightTrig2012DiMuon"
-        "Vtype" , "nvLeptons"          , "nJet"       , "met_pt"   ,
-        "V_mass", "vLeptons_pt"        , "Jet_pt"     , "met_phi"  ,
-        "V_pt"  , "vLeptons_eta"       , "Jet_eta"    , "met_sumEt",
-        "V_eta" , "vLeptons_phi"       , "Jet_phi"    ,
-        "V_phi" , "vLeptons_charge"    , "Jet_btagCSV",
-        "json"  , "vLeptons_pfRelIso04", "Jet_vtxMass",
+        "Vtype" , //"nvLeptons"          ,
+        "V_mass", "vLeptons_pt"        ,
+        "V_pt"  , "vLeptons_eta"       ,
+        "V_eta" , "vLeptons_phi"       ,
+        "V_phi" , "vLeptons_charge"    ,
+        "json"  , "vLeptons_relIso04", "vLeptons_relIso03",
+        "nJet"       , "met_pt"   ,
+        "Jet_pt"     , "met_phi"  ,
+        "Jet_eta"    , "met_sumEt",
+        "Jet_phi"    ,
+        "Jet_btagCSV",
+        "Jet_vtxMass",
         "Jet_vtxPx",
         "Jet_vtxPy",
         "Jet_vtxPz",
@@ -125,14 +127,8 @@ bool EventHandler::mapTree(TTree* tree)
         "primaryVertices_x",
         "primaryVertices_y",
         "primaryVertices_z",
-        //"HLT_BIT_HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_v",
-        //"HLT_BIT_HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_v",
-        //"HLT_BIT_HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_v",
-        //"HLT_BIT_HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_v",
-        //"HLT_BIT_HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v",
         "nPVs",
         "run", "lumi",
-        //"lheNj"
     };
     if(usingSim)
     {
@@ -143,6 +139,21 @@ bool EventHandler::mapTree(TTree* tree)
         branches_to_reactivate.push_back("Jet_hadronFlavour");
         branches_to_reactivate.push_back("lheNj"            );
     }
+    if(hasVtypeFix)
+    {
+        branches_to_reactivate.push_back("Vtype_new"            );
+        branches_to_reactivate.push_back("V_new_pt"             );
+        branches_to_reactivate.push_back("V_new_eta"            );
+        branches_to_reactivate.push_back("V_new_phi"            );
+        branches_to_reactivate.push_back("V_new_mass"           );
+        branches_to_reactivate.push_back("vLeptons_new_pt"      );
+        branches_to_reactivate.push_back("vLeptons_new_eta"     );
+        branches_to_reactivate.push_back("vLeptons_new_phi"     );
+        branches_to_reactivate.push_back("vLeptons_new_mass"    );
+        branches_to_reactivate.push_back("vLeptons_new_relIso03");
+        branches_to_reactivate.push_back("vLeptons_new_relIso04");
+    }
+
 
   // Reactivate branches specified above, as well as branches for triggers named in the analysis config.
     for(TString br : branches_to_reactivate) tree->SetBranchStatus(br.Data(), 1);
@@ -151,23 +162,24 @@ bool EventHandler::mapTree(TTree* tree)
 
   // Z variables
     m_zdecayMode = 0;
-  if(tree->GetListOfBranches()->FindObject("zdecayMode"))
-    tree->SetBranchAddress("zdecayMode",      &m_zdecayMode  );
-    tree->SetBranchAddress("Vtype"     ,          &m_Vtype       );
-  //  temp_branch = tree->GetBranch("V");
-  //  temp_branch->GetLeaf( "mass" )->SetAddress(   &m_Z_mass      );
-  //  temp_branch->GetLeaf( "pt"   )->SetAddress(   &m_Z_pt        );
-  //  temp_branch->GetLeaf( "eta"  )->SetAddress(   &m_Z_eta       );
-  //  temp_branch->GetLeaf( "phi"  )->SetAddress(   &m_Z_phi       );
-    tree->SetBranchAddress( "V_mass", &m_Z_mass      );
-    tree->SetBranchAddress( "V_pt"  , &m_Z_pt        );
-    tree->SetBranchAddress( "V_eta" , &m_Z_eta       );
-    tree->SetBranchAddress( "V_phi" , &m_Z_phi       );
+    if(tree->GetListOfBranches()->FindObject("zdecayMode"))
+        tree->SetBranchAddress("zdecayMode",      &m_zdecayMode  );
+    if(hasVtypeFix)
+    {   tree->SetBranchAddress( "Vtype_new" , &m_Vtype       );
+        tree->SetBranchAddress( "V_new_mass", &m_Z_mass      );
+        tree->SetBranchAddress( "V_new_pt"  , &m_Z_pt        );
+        tree->SetBranchAddress( "V_new_eta" , &m_Z_eta       );
+        tree->SetBranchAddress( "V_new_phi" , &m_Z_phi       );
+    }
+    else
+    {   tree->SetBranchAddress( "Vtype" , &m_Vtype       );
+        tree->SetBranchAddress( "V_mass", &m_Z_mass      );
+        tree->SetBranchAddress( "V_pt"  , &m_Z_pt        );
+        tree->SetBranchAddress( "V_eta" , &m_Z_eta       );
+        tree->SetBranchAddress( "V_phi" , &m_Z_phi       );
+    }
 
   // JSON
-  //  temp_branch = tree->GetBranch("EVENT");
-  //  temp_branch->GetLeaf( "json"  )->SetAddress(   &m_json        );
-  //  temp_branch->GetLeaf( "event" )->SetAddress(   &m_event       );
     tree->SetBranchAddress( "json", &m_json );
     tree->SetBranchAddress( "evt" , &m_event);
     tree->SetBranchAddress( "nPVs", &m_nPVs );
@@ -175,72 +187,55 @@ bool EventHandler::mapTree(TTree* tree)
     tree->SetBranchAddress( "lumi", &m_lumi );
 
 
-  // Muon variables
-  //  tree->SetBranchAddress( "nallMuons"         , &m_nMuons      );
-  //  tree->SetBranchAddress( "allMuon_pt"        ,  m_muon_pt     );
-  //  tree->SetBranchAddress( "allMuon_eta"       ,  m_muon_eta    );
-  //  tree->SetBranchAddress( "allMuon_phi"       ,  m_muon_phi    );
-  //  tree->SetBranchAddress( "allMuon_charge"    ,  m_muon_charge );
-  //  tree->SetBranchAddress( "allMuon_pfCorrIso" ,  m_muon_iso    );
-    tree->SetBranchAddress( "nvLeptons"           , &m_nLeps      );
-    tree->SetBranchAddress( "vLeptons_pt"         ,  m_lep_pt     );
-    tree->SetBranchAddress( "vLeptons_eta"        ,  m_lep_eta    );
-    tree->SetBranchAddress( "vLeptons_phi"        ,  m_lep_phi    );
-    tree->SetBranchAddress( "vLeptons_charge"     ,  m_lep_charge );
-    tree->SetBranchAddress( "vLeptons_pfRelIso04" ,  m_lep_iso    );
-
-  // Muon variables
-  //  tree->SetBranchAddress( "nallElectrons"        , &m_nElecs      );
-  //  tree->SetBranchAddress( "allElectron_pt"       ,  m_elec_pt     );
-  //  tree->SetBranchAddress( "allElectron_eta"      ,  m_elec_eta    );
-  //  tree->SetBranchAddress( "allElectron_phi"      ,  m_elec_phi    );
-  //  tree->SetBranchAddress( "allElectron_charge"   ,  m_elec_charge );
-  //  tree->SetBranchAddress( "allElectron_pfCorrIso",  m_elec_iso    );
+  // Lep variables
+    if(hasVtypeFix)
+    {   tree->SetBranchAddress( "vLeptons_new_pt"       ,  m_lep_pt     );
+        tree->SetBranchAddress( "vLeptons_new_eta"      ,  m_lep_eta    );
+        tree->SetBranchAddress( "vLeptons_new_phi"      ,  m_lep_phi    );
+        tree->SetBranchAddress( "vLeptons_new_charge"   ,  m_lep_charge );
+        tree->SetBranchAddress( "vLeptons_new_relIso03" ,  m_lep_iso03  );
+        tree->SetBranchAddress( "vLeptons_new_relIso04" ,  m_lep_iso04  );
+    }
+    else
+    {   tree->SetBranchAddress( "vLeptons_pt"       ,  m_lep_pt     );
+        tree->SetBranchAddress( "vLeptons_eta"      ,  m_lep_eta    );
+        tree->SetBranchAddress( "vLeptons_phi"      ,  m_lep_phi    );
+        tree->SetBranchAddress( "vLeptons_charge"   ,  m_lep_charge );
+        tree->SetBranchAddress( "vLeptons_relIso03" ,  m_lep_iso03  );
+        tree->SetBranchAddress( "vLeptons_relIso04" ,  m_lep_iso04  );
+    }
 
   // Jet variables
-  //  tree->SetBranchAddress( "nallJets"          , &m_nJets       );
-  //  tree->SetBranchAddress( "allJet_pt"         ,  m_jet_pt      );
-  //  tree->SetBranchAddress( "allJet_eta"        ,  m_jet_eta     );
-  //  tree->SetBranchAddress( "allJet_phi"        ,  m_jet_phi     );
-  //  tree->SetBranchAddress( "allJet_csv"        ,  m_jet_csv     );
-  //  tree->SetBranchAddress( "allJet_vtxMass"    ,  m_jet_msv     );
-  //  tree->SetBranchAddress( "allJet_flavour"    ,  m_jet_flv     );
-    tree->SetBranchAddress( "nJet"           , &m_nJets       );
-    tree->SetBranchAddress( "Jet_pt"         ,  m_jet_pt      );
-    tree->SetBranchAddress( "Jet_eta"        ,  m_jet_eta     );
-    tree->SetBranchAddress( "Jet_phi"        ,  m_jet_phi     );
-    tree->SetBranchAddress( "Jet_btagCSV"    ,  m_jet_csv     );
-    tree->SetBranchAddress( "Jet_vtxMass"    ,  m_jet_msv     );
-    tree->SetBranchAddress( "Jet_vtxPx"  , m_jet_vtx_px );
-    tree->SetBranchAddress( "Jet_vtxPy"  , m_jet_vtx_py );
-    tree->SetBranchAddress( "Jet_vtxPz"  , m_jet_vtx_pz );
-    tree->SetBranchAddress( "Jet_vtxPosX", m_jet_vtx_x  );
-    tree->SetBranchAddress( "Jet_vtxPosY", m_jet_vtx_y  );
-    tree->SetBranchAddress( "Jet_vtxPosZ", m_jet_vtx_z  );
+    tree->SetBranchAddress( "nJet"               , &m_nJets             );
+    tree->SetBranchAddress( "Jet_pt"             ,  m_jet_pt            );
+    tree->SetBranchAddress( "Jet_eta"            ,  m_jet_eta           );
+    tree->SetBranchAddress( "Jet_phi"            ,  m_jet_phi           );
+    tree->SetBranchAddress( "Jet_btagCSV"        ,  m_jet_csv           );
+    tree->SetBranchAddress( "Jet_vtxMass"        ,  m_jet_msv           );
+    tree->SetBranchAddress( "Jet_vtxPx"          , m_jet_vtx_px         );
+    tree->SetBranchAddress( "Jet_vtxPy"          , m_jet_vtx_py         );
+    tree->SetBranchAddress( "Jet_vtxPz"          , m_jet_vtx_pz         );
+    tree->SetBranchAddress( "Jet_vtxPosX"        , m_jet_vtx_x          );
+    tree->SetBranchAddress( "Jet_vtxPosY"        , m_jet_vtx_y          );
+    tree->SetBranchAddress( "Jet_vtxPosZ"        , m_jet_vtx_z          );
     tree->SetBranchAddress( "Jet_vtxCat_IVF"     , m_jet_vtxCat_IVF     );
     tree->SetBranchAddress( "Jet_vtxMassCorr_IVF", m_jet_vtxMassCorr_IVF);
     tree->SetBranchAddress( "Jet_newVtxMass"     , m_jet_msv_new        );
     tree->SetBranchAddress( "Jet_incVtxMass"     , m_jet_msv_inc        );
-    tree->SetBranchAddress("nprimaryVertices" , &m_npv_array );
-    tree->SetBranchAddress("primaryVertices_x",  m_pv_x      );
-    tree->SetBranchAddress("primaryVertices_y",  m_pv_y      );
-    tree->SetBranchAddress("primaryVertices_z",  m_pv_z      );
+    tree->SetBranchAddress("nprimaryVertices"    , &m_npv_array         );
+    tree->SetBranchAddress("primaryVertices_x"   ,  m_pv_x              );
+    tree->SetBranchAddress("primaryVertices_y"   ,  m_pv_y              );
+    tree->SetBranchAddress("primaryVertices_z"   ,  m_pv_z              );
   if(usingSim)
   { tree->SetBranchAddress( "Jet_mcFlavour"    , m_jet_flv    );
     tree->SetBranchAddress( "Jet_hadronFlavour", m_jet_hadflv );
     tree->SetBranchAddress( "Jet_partonFlavour", m_jet_parflv );
-    tree->SetBranchAddress( "lheNj"          , &m_lheNj       );
-    tree->SetBranchAddress( "genWeight"      , &m_genWeight   );
-    tree->SetBranchAddress( "puWeight"       , &m_puWeight    );
+    tree->SetBranchAddress( "lheNj"            , &m_lheNj     );
+    tree->SetBranchAddress( "genWeight"        , &m_genWeight );
+    tree->SetBranchAddress( "puWeight"         , &m_puWeight  );
   }
 
   // MET variables
-  //  temp_branch = tree->GetBranch("MET");
-  //  temp_branch->GetLeaf( "et"   )->SetAddress( &m_MET_et    );
-  //  temp_branch->GetLeaf( "phi"  )->SetAddress( &m_MET_phi   );
-  //  temp_branch->GetLeaf( "sumet")->SetAddress( &m_MET_sumet );
-  //  temp_branch->GetLeaf( "sig"  )->SetAddress( &m_MET_sig   );
-  //  temp_branch = tree->GetBranch("MET");
     tree->SetBranchAddress( "met_pt"     , &m_MET_et    );
     tree->SetBranchAddress( "met_phi"    , &m_MET_phi   );
     tree->SetBranchAddress( "met_sumEt"  , &m_MET_sumet );
@@ -251,14 +246,6 @@ bool EventHandler::mapTree(TTree* tree)
   //  temp_branch->GetLeaf( "met_rawPt"  )->SetAddress( &m_MET_sig   );
 
   // Trigger variables
-    //tree->SetBranchAddress( "triggerFlags",         m_triggers   );
-    //tree->SetBranchAddress( "weightTrig2012DiEle" , &m_wt_diEle  );
-    //tree->SetBranchAddress( "weightTrig2012DiMuon", &m_wt_diMuon );
-    //tree->SetBranchAddress("HLT_BIT_HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_v"         , &m_trig_dimuon3);
-    //tree->SetBranchAddress("HLT_BIT_HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_v"       , &m_trig_dimuon4);
-    //tree->SetBranchAddress("HLT_BIT_HLT_Mu17_TrkIsoVVL_Mu8_TrkIsoVVL_DZ_v"      , &m_trig_dimuon1);
-    //tree->SetBranchAddress("HLT_BIT_HLT_Mu17_TrkIsoVVL_TkMu8_TrkIsoVVL_DZ_v"    , &m_trig_dimuon2);
-    //tree->SetBranchAddress("HLT_BIT_HLT_Ele17_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v", &m_trig_dielec1);
   // Set up trigger vector to be mapped to trigger variables specified in AnalysisCfg.
     for(int i=0; i<m_muon_trig.size(); i++) tree->SetBranchAddress(anCfg.muonTriggers[i].c_str(), &m_muon_trig[i]);
     for(int i=0; i<m_elec_trig.size(); i++) tree->SetBranchAddress(anCfg.elecTriggers[i].c_str(), &m_elec_trig[i]);
@@ -330,13 +317,14 @@ void EventHandler::evalCriteria()
   // Perform selection on leptons and store indexes sorted by pt.
     if(m_Vtype==0)
     {
+        m_nLeps = 2;
         for(Index i=0; i<m_nLeps; i++)
         {
             //cout << "    EventHandler::evalCriteria(): Muon Props (muon #, pt, eta, iso): = (" << i << ", " << m_muon_pt[i] << ", " << m_muon_eta[i] << ", " << m_muon_iso[i] << ")" << endl;
           // Perform selection on this muon. Skip to next if it doesn't meet criteria.
-            if(         m_lep_pt [i] <anCfg.muonPtMin
-                || fabs(m_lep_eta[i])>anCfg.muonEtaMax
-                ||      m_lep_iso[i] >anCfg.muonIsoMax
+            if(         m_lep_pt   [i] <anCfg.muonPtMin
+                || fabs(m_lep_eta  [i])>anCfg.muonEtaMax
+                ||      m_lep_iso04[i] >anCfg.muonIsoMax
               ) continue;
           // Insert muon in list based on pt.
             Index lowPtIndex = i;
@@ -347,6 +335,7 @@ void EventHandler::evalCriteria()
     }
     else if(m_Vtype==1)
     {
+        m_nLeps = 2;
         for(Index i=0; i<m_nLeps; i++)
         {
     //cout << "    EventHandler::evalCriteria(): ELEC Props (elec #, pt, eta, iso): = (" << i << ", " << m_lep_pt[i] << ", " << m_lep_eta[i] << ", " << m_lep_iso[i] << ")" << endl;
@@ -547,11 +536,10 @@ void EventHandler::printJets()
 }
 
 
-float EventHandler::calculatePUReweight(int i)  // Taking an input of the number of primary vertices (PV) in an event, calculated the reweighting factor for that event.
+// CURRENTLY NOT PROPERLY IMPLEMENTED.
+float EventHandler::calculatePUReweight(int i)
 {
-    if(i<0 || i>51) return 1;
-    return data2[i]/mc2[i];
-    // Use modded up/down arrays for up/down error calculation.
+    return 1.0;
 }
 
 float EventHandler::calculateJetMSVQuickCorrection(int jet_i)

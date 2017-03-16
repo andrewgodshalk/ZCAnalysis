@@ -282,18 +282,18 @@ void ControlPlotExtractor::fillMuonHistograms(TString prefix, float wt, bool spl
     for(Index i : evt.validLeptons)
     { // Fill general histograms
         //cout << "    filling : " << prefix+"_muon_pt" << endl;
-        h[prefix+"_muon_pt" ]->Fill(evt.m_lep_pt [i], evt.evtWeight*wt);
-        h[prefix+"_muon_eta"]->Fill(evt.m_lep_eta[i], evt.evtWeight*wt);
-        h[prefix+"_muon_phi"]->Fill(evt.m_lep_phi[i], evt.evtWeight*wt);
-        h[prefix+"_muon_iso"]->Fill(evt.m_lep_iso[i], evt.evtWeight*wt);
+        h[prefix+"_muon_pt" ]->Fill(evt.m_lep_pt   [i], evt.evtWeight*wt);
+        h[prefix+"_muon_eta"]->Fill(evt.m_lep_eta  [i], evt.evtWeight*wt);
+        h[prefix+"_muon_phi"]->Fill(evt.m_lep_phi  [i], evt.evtWeight*wt);
+        h[prefix+"_muon_iso"]->Fill(evt.m_lep_iso04[i], evt.evtWeight*wt);
         if(!selectingZuu || !split) continue;
       // Select for lead/sublead/extra histograms
         int j = min(++objsEntered, 3);
         //cout << "    filling : " << prefix+"_muon"+multName[j]+"_pt" << endl;
-        h[prefix+"_muon"+multName[j]+"_pt" ]->Fill(evt.m_lep_pt [i], evt.evtWeight*wt);
-        h[prefix+"_muon"+multName[j]+"_eta"]->Fill(evt.m_lep_eta[i], evt.evtWeight*wt);
-        h[prefix+"_muon"+multName[j]+"_phi"]->Fill(evt.m_lep_phi[i], evt.evtWeight*wt);
-        h[prefix+"_muon"+multName[j]+"_iso"]->Fill(evt.m_lep_iso[i], evt.evtWeight*wt);
+        h[prefix+"_muon"+multName[j]+"_pt" ]->Fill(evt.m_lep_pt   [i], evt.evtWeight*wt);
+        h[prefix+"_muon"+multName[j]+"_eta"]->Fill(evt.m_lep_eta  [i], evt.evtWeight*wt);
+        h[prefix+"_muon"+multName[j]+"_phi"]->Fill(evt.m_lep_phi  [i], evt.evtWeight*wt);
+        h[prefix+"_muon"+multName[j]+"_iso"]->Fill(evt.m_lep_iso04[i], evt.evtWeight*wt);
         //cout << "    entered " << j << " muons..." << endl;
     }
 }
@@ -305,17 +305,17 @@ void ControlPlotExtractor::fillElectronHistograms(TString prefix, float wt, bool
     int objsEntered = 0;      // Keeps track of how many objects you've entered for labeling purposes
     for(Index i : evt.validLeptons)
     { // Fill general histograms
-        h[prefix+"_electron_pt" ]->Fill(evt.m_lep_pt [i], evt.evtWeight*wt);
-        h[prefix+"_electron_eta"]->Fill(evt.m_lep_eta[i], evt.evtWeight*wt);
-        h[prefix+"_electron_phi"]->Fill(evt.m_lep_phi[i], evt.evtWeight*wt);
-        h[prefix+"_electron_iso"]->Fill(evt.m_lep_iso[i], evt.evtWeight*wt);
+        h[prefix+"_electron_pt" ]->Fill(evt.m_lep_pt   [i], evt.evtWeight*wt);
+        h[prefix+"_electron_eta"]->Fill(evt.m_lep_eta  [i], evt.evtWeight*wt);
+        h[prefix+"_electron_phi"]->Fill(evt.m_lep_phi  [i], evt.evtWeight*wt);
+        h[prefix+"_electron_iso"]->Fill(evt.m_lep_iso03[i], evt.evtWeight*wt);
         if(!selectingZee || !split) continue;
       // Select for lead/sublead/extra histograms
         int j = min(++objsEntered, 3);
-        h[prefix+"_electron"+multName[j]+"_pt" ]->Fill(evt.m_lep_pt [i], evt.evtWeight*wt);
-        h[prefix+"_electron"+multName[j]+"_eta"]->Fill(evt.m_lep_eta[i], evt.evtWeight*wt);
-        h[prefix+"_electron"+multName[j]+"_phi"]->Fill(evt.m_lep_phi[i], evt.evtWeight*wt);
-        h[prefix+"_electron"+multName[j]+"_iso"]->Fill(evt.m_lep_iso[i], evt.evtWeight*wt);
+        h[prefix+"_electron"+multName[j]+"_pt" ]->Fill(evt.m_lep_pt   [i], evt.evtWeight*wt);
+        h[prefix+"_electron"+multName[j]+"_eta"]->Fill(evt.m_lep_eta  [i], evt.evtWeight*wt);
+        h[prefix+"_electron"+multName[j]+"_phi"]->Fill(evt.m_lep_phi  [i], evt.evtWeight*wt);
+        h[prefix+"_electron"+multName[j]+"_iso"]->Fill(evt.m_lep_iso03[i], evt.evtWeight*wt);
     }
 }
 
