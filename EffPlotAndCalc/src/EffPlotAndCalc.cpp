@@ -26,9 +26,7 @@ using std::sqrt;
 
 // MAIN() - Used only to pass on input to EffPlotAndCalc class.
 int main(int argc, char* argv[])
-{ // Set up EffPlotAndCalc
-
-  // Try/catch set up for the sole pupose of catching false return on
+{ // Set up EffPlotAndCalc -  Try/catch set up for the sole pupose of catching false return on
     try { EffPlotAndCalc ePaC (argc, argv); }
     catch(const char* msg)
     {   if(string(msg) != "help") std::cerr << msg << endl;
@@ -37,22 +35,23 @@ int main(int argc, char* argv[])
     return 0;
 }
 
-
 EffPlotAndCalc::EffPlotAndCalc(int argc, char* argv[])
 {
   // Handle commandl line input
     if(!processCommandLineInput(argc, argv)) throw("help");
 
-  // Set up templates for jet efficiency histograms.
+  // Initial output
+    cout << "\n"
+            "===================================================================\n"
+            "===  calcDiffTagEff \n"  << endl;
+
+  // Set up templates for 2D jet efficiency histograms.
     int    nPtBins_  = 7;
     int    nEtaBins_ = 1;
     double ptBinBounds_[]  = {30,50,70,100,140,200,300,670};
     double etaBinBounds_[] = {-2.4, 2.4};
-    h_temp_ = new TH2F("h_temp","", nPtBins_, ptBinBounds_, nEtaBins_, etaBinBounds_);  h_temp_->Sumw2();
-
-    cout << "\n"
-            "===================================================================\n"
-            "===  calcDiffTagEff \n"  << endl;
+    h_temp_ = new TH2F("h_temp","", nPtBins_, ptBinBounds_, nEtaBins_, etaBinBounds_);
+    h_temp_->Sumw2();   h_temp_->SetOption("colz text");
 
   // Attempt to open input file and output file.
     cout << "  Opening file: " << fn_input_ << "..." << endl;
@@ -60,43 +59,79 @@ EffPlotAndCalc::EffPlotAndCalc(int argc, char* argv[])
     cout << "  Output to file: " << fn_output_ << "...\n" << endl;
     f_output_ = TFile::Open(fn_output_.c_str(), "RECREATE"); f_output_->cd();
 
-  // Set up output histograms
-    array<char,3>   flavors = {'l','c','b'};
+  // Set up arrays of flavors and tags to cycle through
+    const vector<TString> datasetLabels = {"dy", "tt", "ww", "wz", "zz"};
+    const vector<TString> decayChainLabels = {"Zuu", "Zee", "Zll"};
+    // const vector<TString> decayChainLabels = {"Zuu", "Zee"};
+    const vector<TString> selectionLabels = {"loose", "zpjmet"};
     // const vector<TString> svTypes = {"noSV", "oldSV", "pfSV", "pfISV", "qcSV", "cISV", "cISVf", "cISVp"};
     const vector<TString> svTypes = {"noSV", "pfSV", "pfISV", "qcSV", "cISV", "cISVf", "cISVp"};
     const vector<TString> tags    = {"NoHF","CSVL","CSVM","CSVT", "CSVS"};
-    for( char& f : flavors)
-    {   h_nJets[f]  =    (TH2F*) h_temp_ ->Clone(TString::Format("h_n%cJets", f));
-        hr_nJets[f] =    (TH2F*) f_input_->Get(  TString::Format("raw_eff_plots/dy/Zuu_Z%c/n_%cJets_2D", f, f))
-                                         ->Clone(TString::Format("n_%cJets_2D_comb",f));
-        hr_nJets[f]->Add((TH2F*) f_input_->Get(  TString::Format("raw_eff_plots/dy/Zee_Z%c/n_%cJets_2D", f, f)));
-      // Rebin plots
-        transferContents(hr_nJets[f], h_nJets[f]);
-        for( const TString & tag : tags )
-            for( const TString & sv : svTypes)
-        {   cout << "\tCreating Eff. for conditions: " << f << "," << tag << "," << sv << "..." << endl;
-            h_nTaggedJets [f][tag][sv] =    (TH2F*) h_temp_ ->Clone(TString::Format("h_nt%cJets_%s%s"                             ,f,tag.Data(),sv.Data()));
-            hr_nTaggedJets[f][tag][sv] =    (TH2F*) f_input_->Get(  TString::Format("raw_eff_plots/dy/Zuu_Z%c/nt_%cJets_2D_%s%s",f,f,tag.Data(),sv.Data()))
-                                                        ->Clone(TString::Format("nt_%cJets_2D_%s%s_comb",f,tag.Data(),sv.Data()));
-            hr_nTaggedJets[f][tag][sv]->Add((TH2F*) f_input_->Get(  TString::Format("raw_eff_plots/dy/Zee_Z%c/nt_%cJets_2D_%s%s",f,f,tag.Data(),sv.Data())));
-          // Rebin plots
-            transferContents(hr_nTaggedJets [f][tag][sv], h_nTaggedJets[f][tag][sv]);
+    array<char,3>   flavors = {'l','c','b'};
+
+  // Set up plot names.
+    efficiencyPlotNameFormat    = "%s_%s_%s_%s%s_%cJetEff"    ;
+    numeratorPlotNameFormat     = "%s_%s_%s_n_%s%s_%cJets"    ;
+    denominatorPlotNameFormat   = "%s_%s_%s_n_NoHFnoSV_%cJets";  // "DS_DC_SEL_n_HFSV_fJets"
+    numeratorPlotSourceFormat   = "raw_jet_eff_plots/%s/%s/%s/n_%s%s_%cJets_2D"    ;
+    denominatorPlotSourceFormat = "raw_jet_eff_plots/%s/%s/%s/n_NoHFnoSV_%cJets_2D";
+    // "raw_jet_eff_plots/<DATASET>/<DECAYCHAIN>/<SELECTION>/nt_<HFTAG><SVTYPE>_<FLAVOR>Jets<1Dvs2D>"
+    // Denominator plot is same as tagged plots with no tag selection.
+
+  // Cycle through everything. Extrat plots from file, then create efficiency plots.
+    for(     const TString&  ds : datasetLabels    )
+      for(   const TString& sel : selectionLabels  )
+        for( const TString&  dc : decayChainLabels )
+          for(        char& flv : flavors          )
+    { // First create the denominator plots, using the NoHFnoSV plots.
+        TString denNewPlotLabel = TString::Format(denominatorPlotNameFormat  .Data(), ds.Data(), dc.Data(), sel.Data(), flv );
+        h_nJets[denNewPlotLabel] = (TH2F*) h_temp_ ->Clone(denNewPlotLabel);
+      // If not making a composite, grab source histograms from file.
+        if(dc != "Zll")
+        {   TString denSrcPlotLabel = TString::Format(denominatorPlotSourceFormat.Data(), ds.Data(), dc.Data(), sel.Data(), flv );
+            hr_nJets[denNewPlotLabel] = (TH2F*) f_input_->Get(denSrcPlotLabel)->Clone(denNewPlotLabel+"_src");
+        }
+        else
+        { // If using Zll, combine previously extracted Zee and Zuu plots.
+            TString denZeeNewPlotLabel = TString::Format(denominatorPlotNameFormat.Data(), ds.Data(), "Zee", sel.Data(), flv );
+            TString denZuuNewPlotLabel = TString::Format(denominatorPlotNameFormat.Data(), ds.Data(), "Zuu", sel.Data(), flv );
+            // hr_nJets[denNewPlotLabel] = (TH2F*) f_input_->Get(denSrcPlotLabel)->Clone(denNewPlotLabel+"_src");
+            hr_nJets[denNewPlotLabel] = (TH2F*) hr_nJets[denZeeNewPlotLabel]->Clone(denNewPlotLabel+"_src");
+            hr_nJets[denNewPlotLabel]->Add(hr_nJets[denZuuNewPlotLabel]);
+        }
+      // Rebin source plots into new plots
+        transferContents(hr_nJets[denNewPlotLabel], h_nJets[denNewPlotLabel]);
+
+      // Now cycle through tag and sv types, creating numerator plots, then efficiency plots.
+        for(     const TString & tag : tags    )
+            for( const TString & sv  : svTypes )
+        {
+            TString numNewPlotLabel = TString::Format(numeratorPlotNameFormat  .Data(), ds.Data(), dc.Data(), sel.Data(), tag.Data(), sv.Data(), flv );
+            TString numSrcPlotLabel = TString::Format(numeratorPlotSourceFormat.Data(), ds.Data(), dc.Data(), sel.Data(), tag.Data(), sv.Data(), flv );
+            h_nTaggedJets [numNewPlotLabel] = (TH2F*) h_temp_ ->Clone(numNewPlotLabel);
+          // If not making a composite, grab source histograms from file.
+            if(dc != "Zll")
+                hr_nTaggedJets[numNewPlotLabel] = (TH2F*) f_input_->Get(numSrcPlotLabel)->Clone(numNewPlotLabel+"_src");
+            else
+            { // If using Zll, combine previously extracted Zee and Zuu plots.
+                TString numZeeNewPlotLabel = TString::Format(numeratorPlotNameFormat.Data(), ds.Data(), "Zee", sel.Data(), tag.Data(), sv.Data(), flv );
+                TString numZuuNewPlotLabel = TString::Format(numeratorPlotNameFormat.Data(), ds.Data(), "Zuu", sel.Data(), tag.Data(), sv.Data(), flv );
+                hr_nTaggedJets[numNewPlotLabel] = (TH2F*) hr_nTaggedJets[numZeeNewPlotLabel]->Clone(numNewPlotLabel+"_src");
+                hr_nTaggedJets[numNewPlotLabel]->Add(hr_nTaggedJets[numZuuNewPlotLabel]);
+            }
+          // Rebin source plots into new plots
+            transferContents(hr_nTaggedJets[numNewPlotLabel], h_nTaggedJets[numNewPlotLabel]);
+
           // Make eff plot
-            h_JetTagEff[f][tag][sv] = makeEffPlots(TString::Format("h_%cJetTagEff_%s%s",f,tag.Data(),sv.Data()), h_nTaggedJets[f][tag][sv], h_nJets[f]);
-            printPlotValues(h_JetTagEff[f][tag][sv]);
+            TString effPlotName = TString::Format(efficiencyPlotNameFormat.Data(), ds.Data(), dc.Data(), sel.Data(), tag.Data(), sv.Data(), flv );
+            h_JetTagEff[effPlotName] = makeEffPlots(effPlotName, h_nTaggedJets[numNewPlotLabel], h_nJets[denNewPlotLabel]);
+            // printPlotValues(h_JetTagEff[effPlotName]);
         }
     }
 
   // Write histograms to file
-    for( char& f : flavors)
-    {   //h_nJets [f]->Write();
-        //hr_nJets[f]->Write();
-        for( const TString & tag : tags )
-            for( const TString & sv : svTypes)
-                h_JetTagEff[f][tag][sv]->Write();
-        // for( const TString & tag : tags ) h_nTaggedJets [f][tag]->Write();
-        // for( const TString & tag : tags ) hr_nTaggedJets[f][tag]->Write();
-    }
+    for( auto& label_effPlot : h_JetTagEff )
+        label_effPlot.second->Write();
     f_output_->Close();
 
     cout << "\n"
@@ -111,11 +146,6 @@ EffPlotAndCalc::~EffPlotAndCalc()
     delete f_input_;
     delete f_output_;
     delete h_temp_;
-    // for( auto& kv : h_nJets  ) delete kv.second;
-    // for( auto& kv : hr_nJets ) delete kv.second;
-    // for( auto& kv1 : h_nTaggedJets  ) for(auto kv2 : kv1.second) delete kv2.second;
-    // for( auto& kv1 : hr_nTaggedJets ) for(auto kv2 : kv1.second) delete kv2.second;
-    // for( auto& kv1 : h_JetTagEff    ) for(auto kv2 : kv1.second) delete kv2.second;
 }
 
 bool EffPlotAndCalc::processCommandLineInput(int argc, char* argv[])
