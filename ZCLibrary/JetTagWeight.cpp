@@ -42,7 +42,8 @@ bool JetTagWeight::setEffFile(const string& fn)
     for( char& f : flavor_)
         for( string& op : opPt_)
             for( string& sv : svTypes_)
-    {   TString plot_name = TString::Format("h_%cJetTagEff_%s%s", f, op.c_str(), sv.c_str());
+    {   TString plot_name = TString::Format("dy_Zll_zpjmet_%s%s_%cJetEff", op.c_str(), sv.c_str(), f);
+        // TString plot_name = TString::Format("h_%cJetTagEff_%s%s", f, op.c_str(), sv.c_str());
         jetTagEff_[f][op][sv] = (TH2F*) effFile->Get(plot_name.Data())->Clone((plot_name+"_clone").Data());
         // cout << "    " << jetTagEff_[f][op][sv]->GetName() << endl;
     }

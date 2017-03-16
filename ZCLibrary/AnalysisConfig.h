@@ -55,7 +55,8 @@ class AnalysisConfig : public ConfigReader
     float                                jetEtaMax              ;
     bool                                 jsonSelect             ;
     std::string                          jsonFile               ;
-    std::string                          btagEffFile            ;
+    std::string                          btagEffDYFile          ;
+    std::string                          btagEffBGFile          ;
     std::string                          btagSFFile             ;
     std::vector<std::string>             muonTriggers           ;
     std::vector<std::string>             elecTriggers           ;
@@ -66,7 +67,8 @@ class AnalysisConfig : public ConfigReader
     std::map<std::string, LeptonSFData> lepSFs;  // List of lepton scale factor storage objects, input from json files.
 
     LumiJSONReader lumiJSON;
-    JetTagWeight   jetTagWeight;
+    JetTagWeight*  jetTagWeightDY;
+    JetTagWeight*  jetTagWeightBG;
 
   private:
     void processBinString(std::vector<std::pair<float,float> >&, std::string&);  // For processing input string of bin variables. Outputs set of pairs with integrated pair first.

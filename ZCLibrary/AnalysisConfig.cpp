@@ -19,7 +19,7 @@ using std::cout;     using std::endl;   using std::stringstream;
 using std::string;   using std::pair;   using std::vector;
 
 AnalysisConfig::AnalysisConfig(TString fnc)
-: ConfigReader(fnc), jetTagWeight()
+: ConfigReader(fnc), jetTagWeightDY(NULL), jetTagWeightBG(NULL)
 {
   // Open and read in config file
     // setWeight["dy"     ] = pt.get<float>("DATASET WEIGHTS.dy"     );
@@ -136,10 +136,18 @@ AnalysisConfig::AnalysisConfig(TString fnc)
                                        );
 
   // Set up JetTagWeight
-    btagEffFile = pt.get<string>("BTAGGING.btag_eff_file");
-    btagSFFile  = pt.get<string>("BTAGGING.btag_sf_file");
-    jetTagWeight.setSFFile( btagSFFile );
-    jetTagWeight.setEffFile(btagEffFile);
+    btagEffDYFile = pt.get<string>("BTAGGING.btag_eff_file_dy");
+    btagEffBGFile = pt.get<string>("BTAGGING.btag_eff_file_bg");
+    btagSFFile    = pt.get<string>("BTAGGING.btag_sf_file"    );
+    jetTagWeightBG = new JetTagWeight();
+    jetTagWeightBG->setSFFile( btagSFFile );
+    jetTagWeightBG->setEffFile(btagEffBGFile);
+    if(btagEffBGFile == btagEffDYFile) jetTagWeightDY = jetTagWeightBG;
+    else
+    {   jetTagWeightDY = new JetTagWeight();
+        jetTagWeightDY->setSFFile( btagSFFile );
+        jetTagWeightDY->setEffFile(btagEffDYFile);
+    }
 }
 
 

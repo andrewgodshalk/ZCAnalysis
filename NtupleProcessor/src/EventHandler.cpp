@@ -481,6 +481,7 @@ void EventHandler::evalCriteria()
   // See link for method used: https://twiki.cern.ch/twiki/bin/view/CMS/BTagSFMethods#1a_Event_reweighting_using_scale
     for(auto& hfTag : HFTags) for(auto& svType : SVType)
         if(hasHFJets[hfTag][svType]) jetTagEvtWeight[hfTag][svType] = calculateJetTagEvtWeight(hfTag.Data(), svType.Data());
+        // if(hasHFJets[hfTag][svType]) jetTagEvtWeight[hfTag][svType] = calculateJetTagEvtWeight(hfTag.Data(), svType.Data(), true);
 
   // Kick function if not using DY. Otherwise, check for origin from Z->tautau
     if(!usingDY) return;
@@ -554,7 +555,6 @@ float EventHandler::calculateJetMSVQuickCorrection(int jet_i)
 float EventHandler::calculateJetTagEvtWeight(string hfOpPt, string svOpPt, bool debug)
 { // For given flavor tag, calculate an event weight based on jet tagging efficiency and tagging data/mc scalefactors.
   // See link for method used: https://twiki.cern.ch/twiki/bin/view/CMS/BTagSFMethods#1a_Event_reweighting_using_scale
-  // MODIFIED 2017-03-03 - Currently doesn't take into account differing SV operating points. Just uses standard msv OP.
     float probData = 1.0;
     float probMC   = 1.0;
   // For each valid jet...
@@ -572,8 +572,9 @@ float EventHandler::calculateJetTagEvtWeight(string hfOpPt, string svOpPt, bool 
            default: flv = 'l';
         }
       // Get the jet tagging efficiency and SF
-        float jetEff = anCfg.jetTagWeight.getJetEff(flv, hfOpPt, svOpPt, m_jet_pt[jet_i], m_jet_eta[jet_i]);
-        float jetSF  = anCfg.jetTagWeight.getJetSF (flv, hfOpPt, m_jet_pt[jet_i], m_jet_eta[jet_i]);
+        JetTagWeight* jtw = usingDY ? anCfg.jetTagWeightDY : anCfg.jetTagWeightBG;
+        float jetEff = jtw->getJetEff(flv, hfOpPt, svOpPt, m_jet_pt[jet_i], m_jet_eta[jet_i]);
+        float jetSF  = jtw->getJetSF (flv, hfOpPt,         m_jet_pt[jet_i], m_jet_eta[jet_i]);
 
       // Get whether this jet was tagged or not.
         bool tagged = HFJets[hfOpPt][svOpPt][vJet_i];
@@ -590,9 +591,9 @@ float EventHandler::calculateJetTagEvtWeight(string hfOpPt, string svOpPt, bool 
     float wt = probData/probMC;
     if(debug) cout << "\n      jetTagEvtWeight calculated for " << hfOpPt << ": " << svOpPt << ": " << wt << std::fixed << endl;
 
-/////////////// TO FIX: 2017-03-03 TEMPORARY SOLUTION: Set wt to zero until new jet eff. histograms w/ sv selection created.
+    /////////////// TO FIX: 2017-03-03 TEMPORARY SOLUTION: Set wt to zero until new jet eff. histograms w/ sv selection created.
     if(TMath::IsNaN(wt) && svOpPt != "noSV") wt = 1.0;
-///////////////
+    ///////////////
 
     return wt;
 }
