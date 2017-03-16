@@ -84,8 +84,8 @@ NtupleProcessor::NtupleProcessor(TString ds, TString nf, TString nl, TString fnp
       // Open and set up appropriate file & tree
         // ntupleFile = TFile::Open(runParams.fn_ntuple[dataset.Data()]);
         ntupleFile = TFile::Open(fileString);
-	cout << "    Dataset = " << dataset << endl;
-	cout << "    File    = " << runParams.fn_ntuple[dataset.Data()] << endl;
+        cout << "    Dataset = " << dataset << endl;
+        cout << "    File    = " << runParams.fn_ntuple[dataset.Data()] << endl;
         if(!ntupleFile) cout << "NtupleProcessor: ERROR: Unable to open file " << runParams.fn_ntuple[dataset.Data()] << endl;
         TTree *ntuple   = (TTree*) ntupleFile->Get("tree");
 
@@ -250,7 +250,7 @@ void NtupleProcessor::createHistogramExtractorFromString(TString& inputString)
                 outputFile->mkdir(newDirName);
                 outDir = outputFile->GetDirectory(newDirName);
                 if(outDir) cout << "     Directory created: " << outDir->GetName() << endl;
-                else       cout << "     Directory " << newDirName << " still not working. Fix your code." << endl;
+                else       cout << "     Directory " << newDirName << " still not working. FIX YOUR CODE!" << endl;
             }
 
             hExtractors[newDirName] = new JetEffPlotExtractor(eHandler, outDir, options+dsOp);

@@ -90,7 +90,7 @@ bool EventHandler::mapTree(TTree* tree)
     TBranch * temp_branch;  // Temporary branch to get at members of struct-branches.
 
   // Check to see if VType fix branches are included in Ntuple.
-    bool hasVtypeFix = tree->GetListOfBranches()->FindObject("Vtype_new");
+    hasVtypeFix = tree->GetListOfBranches()->FindObject("Vtype_new");
     if(hasVtypeFix) cout << "  [EH]: VTYPE FIX FIELDS FOUND." << endl;
     else            cout << "  [EH]: VTYPE FIX FIELDS NOT FOUND." << endl;
 
@@ -150,6 +150,7 @@ bool EventHandler::mapTree(TTree* tree)
         branches_to_reactivate.push_back("vLeptons_new_eta"     );
         branches_to_reactivate.push_back("vLeptons_new_phi"     );
         branches_to_reactivate.push_back("vLeptons_new_mass"    );
+        branches_to_reactivate.push_back("vLeptons_new_charge"  );
         branches_to_reactivate.push_back("vLeptons_new_relIso03");
         branches_to_reactivate.push_back("vLeptons_new_relIso04");
     }
@@ -189,12 +190,12 @@ bool EventHandler::mapTree(TTree* tree)
 
   // Lep variables
     if(hasVtypeFix)
-    {   tree->SetBranchAddress( "vLeptons_new_pt"       ,  m_lep_pt     );
-        tree->SetBranchAddress( "vLeptons_new_eta"      ,  m_lep_eta    );
-        tree->SetBranchAddress( "vLeptons_new_phi"      ,  m_lep_phi    );
-        tree->SetBranchAddress( "vLeptons_new_charge"   ,  m_lep_charge );
-        tree->SetBranchAddress( "vLeptons_new_relIso03" ,  m_lep_iso03  );
-        tree->SetBranchAddress( "vLeptons_new_relIso04" ,  m_lep_iso04  );
+    {   tree->SetBranchAddress( "vLeptons_new_pt"       ,  m_lep_pt         );
+        tree->SetBranchAddress( "vLeptons_new_eta"      ,  m_lep_eta        );
+        tree->SetBranchAddress( "vLeptons_new_phi"      ,  m_lep_phi        );
+        tree->SetBranchAddress( "vLeptons_new_charge"   ,  m_new_lep_charge );
+        tree->SetBranchAddress( "vLeptons_new_relIso03" ,  m_lep_iso03      );
+        tree->SetBranchAddress( "vLeptons_new_relIso04" ,  m_lep_iso04      );
     }
     else
     {   tree->SetBranchAddress( "vLeptons_pt"       ,  m_lep_pt     );
@@ -317,10 +318,13 @@ void EventHandler::evalCriteria()
   // Perform selection on leptons and store indexes sorted by pt.
     if(m_Vtype==0)
     {
+      // Reset a couple of variables becase of ntuple fixes.
         m_nLeps = 2;
+        if(hasVtypeFix) { m_lep_charge[0] = m_new_lep_charge[0];
+                          m_lep_charge[1] = m_new_lep_charge[1]; }
         for(Index i=0; i<m_nLeps; i++)
         {
-            //cout << "    EventHandler::evalCriteria(): Muon Props (muon #, pt, eta, iso): = (" << i << ", " << m_muon_pt[i] << ", " << m_muon_eta[i] << ", " << m_muon_iso[i] << ")" << endl;
+            // cout << "    EventHandler::evalCriteria(): MUON Props (elec #, pt, eta, iso, charge): = (" << i << ", " << m_lep_pt[i] << ", " << m_lep_eta[i] << ", " << m_lep_iso04[i] << ", " << m_new_lep_charge[i] << ")" << endl;
           // Perform selection on this muon. Skip to next if it doesn't meet criteria.
             if(         m_lep_pt   [i] <anCfg.muonPtMin
                 || fabs(m_lep_eta  [i])>anCfg.muonEtaMax
@@ -336,9 +340,11 @@ void EventHandler::evalCriteria()
     else if(m_Vtype==1)
     {
         m_nLeps = 2;
+        if(hasVtypeFix) { m_lep_charge[0] = m_new_lep_charge[0];
+                          m_lep_charge[1] = m_new_lep_charge[1]; }
         for(Index i=0; i<m_nLeps; i++)
         {
-    //cout << "    EventHandler::evalCriteria(): ELEC Props (elec #, pt, eta, iso): = (" << i << ", " << m_lep_pt[i] << ", " << m_lep_eta[i] << ", " << m_lep_iso[i] << ")" << endl;
+            // cout << "    EventHandler::evalCriteria(): ELEC Props (elec #, pt, eta, iso, charge): = (" << i << ", " << m_lep_pt[i] << ", " << m_lep_eta[i] << ", " << m_lep_iso03[i] << ", " << m_new_lep_charge[i] << ")" << endl;
           // Perform selection on this electron.
             if(    m_lep_pt [i] < anCfg.elecPtMin
                 || (fabs(m_lep_eta[i])>anCfg.elecEtaInnerMax && (fabs(m_lep_eta[i])<anCfg.elecEtaOuterMin || fabs(m_lep_eta[i])>anCfg.elecEtaOuterMax))
@@ -353,18 +359,6 @@ void EventHandler::evalCriteria()
 
 
   // Check lepton id, isolation (TO IMPLEMENT. ALREADY DONE IN NTUPLER)
-  //
-
-  // Check for two valid muons, electrons. (Assume 0, 1 are leading and subleading.)
-  //  hasValidMuons =    validMuons.size() >=2   //  && m_Vtype==0
-                  //  && (m_muon_charge[validMuons[0]]*m_muon_charge[validMuons[1]]==-1 || !anCfg.dilepMuonReqOppSign )
-                  //  && isMuTriggered
-                  //  && m_Vtype==0
-  //  ;
-  //  hasValidElectrons =    validElectrons.size()>=2 //&& m_Vtype==1
-                      //  && (m_elec_charge[validElectrons[0]]*m_elec_charge[validElectrons[1]]==-1 || !anCfg.dilepElecReqOppSign )
-                      //  && isElTriggered
-  //  ;
     hasValidMuons =    m_Vtype==0
                     && isMuTriggered
                     && validLeptons.size() >=2

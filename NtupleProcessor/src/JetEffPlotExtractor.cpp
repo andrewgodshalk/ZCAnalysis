@@ -88,11 +88,11 @@ void JetEffPlotExtractor::fillHistos()
     nEvents["Triggered"]++;
 
   // Select for Z events with at least one jet.
-    bool zpjmetSelect = evt.isZpJEvent && evt.hasValidMET;
+    bool isZpjmetEvent = evt.isZpJEvent && evt.hasValidMET;
 
   // Fill some counters.
     nJets["Valid Jets"] += evt.validJets.size();
-    if(zpjmetSelect)
+    if(isZpjmetEvent)
     {   nEvents["Valid Z+j Event w/ MET cut"]++;
         nJets  ["Valid Jets from ZpJ"] += evt.validJets.size();
     }
@@ -100,7 +100,7 @@ void JetEffPlotExtractor::fillHistos()
     // Fill histograms
     for(const TString& selLabel : selectionLabels)
     { // Check if this event meets the desired selection. If not, move to the next.
-        if(selLabel=="zpjmet" && !zpjmetSelect) continue;
+        if(selLabel=="zpjmet" && !isZpjmetEvent) continue;
 
       // Cycle through the hf/sv combinations.
         for(    const TString& hfLabel : JetEffPlotExtractor::HFTags )
@@ -122,7 +122,7 @@ void JetEffPlotExtractor::fillHistos()
                 char flv = (evt.bMCJets[i] ? 'b' : (evt.cMCJets[i] ? 'c' : 'l'));
                 ((TH1*) h[ selLabel+"_n_"+hfLabel+svLabel+'_'+flv+"Jets"   ]) ->Fill(jet_pt,          evtWeight);
                 ((TH2*) h[ selLabel+"_n_"+hfLabel+svLabel+'_'+flv+"Jets_2D"]) ->Fill(jet_pt, jet_eta, evtWeight);
-                nJets[TString("Jets(")+'c'+") from "+selLabel+" ("+hfLabel+","+svLabel+")"]++;
+                nJets[TString("Jets(")+flv+") from "+selLabel+" ("+hfLabel+","+svLabel+")"]++;
             }
         }
     }

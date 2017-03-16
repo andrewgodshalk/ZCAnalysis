@@ -64,6 +64,7 @@ public:
     float m_Vtype ;     float m_jet_csv[maxNumJets];   int   m_lep_charge[maxNumElecs];   bool  m_triggers[54];
     int   m_zdecayMode; float m_jet_msv[maxNumJets];   float m_lep_iso03 [maxNumElecs];   float m_json        ;
                         int   m_jet_flv[maxNumJets];   float m_lep_iso04 [maxNumElecs];   int   m_event       ;
+    float m_new_lep_charge[2];
     int   m_jet_hadflv[maxNumJets];
     int   m_jet_parflv[maxNumJets];
     float m_jet_vtx_px[maxNumJets];
@@ -131,6 +132,7 @@ public:
     bool usingBottomHalfDY  ;
     bool usingEvenEventDY   ;
     bool usingOddEventDY    ;
+    bool hasVtypeFix        ;
 
   // Lepton Selection Variables
 //    std::vector<Index> validLeptons, validMuons, validElectrons;    // List of the indexes of muon objects, eventually ordered by pt.
