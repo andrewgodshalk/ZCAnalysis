@@ -50,8 +50,8 @@ EffPlotAndCalc::EffPlotAndCalc(int argc, char* argv[])
     int    nEtaBins_ = 1;
     double ptBinBounds_[]  = {30,50,70,100,140,200,300,670};
     double etaBinBounds_[] = {-2.4, 2.4};
-    h_temp_ = new TH2F("h_temp","", nPtBins_, ptBinBounds_, nEtaBins_, etaBinBounds_);
-    h_temp_->Sumw2();   h_temp_->SetOption("colz text");
+    h_temp_ = new TH2F("h_temp","Jet Selection Efficiency;Jet p_{T} (GeV); #eta", nPtBins_, ptBinBounds_, nEtaBins_, etaBinBounds_);
+    h_temp_->Sumw2();   h_temp_->SetOption("colz text89");
 
   // Attempt to open input file and output file.
     cout << "  Opening file: " << fn_input_ << "..." << endl;
