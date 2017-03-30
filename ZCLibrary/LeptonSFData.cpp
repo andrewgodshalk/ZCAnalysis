@@ -8,10 +8,10 @@ LeptonSFData.cpp
    for pt and eta.
    - Have function return NULL if no extrapolation, iterator (or bin?) otherwise?
 
-2016-09-11 - 
+2016-09-11 -
   Added an include for json_parser_read header file, included in the ZCLibrary
   directory. LPC boost libraries are out of date and contain a bug that prevents
-  the read-in of json files. Header is a bandaid that needs to be uncommented 
+  the read-in of json files. Header is a bandaid that needs to be uncommented
   when compiling on LPC.
 ------------------------------------------------------------------------------*/
 
@@ -48,12 +48,7 @@ LeptonSFData::LeptonSFData(string fn, string lt, string bp, bool efcb)
 
   // Determine what kind of file sfFileName is.
     string file_sfx = sfFileName_.substr(sfFileName_.size()-5, 5);
-//    if     ( file_sfx==".json" && (loadFromJSONSuccessful_=loadSFFromJSON(sfFileName_)) ) sfRetrievalFunction_ = &LeptonSFData::getSFFromJSON;
-//    else if( file_sfx==".root" &&                          loadSFFromROOT(sfFileName_)  ) sfRetrievalFunction_ = &LeptonSFData::getSFFromROOT;
-//    else {
-//        cerr << "    ERROR: Unable to load scale factors from file: " << sfFileName_ << endl;
-//        sfRetrievalFunction_ = &LeptonSFData::getNonSF;
-//    }
+    rootHist2D_ = binningPref_.substr(0,2) == "2D";
     if( file_sfx==".json") loadFromJSONSuccessful_=loadSFFromJSON(sfFileName_);
     if( file_sfx==".root") loadFromROOTSuccessful_=loadSFFromROOT(sfFileName_);
     if(!loadFromJSONSuccessful_ && !loadFromROOTSuccessful_)
@@ -66,8 +61,8 @@ LeptonSFData::LeptonSFData(string fn, string lt, string bp, bool efcb)
             cerr << "    ERROR: Lepton type " << leptonType_ << " not found in file " << sfFileName_ << endl;
 
       // Check if the desired input binning is found in the leptonType tree
-//        else if(sfPropTree_.find(leptonType_+"."+binningPref_) == sfPropTree_.not_found())
-//        cerr << "    ERROR: Binning preference " << binningPref_ << " not found tree for lepton type " << leptonType_ << endl;
+      // else if(sfPropTree_.find(leptonType_+"."+binningPref_) == sfPropTree_.not_found())
+      // cerr << "    ERROR: Binning preference " << binningPref_ << " not found tree for lepton type " << leptonType_ << endl;
 
         else  // All inputs are valid with the given parameters.
         { // Set the main prop tree to the child tree designated by leptonType_
@@ -101,22 +96,43 @@ bool LeptonSFData::loadSFFromROOT(string fn)
         return false;
     }
 
-  // Attempt to load histogram from file.
-    TH2F* temp_histo;
-    f_sfFile_->GetObject(leptonType_.c_str(), temp_histo);
-    if(!temp_histo){
-        cerr << "    ERROR: Unable to load SF Histogram from file. Histogram not found: " << leptonType_ << endl;
-        return false;
+  // Results different if using 1D or 2D histogram:
+    if(rootHist2D_)
+    { // Attempt to load histogram from file.
+        TH2F* temp_histo;
+        f_sfFile_->GetObject(leptonType_.c_str(), temp_histo);
+        if(!temp_histo){
+            cerr << "    ERROR: Unable to load SF Histogram from file. Histogram not found: " << leptonType_ << endl;
+            return false;
+        }
+
+      // Create a local clone of the histogram.
+        TString cloneName = TString("local_")+leptonType_+"_"+binningPref_;
+        h_sfHisto_ = (TH2F*) temp_histo->Clone(cloneName.Data());
+
+      // Set maximum bin values, then return true;
+        histEtaMaxBin_ = h_sfHisto_->GetXaxis()->GetNbins();
+        histPtMaxBin_  = h_sfHisto_->GetYaxis()->GetNbins();
+        cout << "histogram bins: " << histEtaMaxBin_ << "," << histPtMaxBin_ << endl;
+    }
+    else
+    { // Attempt to load 1D histogram from file.
+        TGraphAsymmErrors* temp_graph;
+        f_sfFile_->GetObject(leptonType_.c_str(), temp_graph);
+        if(!temp_graph){
+            cerr << "    ERROR: Unable to load SF Graph from file. Graph not found: " << leptonType_ << endl;
+            return false;
+        }
+
+      // Create a local clone of the histogram.
+        TString cloneName = TString("local_")+leptonType_+"_"+binningPref_;
+        h_graph_ = (TGraphAsymmErrors*) temp_graph->Clone(cloneName.Data());
+
+      // Set maximum bin values, then return true;
+        histEtaMaxBin_ = h_graph_->GetN();
+        cout << "histogram bins: " << histEtaMaxBin_ << endl;
     }
 
-  // Create a local clone of the histogram.
-    TString cloneName = TString("local_")+leptonType_+"_"+binningPref_;
-    h_sfHisto_ = (TH2F*) temp_histo->Clone(cloneName.Data());
-
-  // Set maximum bin values, then return true;
-    histEtaMaxBin_ = h_sfHisto_->GetXaxis()->GetNbins();
-    histPtMaxBin_  = h_sfHisto_->GetYaxis()->GetNbins();
-    cout << "histogram bins: " << histEtaMaxBin_ << "," << histPtMaxBin_ << endl;
 
 return true;
 }
@@ -220,22 +236,31 @@ pair<double, double> LeptonSFData::getSFFromROOT(double pt, double eta)   // Get
     if(binningPref_.find("abseta")!=string::npos) eta = fabs(eta);
 
   // Find bins corresponding to pt & eta.
-    int etaBin = h_sfHisto_->GetXaxis()->FindBin(eta);
-    int  ptBin = h_sfHisto_->GetYaxis()->FindBin( pt);
+    int etaBin = 0;
     bool outOfBounds = false;
-    if( etaBin==0                ) { etaBin = 1             ; outOfBounds=true; }
-    if( etaBin==histEtaMaxBin_+1 ) { etaBin = histEtaMaxBin_; outOfBounds=true; }
-    if(  ptBin==0                ) {  ptBin = 1             ; outOfBounds=true; }
-    if(  ptBin==histPtMaxBin_ +1 ) {  ptBin = histPtMaxBin_ ; outOfBounds=true; }
-    if(outOfBounds && !extrapolateFromClosestBin_) return std::make_pair(1.0, 0.0);
 
-  // Find value of corresponding bins.
-    double value = h_sfHisto_->GetBinContent(etaBin, ptBin);
-    double error = h_sfHisto_->GetBinError  (etaBin, ptBin);
-
-return std::make_pair(value, error);
-
-//return std::make_pair(1.0, 0.0);
+    if(rootHist2D_)
+    {   etaBin = h_sfHisto_   ->GetXaxis()->FindBin(eta);
+        if( etaBin==0                ) { etaBin = 1             ; outOfBounds=true; }
+        if( etaBin==histEtaMaxBin_+1 ) { etaBin = histEtaMaxBin_; outOfBounds=true; }
+        int  ptBin = h_sfHisto_->GetYaxis()->FindBin( pt);
+        if(  ptBin==0                ) {  ptBin = 1             ; outOfBounds=true; }
+        if(  ptBin==histPtMaxBin_ +1 ) {  ptBin = histPtMaxBin_ ; outOfBounds=true; }
+        if(outOfBounds && !extrapolateFromClosestBin_) return std::make_pair(1.0, 0.0);
+      // Find value of corresponding bins.
+        double value = h_sfHisto_->GetBinContent(etaBin, ptBin);
+        double error = h_sfHisto_->GetBinError  (etaBin, ptBin);
+        return std::make_pair(value, error);
+    }
+    else  // Look at 1D graph
+    {   etaBin = eta/0.2;
+        if( etaBin==histEtaMaxBin_ ) { etaBin = histEtaMaxBin_-1; outOfBounds=true; }
+        if(outOfBounds && !extrapolateFromClosestBin_) return std::make_pair(1.0, 0.0);
+        double valuex,valuey;
+        h_graph_->GetPoint(etaBin, valuex, valuey);
+        double error = h_graph_->GetErrorY(etaBin);
+        return std::make_pair(valuey, error);
+    }
 }
 
 

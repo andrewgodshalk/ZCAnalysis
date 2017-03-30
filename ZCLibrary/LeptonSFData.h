@@ -30,6 +30,7 @@
 //#include <boost/property_tree/ptree.hpp>
 #include <TFile.h>
 #include <TH2D.h>
+#include <TGraphAsymmErrors.h>
 
 class LeptonSFData
 {
@@ -64,6 +65,7 @@ class LeptonSFData
     bool jsonTreePopulated_;
     bool loadFromJSONSuccessful_;
     bool loadFromROOTSuccessful_;
+    bool rootHist2D_;
 
     // Max bins. Only valid when working with ROOT file.
     int   histEtaMaxBin_;        // Max bin of histogram eta axis.
@@ -71,8 +73,10 @@ class LeptonSFData
 
   // Root objects.
     // RECEIVING SEG FAULTS IF THEY AREN'T ADDED AT END OF CLASS DEF. SOMETHING TO LOOK INTO, MAYBE?
-    TFile* f_sfFile_ = 0;                       // ROOT file containing SF.
-    TH2F* h_sfHisto_ = 0;                       // 2D histogram containing sf.
+    TFile* f_sfFile_    = 0;        // ROOT file containing SF.
+    TH2F* h_sfHisto_    = 0;        // 2D histogram containing sf.
+    // TH1F* h_sfHisto_1D_ = 0;        // 1D histogram containing sf.
+    TGraphAsymmErrors* h_graph_ = 0; // Graph with 1D, abs eta axis
 
 };
 
