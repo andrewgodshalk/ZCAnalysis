@@ -52,6 +52,7 @@ public:
     float calculatePUReweight(int);
     float calculateJetMSVQuickCorrection(int);
     float calculateJetTagEvtWeight(std::string, std::string, bool debug=false);
+    void processLeptons();
 
   // Running Variables
     TString options;         // Options input with TreeIterator.
@@ -100,6 +101,30 @@ public:
     std::vector<int> m_muon_trig;
     std::vector<int> m_elec_trig;
 
+  // 2017-03-30 - Added for lepton combination.
+  int   m_nvLeps;
+  float m_vlep_pt    [maxNumElecs];
+  float m_vlep_eta   [maxNumElecs];
+  float m_vlep_phi   [maxNumElecs];
+  int   m_vlep_charge[maxNumElecs];
+  float m_vlep_iso03 [maxNumElecs];
+  float m_vlep_iso04 [maxNumElecs];
+  int   m_vlep_pdgId [maxNumElecs];
+  int   m_nselLeps;
+  float m_sellep_pt    [maxNumElecs];
+  float m_sellep_eta   [maxNumElecs];
+  float m_sellep_phi   [maxNumElecs];
+  int   m_sellep_charge[maxNumElecs];
+  float m_sellep_iso03 [maxNumElecs];
+  float m_sellep_iso04 [maxNumElecs];
+  int   m_sellep_pdgId [maxNumElecs];
+  float m_sellep_m     [maxNumElecs];
+  float m_old_Z_mass;
+  float m_old_Z_pt  ;
+  float m_old_Z_eta ;
+  float m_old_Z_phi ;
+  float m_old_Vtype ;
+
 // Calculated variables
     float Z_DelR, Z_DelPhi, Z_DelEta;
     // std::array<float, maxNumJets> jet_msv_quickCorr;
@@ -135,8 +160,8 @@ public:
     bool hasVtypeFix        ;
 
   // Lepton Selection Variables
-//    std::vector<Index> validLeptons, validMuons, validElectrons;    // List of the indexes of muon objects, eventually ordered by pt.
-    std::vector<Index> validLeptons;    // List of the indexes of muon objects, eventually ordered by pt.
+    std::vector<Index> validLeptons, validMuons, validElectrons;    // List of the indexes of leptons, eventually ordered by pt.
+    // std::vector<Index> validLeptons;    // List of the indexes of muon objects, eventually ordered by pt.
 
   // Jet Selection Variables
     std::vector<Index> validJets;       // lists all "valid" jets from standard cuts.

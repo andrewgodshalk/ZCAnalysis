@@ -71,7 +71,7 @@ ControlPlotMaker::ControlPlotMaker(TString fnac, TString fni, TString fno, TStri
   // For the Zuu, then Zee plots...
     //vector<string> decayChain = {"Zuu"};
     vector<string> decayChain = {"Zuu", "Zee"};
-    for(int ds_i=0; ds_i<1; ds_i++)
+    for(int ds_i=0; ds_i<2; ds_i++)
     {   cout << "  ControlPlotMaker::ControlPlotMaker(): Processing decay chain: " << decayChain[ds_i] << endl;
       // Set up output directory in output file
         TString newOutDir = TString("control_plots/combined_plots/")+decayChain[ds_i];
@@ -95,7 +95,7 @@ ControlPlotMaker::ControlPlotMaker(TString fnac, TString fni, TString fno, TStri
         TDirectory* templateSubDir  = 0;
         TDirectory* selectionSubDir = 0;
         TString selectionDirName = "";
-        while( templateSubDir = (TDirectory*) nextSubDir() )
+        while( (templateSubDir = (TDirectory*) nextSubDir()) )
         { // Set up the output for saving the stacked histograms.
             selectionDirName = templateSubDir->GetName();
             selectionSubDir  = outDir->mkdir(selectionDirName);
@@ -156,7 +156,7 @@ ControlPlotMaker::ControlPlotMaker(TString fnac, TString fni, TString fno, TStri
                 }
 
               // Create canvases
-                TString cName  = histToStack;
+                TString cName  = decayChain[ds_i]+"_"+histToStack;
                 TString cTitle = dsHist[allDatasets[0]]->GetTitle();
                 TCanvas *plot  = new TCanvas(cName,cTitle, 600, 600);
                 plot->cd();
