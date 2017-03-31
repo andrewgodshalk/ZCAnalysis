@@ -15,12 +15,13 @@
 #include <TBranch.h>
 #include <TLeaf.h>
 #include <TMath.h>
+#include <TLorentzVector.h>
 #include "TVector3.h"
 #include "../interface/EventHandler.h"
 
 using std::cout;   using std::endl;   using std::vector;   using std::swap;
 using std::setw;   using std::setprecision;
-using std::sqrt;   using std::string;
+using std::sqrt;   using std::string; using std::sort;
 
 const vector<TString> EventHandler::HFTags = {"NoHF", "CSVL", "CSVM", "CSVT", "CSVS"};
 // const vector<TString> EventHandler::SVType = {"noSV", "oldSV", "pfSV", "pfISV", "qcSV", "cISV", "cISVf", "cISVp"};
@@ -97,11 +98,11 @@ bool EventHandler::mapTree(TTree* tree)
   // Deactivate all branches, reactivate as necessary.
     tree->SetBranchStatus("*",0);
     vector<TString> branches_to_reactivate = {
-        "Vtype" , //"nvLeptons"          ,
-        "V_mass", "vLeptons_pt"        ,
-        "V_pt"  , "vLeptons_eta"       ,
-        "V_eta" , "vLeptons_phi"       ,
-        "V_phi" , "vLeptons_charge"    ,
+        "Vtype" , "nvLeptons"        ,
+        "V_mass", "vLeptons_pt"      ,
+        "V_pt"  , "vLeptons_eta"     ,
+        "V_eta" , "vLeptons_phi"     ,
+        "V_phi" , "vLeptons_charge"  , "vLeptons_pdgId"   ,
         "json"  , "vLeptons_relIso04", "vLeptons_relIso03",
         "nJet"       , "met_pt"   ,
         "Jet_pt"     , "met_phi"  ,
@@ -154,6 +155,17 @@ bool EventHandler::mapTree(TTree* tree)
         branches_to_reactivate.push_back("vLeptons_new_relIso03");
         branches_to_reactivate.push_back("vLeptons_new_relIso04");
     }
+    else
+    {
+      branches_to_reactivate.push_back("selLeptons_pt"      );
+      branches_to_reactivate.push_back("selLeptons_eta"     );
+      branches_to_reactivate.push_back("selLeptons_phi"     );
+      branches_to_reactivate.push_back("selLeptons_charge"  );
+      branches_to_reactivate.push_back("selLeptons_relIso04");
+      branches_to_reactivate.push_back("selLeptons_relIso03");
+      branches_to_reactivate.push_back("selLeptons_pdgId"   );
+      branches_to_reactivate.push_back("selLeptons_mass"    );
+    }
 
 
   // Reactivate branches specified above, as well as branches for triggers named in the analysis config.
@@ -173,11 +185,11 @@ bool EventHandler::mapTree(TTree* tree)
         tree->SetBranchAddress( "V_new_phi" , &m_Z_phi       );
     }
     else
-    {   tree->SetBranchAddress( "Vtype" , &m_Vtype       );
-        tree->SetBranchAddress( "V_mass", &m_Z_mass      );
-        tree->SetBranchAddress( "V_pt"  , &m_Z_pt        );
-        tree->SetBranchAddress( "V_eta" , &m_Z_eta       );
-        tree->SetBranchAddress( "V_phi" , &m_Z_phi       );
+    {   tree->SetBranchAddress( "Vtype" , &m_old_Vtype       );
+        tree->SetBranchAddress( "V_mass", &m_old_Z_mass      );
+        tree->SetBranchAddress( "V_pt"  , &m_old_Z_pt        );
+        tree->SetBranchAddress( "V_eta" , &m_old_Z_eta       );
+        tree->SetBranchAddress( "V_phi" , &m_old_Z_phi       );
     }
 
   // JSON
@@ -186,7 +198,6 @@ bool EventHandler::mapTree(TTree* tree)
     tree->SetBranchAddress( "nPVs", &m_nPVs );
     tree->SetBranchAddress( "run" , &m_run  );
     tree->SetBranchAddress( "lumi", &m_lumi );
-
 
   // Lep variables
     if(hasVtypeFix)
@@ -198,12 +209,23 @@ bool EventHandler::mapTree(TTree* tree)
         tree->SetBranchAddress( "vLeptons_new_relIso04" ,  m_lep_iso04      );
     }
     else
-    {   tree->SetBranchAddress( "vLeptons_pt"       ,  m_lep_pt     );
-        tree->SetBranchAddress( "vLeptons_eta"      ,  m_lep_eta    );
-        tree->SetBranchAddress( "vLeptons_phi"      ,  m_lep_phi    );
-        tree->SetBranchAddress( "vLeptons_charge"   ,  m_lep_charge );
-        tree->SetBranchAddress( "vLeptons_relIso03" ,  m_lep_iso03  );
-        tree->SetBranchAddress( "vLeptons_relIso04" ,  m_lep_iso04  );
+    {   tree->SetBranchAddress( "nvLeptons"           , &m_nvLeps      );
+        tree->SetBranchAddress( "vLeptons_pt"         ,  m_vlep_pt     );
+        tree->SetBranchAddress( "vLeptons_eta"        ,  m_vlep_eta    );
+        tree->SetBranchAddress( "vLeptons_phi"        ,  m_vlep_phi    );
+        tree->SetBranchAddress( "vLeptons_charge"     ,  m_vlep_charge );
+        tree->SetBranchAddress( "vLeptons_relIso03"   ,  m_vlep_iso03  );
+        tree->SetBranchAddress( "vLeptons_relIso04"   ,  m_vlep_iso04  );
+        tree->SetBranchAddress( "vLeptons_pdgId"      ,  m_vlep_pdgId  );
+        tree->SetBranchAddress( "nselLeptons"         , &m_nselLeps      );
+        tree->SetBranchAddress( "selLeptons_pt"       ,  m_sellep_pt     );
+        tree->SetBranchAddress( "selLeptons_eta"      ,  m_sellep_eta    );
+        tree->SetBranchAddress( "selLeptons_phi"      ,  m_sellep_phi    );
+        tree->SetBranchAddress( "selLeptons_charge"   ,  m_sellep_charge );
+        tree->SetBranchAddress( "selLeptons_relIso03" ,  m_sellep_iso03  );
+        tree->SetBranchAddress( "selLeptons_relIso04" ,  m_sellep_iso04  );
+        tree->SetBranchAddress( "selLeptons_pdgId"    ,  m_sellep_pdgId  );
+        tree->SetBranchAddress( "selLeptons_mass"     ,  m_sellep_m      );
     }
 
   // Jet variables
@@ -314,6 +336,8 @@ void EventHandler::evalCriteria()
     // May want to add some control plot information to the Ntupler/PATTupler.
     // For now, just finds leptons without intermediate steps.
     // Also need to implement trigger matching (or see if implemented in previous steps).
+
+    if(!hasVtypeFix) processLeptons();
 
   // Perform selection on leptons and store indexes sorted by pt.
     if(m_Vtype==0)
@@ -505,8 +529,8 @@ void EventHandler::resetSelectionVariables()
       = hasValidZBosonMass = zBosonFromTaus = hasValidMET
       = isZpJEvent = isZHFEvent = hasBJet = hasCJet = false;
     leadBJet = leadCJet = 200;
-  //  validMuons.clear();
-  //  validElectrons.clear();
+    validMuons.clear();
+    validElectrons.clear();
     validLeptons.clear();
     validJets.clear();
     evtWeight = 1.0;
@@ -596,4 +620,133 @@ float EventHandler::calculateJetTagEvtWeight(string hfOpPt, string svOpPt, bool 
     ///////////////
 
     return wt;
+}
+
+
+void EventHandler::processLeptons()
+{ // A replacement for VtypeReEvaluation script, because it doesn't seem to work on some ntuples.
+  // Split selLeptons into validLepton arrays (validMuon, validElectron)
+    // cout << " == EVENT: " << m_event << " == " << endl;
+
+    bool sortCheck   = false;
+    bool ptUnordered = false;
+
+    // vector<Index> validLeptons_temp;
+  // Add leptons to the appropriate lists.
+    for(int i = 0; i < m_nselLeps; i++)
+    {   //cout << " Checking lep " << i << " of " << m_nselLeps << "..." << endl;
+        validLeptons.push_back(i);
+        // validLeptons_temp.push_back(i);
+        if(abs(m_sellep_pdgId[i]) == 13) validMuons    .push_back(i);
+        if(abs(m_sellep_pdgId[i]) == 11) validElectrons.push_back(i);
+    }
+
+    // for(int i=m_nselLeps; i>0; i--) validLeptons.push_back( validLeptons_temp[i-1] );
+
+  // Check if any of the lists are unordered by pt, decending.
+    for( int i=0; i+1<validMuons.size(); i++ )
+    { if( m_sellep_pt[validMuons[i]] >= m_sellep_pt[validMuons[i+1]] ) continue;
+      ptUnordered = true; break;
+    }
+    for( int i=0; i+1<validElectrons.size(); i++ )
+    { if( m_sellep_pt[validElectrons[i]] >= m_sellep_pt[validElectrons[i+1]] ) continue;
+      ptUnordered = true; break;
+    }
+    for( int i=0; i+1<validLeptons.size(); i++ )
+    { if( m_sellep_pt[validLeptons[i]] >= m_sellep_pt[validLeptons[i+1]] ) continue;
+      ptUnordered = true; break;
+    }
+
+    sort(validMuons    .begin(), validMuons    .end(), [this](Index i, Index j)->bool {return this->m_sellep_pt[i] > this->m_sellep_pt[i];});
+    sort(validElectrons.begin(), validElectrons.end(), [this](Index i, Index j)->bool {return this->m_sellep_pt[i] > this->m_sellep_pt[i];});
+    sort(validLeptons  .begin(), validLeptons  .end(), [this](Index i, Index j)->bool {return this->m_sellep_pt[i] > this->m_sellep_pt[i];});
+
+    for( int i=0; i+1<validMuons.size(); i++)
+    { if( validMuons[i] < validMuons[i+1] ) continue;
+      sortCheck = true; break;
+    }
+    for( int i=0; i+1<validElectrons.size(); i++)
+    { if( validElectrons[i] < validElectrons[i+1] ) continue;
+      sortCheck = true; break;
+    }
+    for( int i=0; i+1<validLeptons.size(); i++)
+    { if( validLeptons[i] < validLeptons[i+1] ) continue;
+      sortCheck = true; break;
+    }
+
+    if(ptUnordered || sortCheck)
+    {  // cout << " == EVENT: " << m_event << " == " << endl;
+        cout << "    ValidLeptons  : "; for (Index& i : validLeptons  ) cout << i << "[" << abs(m_sellep_pdgId[i]) << "][" << m_sellep_pt[i] << "]"; cout << endl;
+        cout << "    ValidMuons    : "; for (Index& i : validMuons    ) cout << i << "[" << abs(m_sellep_pdgId[i]) << "][" << m_sellep_pt[i] << "]"; cout << endl;
+        cout << "    ValidElectrons: "; for (Index& i : validElectrons) cout << i << "[" << abs(m_sellep_pdgId[i]) << "][" << m_sellep_pt[i] << "]"; cout << endl;
+    }
+
+
+  // Check to see which has two. Muon takes precedence.
+    vector<vector<Index>*> lepLists = {&validMuons, &validElectrons};
+    m_Vtype = -1; m_nLeps = 0;
+    // for( auto& lepList : lepLists )
+    Index ld_lep = -1;
+    Index sl_lep = -1;
+    vector<Index> vLep;
+    for( int i=0; i<2; i++ )
+    { // Check if there are enough leptons and the leading lepton has enough momentum.
+        vector<Index>* lepList = lepLists[i];
+        if(lepList->size()<2 || m_sellep_pt[(ld_lep = lepList->at(0))] < 20) continue;
+        // ld_lep = lepList->at(0);
+      // Find leading op-sign lepton
+        sl_lep = -1;
+        for( int j=1; j<lepList->size(); j++) if(m_sellep_charge[lepList->at(j)]*m_sellep_charge[ld_lep] == -1) {sl_lep = lepList->at(j); break;}
+        if(sl_lep == -1) continue;
+        m_Vtype = i;
+        vLep = {ld_lep, sl_lep};
+        break;
+    }
+
+    if(m_Vtype == -1)
+    { // Check that the old vtype isn't 0 or 1.
+        if(m_old_Vtype == 0 || m_old_Vtype == 1) cout << "  BIG FAT ERROR: old dilep selection not held by new vtype: " << m_old_Vtype << " -> " << m_Vtype << endl;
+      // Otherwise set num leps to 0 and return.
+        m_nLeps = 0;
+        return;
+    }
+
+  // Save lepton variables to the appropriated "mapped" variables.
+    m_nLeps = 2;
+    vector<TLorentzVector> vlepLVs(2, TLorentzVector());
+    for(int i=0; i<2; i++)
+    {   m_lep_pt    [i] = m_sellep_pt    [vLep[i]];
+        m_lep_eta   [i] = m_sellep_eta   [vLep[i]];
+        m_lep_phi   [i] = m_sellep_phi   [vLep[i]];
+        m_lep_charge[i] = m_sellep_charge[vLep[i]];
+        m_lep_iso03 [i] = m_sellep_iso03 [vLep[i]];
+        m_lep_iso04 [i] = m_sellep_iso04 [vLep[i]];
+        vlepLVs[i].SetPtEtaPhiM(m_sellep_pt[vLep[i]], m_sellep_eta[vLep[i]], m_sellep_phi[vLep[i]], m_sellep_m[vLep[i]]);
+    }
+  // Calculate VType variables from the two leps.
+    TLorentzVector VBoson_LV = vlepLVs[0]+vlepLVs[1];
+    m_Z_mass = VBoson_LV.M()  ;
+    m_Z_pt   = VBoson_LV.Pt() ;
+    m_Z_eta  = VBoson_LV.Eta();
+    m_Z_phi  = VBoson_LV.Phi();
+
+    // cout << " VType Fix Status ";
+
+    validMuons    .clear();
+    validElectrons.clear();
+    validLeptons  .clear();
+
+  // Check NEW Variables against OLD variables.
+    // if(m_Vtype == m_old_Vtype)
+    // { // Print comparison
+    //     cout << "  --> MATCH: " << m_Vtype << endl;
+    //     cout << "    M  : " << m_old_Z_mass << " -> " << m_Z_mass << endl;
+    //     cout << "    Pt : " << m_old_Z_pt   << " -> " << m_Z_pt   << endl;
+    //     cout << "    Eta: " << m_old_Z_eta  << " -> " << m_Z_eta  << endl;
+    //     cout << "    Phi: " << m_old_Z_phi  << " -> " << m_Z_phi  << endl;
+    // }
+    // else cout << "  --> CHANGE: " << m_old_Vtype << " --> " << m_Vtype << endl;
+
+  // Profit.
+
 }
