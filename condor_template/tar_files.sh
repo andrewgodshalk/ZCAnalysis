@@ -10,3 +10,6 @@ tar czv --file=zcfiles.tgz --files-from=files_to_tar.txt
 
 # Clean up previous files.
 rm zcAC.ini zcNPC.ini dsList.txt
+
+# Add a directory for condor logs
+mkdir -p condor_logs

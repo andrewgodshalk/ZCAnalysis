@@ -1,15 +1,26 @@
 #!/bin/bash
 
 # Set up env and unpack all files
+echo " ---> SETTING UP ENVIRONMENT"
 source /cvmfs/cms.cern.ch/cmsset_default.sh 
 export SCRAM_ARCH="slc6_amd64_gcc530" 
 cd ${_CONDOR_SCRATCH_DIR} 
-pwd 
-cd /uscms_data/d2/godshalk/root6SetupDir/CMSSW_8_0_25/src 
-eval `scramv1 runtime -sh` 
+eval `scramv1 project CMSSW CMSSW_8_0_25`
+cd CMSSW_8_0_25/src/
+eval `scram runtime -sh` 
+echo "CMSSW: $CMSSW_BASE"
+echo "Current directory: "`pwd`
 cd - 
+pwd 
 tar -zxf zcfiles.tgz 
+mkdir -p condor_logs 
 
+# Print infomation on environment
+printenv
+echo "Starting job on " `date` #Date/time of start of job
+echo "Running on: `uname -a`" #Condor job is running on this node
+echo "System software: `cat /etc/redhat-release`" #Operating System on that node
+echo "hostname: " `hostname`
 
 # Set up variables to select files to run cmsRun, ZCAnalyzer over
 let jobNum=$1+1
@@ -21,9 +32,6 @@ echo $dataset
 echo $file
 
 # Run the main process
-#./NtupleProcessor.exe -d $dsName -n zcNPC_runII.ini -a zcAnalysisConfig_runII.ini
-#./NtupleProcessor.exe -d $dsName -n zcNPC_2016.ini -a zcAC_runII_noSF.ini
-#./NtupleProcessor.exe -d $dsName -n zcNPC_2016_SingleLepSets.ini -a zcAC_runII_muonIDISO_2016-12-22.ini
 ./NtupleProcessor.exe -N $file -L $ntuple -d $dataset -n zcNPC.ini -a zcAC.ini
 
 # Clean up
@@ -35,3 +43,4 @@ rm zcNPC*
 rm dsList.txt
 rm zcfiles.tgz
 rm zcControlPlotConfig_default.ini
+rm CMSSW_8_0_25 -r

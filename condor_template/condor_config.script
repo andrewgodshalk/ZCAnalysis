@@ -1,13 +1,16 @@
+LOGDIR = condor_logs
+
 universe = vanilla
 Executable = condor_executable.sh
 Arguments = $(Process)
 Should_Transfer_Files = YES
-WhenToTransferOutput = ON_EXIT
+WhenToTransferOutput = ON_EXIT_OR_EVICT
 Transfer_Input_Files = zcfiles.tgz
-Output = zcntupler_$(Cluster)_$(Process).stdout
-Error = zcntupler_$(Cluster)_$(Process).stderr
-Log = zcntupler_$(Cluster)_$(Process).log
-notify_user = ${LOGNAME}@FNAL.GOV
+Output = $(LOGDIR)/zc_$(Cluster)_$(Process).stdout
+Error  = $(LOGDIR)/zc_$(Cluster)_$(Process).stderr
+Log    = $(LOGDIR)/zc_$(Cluster)_$(Process).log
+notify_user = godshalk@FNAL.GOV
 +LENGTH="SHORT"
 x509userproxy = /tmp/x509up_u42382
-Queue 2 
+Queue 193
+#Queue 1
