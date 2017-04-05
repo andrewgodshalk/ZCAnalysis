@@ -65,6 +65,7 @@ public:
     float m_Vtype ;     float m_jet_csv[maxNumJets];   int   m_lep_charge[maxNumElecs];   bool  m_triggers[54];
     int   m_zdecayMode; float m_jet_msv[maxNumJets];   float m_lep_iso03 [maxNumElecs];   float m_json        ;
                         int   m_jet_flv[maxNumJets];   float m_lep_iso04 [maxNumElecs];   int   m_event       ;
+                                                       int   m_lep_pdgId [maxNumElecs];
     float m_new_lep_charge[2];
     int   m_jet_hadflv[maxNumJets];
     int   m_jet_parflv[maxNumJets];
@@ -119,6 +120,7 @@ public:
   float m_sellep_iso04 [maxNumElecs];
   int   m_sellep_pdgId [maxNumElecs];
   float m_sellep_m     [maxNumElecs];
+  int   m_sellep_eleMVAIdSppring16GenPurp [maxNumElecs];
   float m_old_Z_mass;
   float m_old_Z_pt  ;
   float m_old_Z_eta ;

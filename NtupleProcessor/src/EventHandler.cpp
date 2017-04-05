@@ -155,17 +155,15 @@ bool EventHandler::mapTree(TTree* tree)
         branches_to_reactivate.push_back("vLeptons_new_relIso03");
         branches_to_reactivate.push_back("vLeptons_new_relIso04");
     }
-    else
-    {
-      branches_to_reactivate.push_back("selLeptons_pt"      );
-      branches_to_reactivate.push_back("selLeptons_eta"     );
-      branches_to_reactivate.push_back("selLeptons_phi"     );
-      branches_to_reactivate.push_back("selLeptons_charge"  );
-      branches_to_reactivate.push_back("selLeptons_relIso04");
-      branches_to_reactivate.push_back("selLeptons_relIso03");
-      branches_to_reactivate.push_back("selLeptons_pdgId"   );
-      branches_to_reactivate.push_back("selLeptons_mass"    );
-    }
+    branches_to_reactivate.push_back("selLeptons_pt"      );
+    branches_to_reactivate.push_back("selLeptons_eta"     );
+    branches_to_reactivate.push_back("selLeptons_phi"     );
+    branches_to_reactivate.push_back("selLeptons_charge"  );
+    branches_to_reactivate.push_back("selLeptons_relIso04");
+    branches_to_reactivate.push_back("selLeptons_relIso03");
+    branches_to_reactivate.push_back("selLeptons_pdgId"   );
+    branches_to_reactivate.push_back("selLeptons_mass"    );
+    branches_to_reactivate.push_back("selLeptons_eleMVAIdSppring16GenPurp");
 
 
   // Reactivate branches specified above, as well as branches for triggers named in the analysis config.
@@ -208,25 +206,24 @@ bool EventHandler::mapTree(TTree* tree)
         tree->SetBranchAddress( "vLeptons_new_relIso03" ,  m_lep_iso03      );
         tree->SetBranchAddress( "vLeptons_new_relIso04" ,  m_lep_iso04      );
     }
-    else
-    {   tree->SetBranchAddress( "nvLeptons"           , &m_nvLeps      );
-        tree->SetBranchAddress( "vLeptons_pt"         ,  m_vlep_pt     );
-        tree->SetBranchAddress( "vLeptons_eta"        ,  m_vlep_eta    );
-        tree->SetBranchAddress( "vLeptons_phi"        ,  m_vlep_phi    );
-        tree->SetBranchAddress( "vLeptons_charge"     ,  m_vlep_charge );
-        tree->SetBranchAddress( "vLeptons_relIso03"   ,  m_vlep_iso03  );
-        tree->SetBranchAddress( "vLeptons_relIso04"   ,  m_vlep_iso04  );
-        tree->SetBranchAddress( "vLeptons_pdgId"      ,  m_vlep_pdgId  );
-        tree->SetBranchAddress( "nselLeptons"         , &m_nselLeps      );
-        tree->SetBranchAddress( "selLeptons_pt"       ,  m_sellep_pt     );
-        tree->SetBranchAddress( "selLeptons_eta"      ,  m_sellep_eta    );
-        tree->SetBranchAddress( "selLeptons_phi"      ,  m_sellep_phi    );
-        tree->SetBranchAddress( "selLeptons_charge"   ,  m_sellep_charge );
-        tree->SetBranchAddress( "selLeptons_relIso03" ,  m_sellep_iso03  );
-        tree->SetBranchAddress( "selLeptons_relIso04" ,  m_sellep_iso04  );
-        tree->SetBranchAddress( "selLeptons_pdgId"    ,  m_sellep_pdgId  );
-        tree->SetBranchAddress( "selLeptons_mass"     ,  m_sellep_m      );
-    }
+    tree->SetBranchAddress( "nvLeptons"           , &m_nvLeps      );
+    tree->SetBranchAddress( "vLeptons_pt"         ,  m_vlep_pt     );
+    tree->SetBranchAddress( "vLeptons_eta"        ,  m_vlep_eta    );
+    tree->SetBranchAddress( "vLeptons_phi"        ,  m_vlep_phi    );
+    tree->SetBranchAddress( "vLeptons_charge"     ,  m_vlep_charge );
+    tree->SetBranchAddress( "vLeptons_relIso03"   ,  m_vlep_iso03  );
+    tree->SetBranchAddress( "vLeptons_relIso04"   ,  m_vlep_iso04  );
+    tree->SetBranchAddress( "vLeptons_pdgId"      ,  m_vlep_pdgId  );
+    tree->SetBranchAddress( "nselLeptons"         , &m_nselLeps      );
+    tree->SetBranchAddress( "selLeptons_pt"       ,  m_sellep_pt     );
+    tree->SetBranchAddress( "selLeptons_eta"      ,  m_sellep_eta    );
+    tree->SetBranchAddress( "selLeptons_phi"      ,  m_sellep_phi    );
+    tree->SetBranchAddress( "selLeptons_charge"   ,  m_sellep_charge );
+    tree->SetBranchAddress( "selLeptons_relIso03" ,  m_sellep_iso03  );
+    tree->SetBranchAddress( "selLeptons_relIso04" ,  m_sellep_iso04  );
+    tree->SetBranchAddress( "selLeptons_pdgId"    ,  m_sellep_pdgId  );
+    tree->SetBranchAddress( "selLeptons_mass"     ,  m_sellep_m      );
+    tree->SetBranchAddress( "selLeptons_eleMVAIdSppring16GenPurp", m_sellep_eleMVAIdSppring16GenPurp );
 
   // Jet variables
     tree->SetBranchAddress( "nJet"               , &m_nJets             );
@@ -339,13 +336,21 @@ void EventHandler::evalCriteria()
 
     if(!hasVtypeFix) processLeptons();
 
+    // cout << "\nVTYPE: " << m_Vtype << endl;
+
+    // for(int i=0; i<m_nselLeps; i++)
+    //   cout << "    EH: Selected Lep Props ( #, id, pt, eta, iso, charge, MVA): = (" << i << ", " << m_sellep_pdgId[i] << ", " << m_sellep_pt[i] << ", " << m_sellep_eta[i] << ", " << m_sellep_iso03[i] << ", " << m_sellep_charge[i] << ", " << m_sellep_eleMVAIdSppring16GenPurp[i] << ")" << endl;
+
   // Perform selection on leptons and store indexes sorted by pt.
     if(m_Vtype==0)
     {
       // Reset a couple of variables becase of ntuple fixes.
         m_nLeps = 2;
         if(hasVtypeFix) { m_lep_charge[0] = m_new_lep_charge[0];
-                          m_lep_charge[1] = m_new_lep_charge[1]; }
+                          m_lep_charge[1] = m_new_lep_charge[1];
+                        //   m_lep_pdgId [0] = m_new_lep_pdgId [0];
+                        //   m_lep_pdgId [1] = m_new_lep_pdgId [1];
+                        }
         for(Index i=0; i<m_nLeps; i++)
         {
             // cout << "    EventHandler::evalCriteria(): MUON Props (elec #, pt, eta, iso, charge): = (" << i << ", " << m_lep_pt[i] << ", " << m_lep_eta[i] << ", " << m_lep_iso04[i] << ", " << m_new_lep_charge[i] << ")" << endl;
@@ -368,7 +373,7 @@ void EventHandler::evalCriteria()
                           m_lep_charge[1] = m_new_lep_charge[1]; }
         for(Index i=0; i<m_nLeps; i++)
         {
-            // cout << "    EventHandler::evalCriteria(): ELEC Props (elec #, pt, eta, iso, charge): = (" << i << ", " << m_lep_pt[i] << ", " << m_lep_eta[i] << ", " << m_lep_iso03[i] << ", " << m_new_lep_charge[i] << ")" << endl;
+            // cout << "    EventHandler::evalCriteria(): ELEC Props (elec #, pt, eta, iso, charge): = (" << i << ", " << m_lep_pt[i] << ", " << m_lep_eta[i] << ", " << m_lep_iso03[i] << ", " << m_lep_charge[i] << ")" << endl;
           // Perform selection on this electron.
             if(    m_lep_pt [i] < anCfg.elecPtMin
                 || (fabs(m_lep_eta[i])>anCfg.elecEtaInnerMax && (fabs(m_lep_eta[i])<anCfg.elecEtaOuterMin || fabs(m_lep_eta[i])>anCfg.elecEtaOuterMax))
@@ -637,8 +642,9 @@ void EventHandler::processLeptons()
     {   //cout << " Checking lep " << i << " of " << m_nselLeps << "..." << endl;
         validLeptons.push_back(i);
         // validLeptons_temp.push_back(i);
-        if(abs(m_sellep_pdgId[i]) == 13) validMuons    .push_back(i);
-        if(abs(m_sellep_pdgId[i]) == 11) validElectrons.push_back(i);
+        if(   abs(m_sellep_pdgId[i] ) == 13             ) validMuons    .push_back(i);
+        if(   abs(m_sellep_pdgId[i] ) == 11
+           && m_sellep_eleMVAIdSppring16GenPurp[i] >= 1 ) validElectrons.push_back(i);
     }
 
     // for(int i=m_nselLeps; i>0; i--) validLeptons.push_back( validLeptons_temp[i-1] );
@@ -686,8 +692,8 @@ void EventHandler::processLeptons()
     vector<vector<Index>*> lepLists = {&validMuons, &validElectrons};
     m_Vtype = -1; m_nLeps = 0;
     // for( auto& lepList : lepLists )
-    Index ld_lep = -1;
-    Index sl_lep = -1;
+    int ld_lep = -1;
+    int sl_lep = -1;
     vector<Index> vLep;
     for( int i=0; i<2; i++ )
     { // Check if there are enough leptons and the leading lepton has enough momentum.
@@ -721,6 +727,7 @@ void EventHandler::processLeptons()
         m_lep_charge[i] = m_sellep_charge[vLep[i]];
         m_lep_iso03 [i] = m_sellep_iso03 [vLep[i]];
         m_lep_iso04 [i] = m_sellep_iso04 [vLep[i]];
+        m_lep_pdgId [i] = m_sellep_pdgId [vLep[i]];
         vlepLVs[i].SetPtEtaPhiM(m_sellep_pt[vLep[i]], m_sellep_eta[vLep[i]], m_sellep_phi[vLep[i]], m_sellep_m[vLep[i]]);
     }
   // Calculate VType variables from the two leps.
