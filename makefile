@@ -8,6 +8,7 @@ all : NtupleProcessor ControlPlotMaker EffPlotAndCalc CombineBCLTemplates
 	make -f NtupleProcessor/makefile
 	make -f ControlPlotMaker/makefile
 	make -C EffPlotAndCalc
+	make -C EventEffPlotAndCalc
 
 # EffPlotAndCalc :
 # 	$(CC) EffPlotAndCalc.cpp -o EffPlotAndCalc.exe $(ROOTFLAGS) -lboost_program_options
@@ -18,4 +19,5 @@ CombineBCLTemplates :
 clean :
 	make clean -f NtupleProcessor/makefile
 	make clean -f ControlPlotMaker/makefile
-	make clean - EffPlotAndCalc
+	make clean -f EffPlotAndCalc/makefile
+	make clean -f EventEffPlotAndCalc/makefile
