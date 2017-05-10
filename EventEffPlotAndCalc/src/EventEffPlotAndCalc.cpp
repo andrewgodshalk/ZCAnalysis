@@ -54,10 +54,12 @@ EventEffPlotAndCalc::EventEffPlotAndCalc(int argc, char* argv[])
     // double ptBinBounds_[]   = {30, 32, 34, 36, 38, 40, 42, 44, 46, 48, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95, 100,
     //                           110, 120, 130, 140, 150, 160, 170, 180, 190, 200, 220, 240, 260, 280, 300,
     //                           350, 400, 450, 500, 670};
-    // h_temp_ = new TH1F("h_temp","", nPtBins_, ptBinBounds_);  h_temp_->Sumw2();
-    int maxX = 660;
-    int binWidth = 20;
-    h_temp_ = new TH1F("h_temp","", maxX/binWidth, 0, maxX);  h_temp_->Sumw2();
+    double ptBinBounds_[] = {30, 50, 100, 140, 200, 300, 670};
+    nPtBins_ = 6;
+    h_temp_ = new TH1F("h_temp","", nPtBins_, ptBinBounds_);  h_temp_->Sumw2();
+    // int maxX = 660;
+    // int binWidth = 20;
+    // h_temp_ = new TH1F("h_temp","", maxX/binWidth, 0, maxX);  h_temp_->Sumw2();
 
   // Attempt to open input file and output file.
     cout << "  Opening file: " << fn_input_ << "..." << endl;
@@ -68,24 +70,29 @@ EventEffPlotAndCalc::EventEffPlotAndCalc(int argc, char* argv[])
   // Set up output histograms
     array<char,3>   flavors = {'l','c','b'};
     // const vector<TString> svTypes = {"noSV", "oldSV", "pfSV", "pfISV", "qcSV", "cISV", "cISVf", "cISVp"};
-    const vector<TString> svTypes = {"noSV", "pfSV", "pfISV", "qcSV", "cISV", "cISVf", "cISVp"};
-    const vector<TString> tags    = {"NoHF","CSVL","CSVM","CSVT", "CSVS"};
+    // const vector<TString> svTypes = {"noSV", "pfSV", "pfISV", "qcSV", "cISV", "cISVf", "cISVp"};
+    // const vector<TString> tags    = {"NoHF","CSVL","CSVM","CSVT", "CSVS"};
+    const vector<TString> svTypes = {"noSV", "cISVf"};
+    const vector<TString> tags    = {"NoHF", "CSVM"};
     for( char& f : flavors)
     { // Set up properly binned storage histos.
-        h_nEvts     [f] = (TH1F*) h_temp_ ->Clone(TString::Format("h_nZ%cEvents", f));
-        hr_nEvts[f] = (TH1F*) f_input_ ->Get(  TString::Format("raw_eff_plots/dy/Zuu_Z%c/n_Z%cEvents", f, f))
-                                         ->Clone(TString::Format("n_Z%cEvents_comb",f));
-        // hr_nEvts[f]->Add((TH1F*) f_input_->Get(  TString::Format("raw_eff_plots/dy/Zee_Z%c/n_Z%cEvents", f, f)));
+        cout << "Retrieving plots for " << f << "...";
+        h_nEvts [f] = (TH1F*) h_temp_  ->Clone(TString::Format("h_nZ%cEvents", f));
+        hr_nEvts[f] = (TH1F*) f_input_ ->Get(  TString::Format("raw_event_eff_plots/dy/Zuu_Z%c/nZfEvents_NoHFnoSV", f))
+                                       ->Clone(TString::Format("n_Z%cEvents_comb",f));
+        // hr_nEvts[f]->Add((TH1F*) f_input_->Get(  TString::Format("raw_eff_plots/dy/Zuu_Z%c/n_Z%cEvents", f, f)));
+        cout << " done." << endl;
       // Rebin plots
         transferContents(hr_nEvts[f], h_nEvts[f]);
         for( const TString & tag : tags )
             for( const TString & sv : svTypes)
-        {   cout << "\tCreating Eff. for conditions: " << f << "," << tag << "," << sv << "..." << endl;
-            h_nTaggedEvts [f][tag][sv] = (TH1F*) h_temp_ ->Clone(TString::Format("h_nt_Z%cEvts_%s%s"                           ,f,tag.Data(),sv.Data()));
-            hr_nTaggedEvts[f][tag][sv] = (TH1F*) f_input_->Get(  TString::Format("raw_eff_plots/dy/Zuu_Z%c/nt_Z%cEvents_%s%s",f,f,tag.Data(),sv.Data()))
-                                                         ->Clone(TString::Format("h_nt_Z%cEvts_%s%s_comb"                      ,f,tag.Data(),sv.Data()));
-            // hr_nTaggedEvts[f][tag][sv]->Add((TH1F*) f_input_->Get(  TString::Format("raw_eff_plots/dy/Zee_Z%c/nt_%cJets_2D_%s%s",f,f,tag.Data(),sv.Data())));
+        {   cout << "\tCreating Eff. for conditions: " << f << "," << tag << "," << sv << "...";
+            h_nTaggedEvts [f][tag][sv] = (TH1F*) h_temp_ ->Clone(TString::Format("h_nt_Z%cEvts_%s%s"                            ,f,tag.Data(),sv.Data()));
+            hr_nTaggedEvts[f][tag][sv] = (TH1F*) f_input_->Get(  TString::Format("raw_event_eff_plots/dy/Zuu_Z%c/nZfEvents_%s%s",f,tag.Data(),sv.Data()))
+                                                         ->Clone(TString::Format("h_nt_Z%cEvts_%s%s_comb"                       ,f,tag.Data(),sv.Data()));
+            // hr_nTaggedEvts[f][tag][sv]->Add((TH1F*) f_input_->Get(  TString::Format("raw_eff_plots/dy/Zuu_Z%c/nt_%cJets_2D_%s%s",f,f,tag.Data(),sv.Data())));
           // Rebin plots
+            cout << " done. Transferring contents." << endl;
             transferContents(hr_nTaggedEvts[f][tag][sv], h_nTaggedEvts[f][tag][sv]);
           // Make eff plot
             h_EvtTagEff[f][tag][sv] = makeEffPlots(TString::Format("h_Z%cEvtTagEff_%s%s",f,tag.Data(),sv.Data()), h_nTaggedEvts[f][tag][sv], h_nEvts[f]);
@@ -93,13 +100,16 @@ EventEffPlotAndCalc::EventEffPlotAndCalc(int argc, char* argv[])
         }
     }
     // Set up histograms from data.
+
+    cout << "Retrieving plots from data..." << endl;
     for( const TString & tag : tags )
         for( const TString & sv : svTypes)
-    {   // cout << "\tExtracting Results from Data for conditions: " << tag << "," << sv << "..." << endl;
-        h_nTaggedEvts_Data [tag][sv] = (TH1F*) h_temp_ ->Clone(TString::Format("h_nt_ZHFEvts_%s%s"                 ,tag.Data(),sv.Data()));
-        hr_nTaggedEvts_Data[tag][sv] = (TH1F*) f_input_->Get(  TString::Format("raw_eff_plots/muon/Zuu/nt_Evt_%s%s",tag.Data(),sv.Data()))
-                                                       ->Clone(TString::Format("h_nt_ZHFEvts_%s%s_comb"            ,tag.Data(),sv.Data()));
-        // hr_nTaggedEvts[f][tag][sv]->Add((TH1F*) f_input_->Get(  TString::Format("raw_eff_plots/dy/Zee_Z%c/nt_%cJets_2D_%s%s",f,f,tag.Data(),sv.Data())));
+    {    cout << "\tExtracting Results from Data for conditions: " << tag << "," << sv << "...";
+        h_nTaggedEvts_Data [tag][sv] = (TH1F*) h_temp_ ->Clone(TString::Format("h_nt_ZHFEvts_%s%s"                    ,tag.Data(),sv.Data()));
+        hr_nTaggedEvts_Data[tag][sv] = (TH1F*) f_input_->Get(  TString::Format("raw_event_eff_plots/muon/Zuu/nZfEvents_%s%s",tag.Data(),sv.Data()))
+                                                       ->Clone(TString::Format("h_nt_ZHFEvts_%s%s_comb"               ,tag.Data(),sv.Data()));
+        // hr_nTaggedEvts[f][tag][sv]->Add((TH1F*) f_input_->Get(  TString::Format("raw_eff_plots/dy/Zuu_Z%c/nt_%cJets_2D_%s%s",f,f,tag.Data(),sv.Data())));
+        cout << " done. Rebinning contents." << endl;
       // Rebin plots
         transferContents(hr_nTaggedEvts_Data[tag][sv], h_nTaggedEvts_Data[tag][sv]);
     }
@@ -152,7 +162,7 @@ EventEffPlotAndCalc::~EventEffPlotAndCalc()
 bool EventEffPlotAndCalc::processCommandLineInput(int argc, char* argv[])
 { // Process command line input.
     if(argc != 3)
-    {   cout << "Please include two arguements: ./EventEffPlotAndCalc/bin/EventEffPlotAndCalc <INPUT FILE> <OUTPUT FILE>" << endl;
+    {   cout << "Please specify two arguments: ./EventEffPlotAndCalc/bin/EventEffPlotAndCalc <INPUT FILE> <OUTPUT FILE>" << endl;
         return false;
     }
     fn_input_  = argv[1];
