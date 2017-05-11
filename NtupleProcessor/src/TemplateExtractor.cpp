@@ -105,7 +105,7 @@ void TemplateExtractor::fillHistos()
         // h[tempPrefix+"_"+svLabel+"_"+hfLabel]->Fill(evt.m_jet_msv[evt.leadHFJet[hfLabel]]);
         h[tempPrefix+svLabel+"_"+hfLabel]->Fill(
             evt.SVVariable[svLabel][evt.leadHFJet[hfLabel][svLabel]],        // Fill using the appropriately specified variable for this SV
-            evtWeight * evt.jetTagEvtWeight[hfLabel.Data()][svLabel.Data()]  // Fill weighted by event and btag/sv SFs.
+            evtWeight * evt.jetTagEvtWeight[hfLabel.Data()][svLabel.Data()]["central"]  // Fill weighted by event and btag/sv SFs.
         );
     }
 }

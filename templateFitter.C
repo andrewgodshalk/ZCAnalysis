@@ -12,7 +12,14 @@ const bool useDY1J = false;
 // const string tempName = "zhfmet_CSVMpfSV_hfjet_ld_msv_new";       const string selectionName = "zhfmet_CSVMpfSV";
 // const string tempName = "zhfmet_CSVMpfISV_hfjet_ld_msv_inc";      const string selectionName = "zhfmet_CSVMpfISV";
 // const string tempName = "zhfmet_CSVMcISV_hfjet_ld_msv_corr";      const string selectionName = "zhfmet_CSVMcISV";
-const string tempName = "zhfmet_CSVMcISV_hfjet_ld_msv_corr_zm";   const string selectionName = "zhfmet_CSVMcISV";
+// const string tempName = "zhfmet_CSVMcISVf_hfjet_ld_msv_corrFull_zm";   const string selectionName = "zhfmet_CSVMcISVf";
+// const string tempName = "zhfmet_CSVMcISVf_hfjet_ld_msv_corrFull_zm";   const string selectionName = "zhfmet_CSVMcISVf";
+// const string tempName = "template_cISV_CSVM" ;   const string selectionName = "CSVMcISV" ;
+// const string tempName = "template_cISV_CSVT" ;   const string selectionName = "CSVTcISV" ;
+// const string tempName = "template_pfSV_CSVM" ;   const string selectionName = "CSVMpfSV" ;
+// const string tempName = "template_pfSV_CSVT" ;   const string selectionName = "CSVTpfSV" ;
+// const string tempName = "template_pfISV_CSVM";   const string selectionName = "CSVMpfISV";
+const string tempName = "template_pfISV_CSVT";   const string selectionName = "CSVTpfISV";
 
 // WEIGHTS: 2017-03-09 DoubleMuonB-H
 const double tt_wt = 0.399686357943681;
@@ -165,8 +172,8 @@ string templateFitter(TString plotName, TH1F* h_sample, TH1F* h_b, TH1F* h_c, TH
     fit->Constrain(1, 0.00001, 0.99999);
     fit->Constrain(2, 0.00001, 0.99999);
     // Extract the number of bins in data, then Set the range of the fit to exclude first and last (underflow and overflow) bins.
-    // fit->SetRangeX(1,nBins);
-    fit->SetRangeX(1,nBins*6/20);
+    fit->SetRangeX(1,nBins);
+    // fit->SetRangeX(1,nBins*6/20);
 
     for(int i=0; i<=nBins+1; i++)  // Exclude bins w/ negative values in data-bkgd from fitting.
         if(data->GetBinContent(i)<0 || btemp->GetBinContent(i)<0 || ctemp->GetBinContent(i)<0 || ltemp->GetBinContent(i)<0)
@@ -348,9 +355,12 @@ void getTemplatesFromRunIIFile(TString fn, TH1F*& h_b, TH1F*& h_c, TH1F*& h_l, T
     else
     {
       // Get templates from file for the specified channel
-        inputFile->GetObject("control_plots/dy"  "/"+channel+"_Zb/"+selectionName+"/"+tempName, hf_b1);
-        inputFile->GetObject("control_plots/dy"  "/"+channel+"_Zc/"+selectionName+"/"+tempName, hf_c1);
-        inputFile->GetObject("control_plots/dy"  "/"+channel+"_Zl/"+selectionName+"/"+tempName, hf_l1);
+        // inputFile->GetObject("control_plots/dy"  "/"+channel+"_Zb/"+selectionName+"/"+tempName, hf_b1);
+        // inputFile->GetObject("control_plots/dy"  "/"+channel+"_Zc/"+selectionName+"/"+tempName, hf_c1);
+        // inputFile->GetObject("control_plots/dy"  "/"+channel+"_Zl/"+selectionName+"/"+tempName, hf_l1);
+      inputFile->GetObject("templates/dy"  "/"+channel+"_Zb/"+tempName, hf_b1);
+      inputFile->GetObject("templates/dy"  "/"+channel+"_Zc/"+tempName, hf_c1);
+      inputFile->GetObject("templates/dy"  "/"+channel+"_Zl/"+tempName, hf_l1);
         // if(useDY1J) inputFile->GetObject("control_plots/dy1j""/"+channel+"_Zb/"+tempName, hf_b2);
         // if(useDY1J) inputFile->GetObject("control_plots/dy1j""/"+channel+"_Zc/"+tempName, hf_c2);
         // if(useDY1J) inputFile->GetObject("control_plots/dy1j""/"+channel+"_Zl/"+tempName, hf_l2);
@@ -407,11 +417,16 @@ TH1F* getRunIISampleFromFile(TString fn, TString channel)
         TH1F *h_zz   ;
 
       // Get templates from file
-        inputFile->GetObject("control_plots/"+setname+"/"+channel+"/"+selectionName+"/"+tempName, h_data);   h_data->Sumw2();
-        inputFile->GetObject("control_plots/tt"       "/"+channel+"/"+selectionName+"/"+tempName, h_tt  );   h_tt  ->Sumw2();
-        inputFile->GetObject("control_plots/ww"       "/"+channel+"/"+selectionName+"/"+tempName, h_ww  );   h_ww  ->Sumw2();
-        inputFile->GetObject("control_plots/wz"       "/"+channel+"/"+selectionName+"/"+tempName, h_wz  );   h_wz  ->Sumw2();
-        inputFile->GetObject("control_plots/zz"       "/"+channel+"/"+selectionName+"/"+tempName, h_zz  );   h_zz  ->Sumw2();
+        inputFile->GetObject("templates/"+setname+"/"+channel+"/"+tempName, h_data);   h_data->Sumw2();
+        inputFile->GetObject("templates/tt"       "/"+channel+"/"+tempName, h_tt  );   h_tt  ->Sumw2();
+        inputFile->GetObject("templates/ww"       "/"+channel+"/"+tempName, h_ww  );   h_ww  ->Sumw2();
+        inputFile->GetObject("templates/wz"       "/"+channel+"/"+tempName, h_wz  );   h_wz  ->Sumw2();
+        inputFile->GetObject("templates/zz"       "/"+channel+"/"+tempName, h_zz  );   h_zz  ->Sumw2();
+        // inputFile->GetObject("control_plots/"+setname+"/"+channel+"/"+selectionName+"/"+tempName, h_data);   h_data->Sumw2();
+        // inputFile->GetObject("control_plots/tt"       "/"+channel+"/"+selectionName+"/"+tempName, h_tt  );   h_tt  ->Sumw2();
+        // inputFile->GetObject("control_plots/ww"       "/"+channel+"/"+selectionName+"/"+tempName, h_ww  );   h_ww  ->Sumw2();
+        // inputFile->GetObject("control_plots/wz"       "/"+channel+"/"+selectionName+"/"+tempName, h_wz  );   h_wz  ->Sumw2();
+        // inputFile->GetObject("control_plots/zz"       "/"+channel+"/"+selectionName+"/"+tempName, h_zz  );   h_zz  ->Sumw2();
         cout << h_data->GetTitle() << endl;
 
 

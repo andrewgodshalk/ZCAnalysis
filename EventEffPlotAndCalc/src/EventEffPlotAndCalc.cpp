@@ -72,8 +72,8 @@ EventEffPlotAndCalc::EventEffPlotAndCalc(int argc, char* argv[])
     // const vector<TString> svTypes = {"noSV", "oldSV", "pfSV", "pfISV", "qcSV", "cISV", "cISVf", "cISVp"};
     // const vector<TString> svTypes = {"noSV", "pfSV", "pfISV", "qcSV", "cISV", "cISVf", "cISVp"};
     // const vector<TString> tags    = {"NoHF","CSVL","CSVM","CSVT", "CSVS"};
-    const vector<TString> svTypes = {"noSV", "cISVf"};
-    const vector<TString> tags    = {"NoHF", "CSVM"};
+    const vector<TString> svTypes = {"noSV", "pfSV", "pfISV", "cISV", "cISVf"};
+    const vector<TString> tags    = {"NoHF", "CSVM", "CSVT"};
     for( char& f : flavors)
     { // Set up properly binned storage histos.
         cout << "Retrieving plots for " << f << "...";

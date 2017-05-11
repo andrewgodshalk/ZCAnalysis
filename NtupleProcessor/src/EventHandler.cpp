@@ -26,6 +26,7 @@ using std::sqrt;   using std::string; using std::sort;
 const vector<TString> EventHandler::HFTags = {"NoHF", "CSVL", "CSVM", "CSVT", "CSVS"};
 // const vector<TString> EventHandler::SVType = {"noSV", "oldSV", "pfSV", "pfISV", "qcSV", "cISV", "cISVf", "cISVp"};
 const vector<TString> EventHandler::SVType = {"noSV", "pfSV", "pfISV", "qcSV", "cISV", "cISVf", "cISVp"};
+const vector<TString> EventHandler::UncertVariations= {"central", "sfHFp", "sfHFm", "sfLp", "sfLm"};
 
 EventHandler::EventHandler(TString fnac, TString o) : anCfg(fnac), options(o)
 {
@@ -508,9 +509,8 @@ void EventHandler::evalCriteria()
 
   // For each flavor tag, calculate an event weight based on jet tagging efficiency and tagging data/mc scalefactors.
   // See link for method used: https://twiki.cern.ch/twiki/bin/view/CMS/BTagSFMethods#1a_Event_reweighting_using_scale
-    for(auto& hfTag : HFTags) for(auto& svType : SVType)
-        if(hasHFJets[hfTag][svType]) jetTagEvtWeight[hfTag][svType] = calculateJetTagEvtWeight(hfTag.Data(), svType.Data());
-        // if(hasHFJets[hfTag][svType]) jetTagEvtWeight[hfTag][svType] = calculateJetTagEvtWeight(hfTag.Data(), svType.Data(), true);
+    for(auto& hfTag : HFTags) for(auto& svType : SVType) for(auto& uncVar : UncertVariations)
+        if(hasHFJets[hfTag][svType]) jetTagEvtWeight[hfTag][svType][uncVar] = calculateJetTagEvtWeight(hfTag.Data(), svType.Data(), uncVar.Data());
 
   // Kick function if not using DY. Otherwise, check for origin from Z->tautau
     if(!usingDY) return;
@@ -540,7 +540,7 @@ void EventHandler::resetSelectionVariables()
     validJets.clear();
     evtWeight = 1.0;
     for(int i=0; i<maxNumJets; i++) jet_msv_quickCorr[i] = -10.0;
-    for( auto& hftag : HFTags) for( auto& svtype : SVType) jetTagEvtWeight[hftag][svtype] = 1.0;
+    for( auto& hftag : HFTags) for( auto& svtype : SVType) for( auto& uncVar : UncertVariations) jetTagEvtWeight[hftag][svtype][uncVar] = 1.0;
 }
 
 
@@ -581,7 +581,7 @@ float EventHandler::calculateJetMSVQuickCorrection(int jet_i)
 }
 
 
-float EventHandler::calculateJetTagEvtWeight(string hfOpPt, string svOpPt, bool debug)
+float EventHandler::calculateJetTagEvtWeight(string hfOpPt, string svOpPt, string uncert, bool debug)
 { // For given flavor tag, calculate an event weight based on jet tagging efficiency and tagging data/mc scalefactors.
   // See link for method used: https://twiki.cern.ch/twiki/bin/view/CMS/BTagSFMethods#1a_Event_reweighting_using_scale
     float probData = 1.0;
@@ -602,8 +602,8 @@ float EventHandler::calculateJetTagEvtWeight(string hfOpPt, string svOpPt, bool 
         }
       // Get the jet tagging efficiency and SF
         JetTagWeight* jtw = usingDY ? anCfg.jetTagWeightDY : anCfg.jetTagWeightBG;
-        float jetEff = jtw->getJetEff(flv, hfOpPt, svOpPt, m_jet_pt[jet_i], m_jet_eta[jet_i]);
-        float jetSF  = jtw->getJetSF (flv, hfOpPt,         m_jet_pt[jet_i], m_jet_eta[jet_i]);
+        float jetEff = jtw->getJetEff(flv, hfOpPt, svOpPt, m_jet_pt[jet_i], m_jet_eta[jet_i]        );
+        float jetSF  = jtw->getJetSF (flv, hfOpPt,         m_jet_pt[jet_i], m_jet_eta[jet_i], uncert);
 
       // Get whether this jet was tagged or not.
         bool tagged = HFJets[hfOpPt][svOpPt][vJet_i];

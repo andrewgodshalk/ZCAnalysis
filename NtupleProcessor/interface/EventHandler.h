@@ -42,6 +42,7 @@ public:
 
     static const std::vector<TString> HFTags;
     static const std::vector<TString> SVType;
+    static const std::vector<TString> UncertVariations;
 
   // Methods
     bool mapTree(TTree*);                         // Maps class variables to an input TTree.
@@ -51,7 +52,7 @@ public:
     void printJets();                             // Test function that prints jets and their properties.
     float calculatePUReweight(int);
     float calculateJetMSVQuickCorrection(int);
-    float calculateJetTagEvtWeight(std::string, std::string, bool debug=false);
+    float calculateJetTagEvtWeight(std::string, std::string, std::string uncert = "central", bool debug=false);
     void processLeptons();
 
   // Running Variables
@@ -132,7 +133,9 @@ public:
     // std::array<float, maxNumJets> jet_msv_quickCorr;
     float jet_msv_quickCorr[maxNumJets];
     float evtWeight;
-    std::map< TString, std::map<TString, float> > jetTagEvtWeight;    // Additional event weight calculated for each hf/sv operating point.
+    // std::map< TString, std::map<TString, float> > jetTagEvtWeight;    // Additional event weight calculated for each hf/sv operating point.
+    std::map< TString, std::map<TString, std::map<TString, float> > > jetTagEvtWeight;   // jetTagEvtWeight[HFType][SVType][UncertaintyVariation]
+      // Additional event weight calculated for each hf/sv operating point, with variations to various uncertainties
 
   // Selection Variables
     bool usingSim; // Simulation events. For plotting sim-truth information.

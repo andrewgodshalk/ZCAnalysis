@@ -193,7 +193,7 @@ void EffPlotExtractor::fillHistos()
       // Select for Z events with at least one HF jet and with the MET cut.
         if(!evt.hasHFJets[hfLabel][svLabel]) continue;
         nEvents[TString("Valid Z+HF Event w/ MET cut (")+hfLabel+","+svLabel+")"]++;
-        float evt_tag_wt = evt.jetTagEvtWeight[hfLabel][svLabel]; // Event weight based on previously calculated Jet Tag Efficiency and btag scale factors.
+        float evt_tag_wt = evt.jetTagEvtWeight[hfLabel][svLabel]["central"]; // Event weight based on previously calculated Jet Tag Efficiency and btag scale factors.
           // ONLY to be applied to Event Efficiency histograms.
         h[TString("nt_Evt_")+hfLabel+svLabel]->Fill(evt.m_jet_pt[evt.validJets[evt.leadHFJet[hfLabel][svLabel]]], evtWeight*evt_tag_wt);
         for(Index i = 0; i<evt.validJets.size(); i++)  // Cycle over all jets and fill when appropriate.

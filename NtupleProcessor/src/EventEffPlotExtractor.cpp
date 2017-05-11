@@ -24,8 +24,10 @@ using std::endl;           using std::ofstream;   using std::setw;   using std::
 using std::map;
 typedef unsigned int Index;
 
-const vector<TString> EventEffPlotExtractor::HFTags = {"NoHF", "CSVL", "CSVM", "CSVT", "CSVS"};
-const vector<TString> EventEffPlotExtractor::SVTypes= {"noSV", "oldSV", "pfSV", "pfISV", "qcSV", "cISV", "cISVf", "cISVp"};
+const vector<TString> EventEffPlotExtractor::HFTags  = {"NoHF", "CSVL", "CSVM", "CSVT", "CSVS"};
+const vector<TString> EventEffPlotExtractor::SVTypes = {"noSV", "oldSV", "pfSV", "pfISV", "qcSV", "cISV", "cISVf", "cISVp"};
+const vector<TString> EventEffPlotExtractor::UncertVariations= {"central", "sfHFp", "sfHFm", "sfLp", "sfLm"};
+  // Scale factor uncertainty up, down, for HF and Light scale factors.
 
 EventEffPlotExtractor::EventEffPlotExtractor(EventHandler& eh, TDirectory* d, TString o) : HistogramExtractor(eh, d, o)
 {
@@ -46,10 +48,11 @@ EventEffPlotExtractor::EventEffPlotExtractor(EventHandler& eh, TDirectory* d, TS
     hDir->cd();     // Move to this extractor's output directory to initialize the histograms.
     TH1* tempEvtHisto   = new TH1F( "n_evts", "Event Tagging Eff. vs. Lead Taggd Jet p_{T}" ";Lead Tagged Jet p_{T} (GeV)" ";Tagging Eff.", 600, 0, 600); tempEvtHisto->Sumw2();
     TString evtFlavTitle = "nZfEvents" ;
-    for(    const TString& hfLabel : EventEffPlotExtractor::HFTags )
-        for(const TString& svLabel : EventEffPlotExtractor::SVTypes)
+    for(        const TString& hfLabel : EventEffPlotExtractor::HFTags          )
+        for(    const TString& svLabel : EventEffPlotExtractor::SVTypes         )
+            for(const TString& uncVar  : EventEffPlotExtractor::UncertVariations)
     { // Make a histogram that contains the results from tagged jets.
-      TString fullEvtTitle   = evtFlavTitle+'_'+hfLabel+svLabel;
+      TString fullEvtTitle   = evtFlavTitle+'_'+hfLabel+svLabel+'_'+uncVar;
       h[fullEvtTitle] = (TH1F*)tempEvtHisto->Clone(fullEvtTitle); // Make a histogram to contain results from Z+f events.
     }
     // Delete template histograms
@@ -89,11 +92,15 @@ void EventEffPlotExtractor::fillHistos()
       // Select for Z events with at least one HF jet and with the MET cut.
         if(!evt.hasHFJets[hfLabel][svLabel]) continue;
         nEvents[TString("Valid Z+HF Event w/ MET cut (")+hfLabel+","+svLabel+")"]++;
-        float evt_tag_wt = evt.jetTagEvtWeight[hfLabel][svLabel]; // Event weight based on previously calculated Jet Tag Efficiency and btag scale factors.
-        h[TString("nZfEvents_")+hfLabel+svLabel]->Fill(
-            evt.m_jet_pt[evt.validJets[evt.leadHFJet[hfLabel][svLabel]]],
-            evtWeight*evt_tag_wt
-        );
+      // Cycle through uncertainty variations and add to the appropriate plots.
+        for(const TString& uncVar  : EventEffPlotExtractor::UncertVariations)
+        {
+            float evt_tag_wt = evt.jetTagEvtWeight[hfLabel][svLabel][uncVar]; // Event weight based on previously calculated Jet Tag Efficiency and btag scale factors.
+            h[TString("nZfEvents_")+hfLabel+svLabel+"_"+uncVar]->Fill(
+                evt.m_jet_pt[evt.validJets[evt.leadHFJet[hfLabel][svLabel]]],
+                evtWeight*evt_tag_wt
+            );
+        }
     }
 }
 

@@ -167,12 +167,12 @@ void ControlPlotExtractor::fillHistos()
     {
       // Select for Z events with at least one HF jet.
         if(!evt.hasHFJets[hfLabel][svLabel]) continue;
-        double jetWt = evt.jetTagEvtWeight[hfLabel.Data()][svLabel.Data()];
+        double jetWt = evt.jetTagEvtWeight[hfLabel.Data()][svLabel.Data()]["central"];
         // if(jetWt != 1) cout << "    ControlPlotExtractor(" << options << ")::fillHistos(): Found Z+HF Event (" << evt.m_event << "). Weighting w/ " << jetWt << endl;
         if(TMath::IsNaN(jetWt))
         {   cout << "    ControlPlotExtractor(" << options << ")::fillHistos(): Found Z+HF Event (" << evt.m_event << "). Weighting w/ " << jetWt << endl;
             cout << "      Tagging: " << hfLabel << ", " << svLabel << endl;
-            double secondaryJetWeight = evt.calculateJetTagEvtWeight(hfLabel.Data(), svLabel.Data(), true);
+            double secondaryJetWeight = evt.calculateJetTagEvtWeight(hfLabel.Data(), svLabel.Data(), "central", true);
             cout << endl;
         }
         nEvents[TString("Valid Z+HF Event(")+hfLabel+","+svLabel+")"]++;

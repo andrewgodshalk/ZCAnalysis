@@ -15,13 +15,13 @@
   ///////////////////////////////////////////////////
   // PLACE TO MODIFY
   ///////////////////////////////////////////////////
-    int rebin     = 4;
+    int rebin     = 10;
     int tempScale = 1;
 
     TString fn_input, fn_sample;
 
-    // TString fn_2016RR = "/home/godshalk/Work/2016-12-07_ZCAnalysis2016_OldCode/raw_cp_merges/2017-03-06_V25RR_mgJetEff/zc_rawcp_2017-03-06_V25RR_mgJetEff.root";
-    TString fn_2016RR = "/home/godshalk/Work/2016-12-07_ZCAnalysis2016_OldCode/raw_cp_merges/2017-03-06_V25RR_amcJetEff/zc_rawcp_2017-03-06_V25RR_amcJetEff.root";
+    // TString fn_2016RR = "/home/godshalk/Work/2016-12-07_ZCAnalysis2016_OldCode/raw_cp_merges/2017-03-06_V25RR_amcJetEff/zc_rawcp_2017-03-06_V25RR_amcJetEff.root";
+    TString fn_2016RR = "/home/godshalk/Work/2016-12-07_ZCAnalysis2016_OldCode/raw_cp_merges/zc_rawcp_2017-05-10_septmg.root";
     fn_input = fn_sample = fn_2016RR;
   // NOTE: Need to change dataset weights in templateFitter.C for different datasets (getRunIISampleFromFile(), Line 405)
 

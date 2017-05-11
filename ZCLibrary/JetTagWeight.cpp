@@ -101,6 +101,20 @@ float JetTagWeight::getJetSF(char flv, string opPt, float pt, float eta, string 
 {
     //cout << "  Looking for jet sf: flv=" << flv << ", opPt=" << opPt << ", pt=" << pt << ", eta=" << eta << endl;
     float sf = 1.0;
+
+  // Evaluate the input type.
+    if(type != "central" )
+    {   if(     type == "sfHFp") (flv == 'b' || flv == 'c' ? type = "up"   : type = "central");
+        else if(type == "sfHFm") (flv == 'b' || flv == 'c' ? type = "down" : type = "central");
+        else if(type == "sfLp" ) (              flv == 'l' ? type = "up"   : type = "central");
+        else if(type == "sfLm" ) (              flv == 'l' ? type = "down" : type = "central");
+        else
+        {   cout << "  INVALID TYPE SPECIFIED: " << type << " --> Using default type \"central\"." << endl;
+            type = "central";
+        }
+    }
+
+  // Get value from btag calibration reader
     if(sfLoaded_ && opPt != "SVT" && opPt != "NoHF")
     {   sf = btagCalibReader_[opPt].eval_auto_bounds(type, flvMap_[flv], eta, pt);
         //cout << "    ...from file: " << sf << endl;
