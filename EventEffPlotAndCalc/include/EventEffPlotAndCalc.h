@@ -38,6 +38,7 @@ private:
     TH1F*    makeEffPlots(TString, TH1F*, TH1F*);
     void     printPlotValues(TH1F*);
     TCanvas* makeCombinedEffPlots(TString, TString, TH1F*, TH1F*, TH1F*);
+    TCanvas* makeCombinedEffPlots(TString, TString, TString, std::map<TString, TH1F*>&, std::map<TString, TH1F*>&, std::map<TString, TH1F*>&);
     std::pair<double, double> calculateAvgEff(TH1F*, TH1F*);
 
     int    nPtBins_;
@@ -45,18 +46,20 @@ private:
     // int    nEtaBins_;
     // double etaBinBounds_[];
 
-    std::map<char, TH1F*> hr_nEvts;       // hr_nEvts[Flavor] Storage for plot from root file, with original binning.
-    std::map<char, TH1F*>  h_nEvts;       // h_nEvts [Flavor] Storage for new # of jet plots, with new binning.
-    std::map<char, std::map<TString, std::map< TString, TH1F*> > >  h_nTaggedEvts;  // h_nTaggedEvts[Flavor][Tag][SVType]
-    std::map<char, std::map<TString, std::map< TString, TH1F*> > > hr_nTaggedEvts;  // h_nTaggedEvts[Flavor][Tag][SVType]
-    std::map<char, std::map<TString, std::map< TString, TH1F*> > > h_EvtTagEff   ;  // h_EvtTagEff  [Flavor][Tag][SVType]
-    std::map<TString, std::map< TString, TH1F*   > >  h_nTaggedEvts_Data;
-    std::map<TString, std::map< TString, TH1F*   > > hr_nTaggedEvts_Data;
-    std::map<TString, std::map< TString, TCanvas*> > c_combinedEffPlot;   // Final, combined, beutified efficiency plots.
-    std::map<char, std::map<TString, std::map< TString, std::pair<double, double> > > > avgEff;
-    TFile* f_input_;
+    std::map<TString, std::map<char, TH1F*> > hr_nEvts;       // hr_nEvts[Channel][Flavor] Storage for plot from root file, with original binning.
+    std::map<TString, std::map<char, TH1F*> >  h_nEvts;       // h_nEvts [Channel][Flavor] Storage for new # of jet plots, with new binning.
+    std::map<TString, std::map<char, std::map<TString, std::map< TString, std::map< TString, TH1F*> > > > >  h_nTaggedEvts;  // h_nTaggedEvts[Channel][Flavor][Tag][SVType][UncertType]
+    std::map<TString, std::map<char, std::map<TString, std::map< TString, std::map< TString, TH1F*> > > > > hr_nTaggedEvts;  // h_nTaggedEvts[Channel][Flavor][Tag][SVType][UncertType]
+    std::map<TString, std::map<char, std::map<TString, std::map< TString, std::map< TString, TH1F*> > > > > h_EvtTagEff   ;  // h_EvtTagEff  [Channel][Flavor][Tag][SVType][UncertType]
+
+    std::map<TString, std::map<TString, std::map< TString, TH1F*   > > >  h_nTaggedEvts_Data; // h[Channel][Tag][SV]
+    std::map<TString, std::map<TString, std::map< TString, TH1F*   > > > hr_nTaggedEvts_Data; // h[Channel][Tag][SV]
+    std::map<TString, std::map<TString, std::map< TString, TCanvas*> > > c_combinedEffPlot;   // c[Channel][Tag][SV]  Final, combined, beutified efficiency plots.
+    std::map<TString, std::map<   char, std::map< TString, std::map< TString, std::map< TString, std::pair<double, double> > > > > > avgEff;  // avgEff[Channel][Flavor][Tag][SVType][UncertType]
+
+    TFile* f_input_ ;
     TFile* f_output_;
-    std::string fn_input_;
+    std::string fn_input_ ;
     std::string fn_output_;
     TH1F* h_temp_;    // Template for 2D efficiency histograms
 };

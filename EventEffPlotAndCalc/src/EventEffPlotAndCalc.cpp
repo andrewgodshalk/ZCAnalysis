@@ -72,70 +72,87 @@ EventEffPlotAndCalc::EventEffPlotAndCalc(int argc, char* argv[])
     // const vector<TString> svTypes = {"noSV", "oldSV", "pfSV", "pfISV", "qcSV", "cISV", "cISVf", "cISVp"};
     // const vector<TString> svTypes = {"noSV", "pfSV", "pfISV", "qcSV", "cISV", "cISVf", "cISVp"};
     // const vector<TString> tags    = {"NoHF","CSVL","CSVM","CSVT", "CSVS"};
-    const vector<TString> svTypes = {"noSV", "pfSV", "pfISV", "cISV", "cISVf"};
-    const vector<TString> tags    = {"NoHF", "CSVM", "CSVT"};
-    for( char& f : flavors)
+    const vector<TString> channels = {"Zuu", "Zee"};
+    const vector<TString> svTypes  = {"noSV", "pfSV", "pfISV", "cISV", "cISVf"};
+    const vector<TString> tags     = {"NoHF", "CSVM", "CSVT"};
+    const vector<TString> uncVar   = {"central", "sfHFp", "sfHFm", "sfLp", "sfLm"};
+
+    for( const TString& channel : channels )
+        for(      char&       f : flavors  )
     { // Set up properly binned storage histos.
         cout << "Retrieving plots for " << f << "...";
-        h_nEvts [f] = (TH1F*) h_temp_  ->Clone(TString::Format("h_nZ%cEvents", f));
-        hr_nEvts[f] = (TH1F*) f_input_ ->Get(  TString::Format("raw_event_eff_plots/dy/Zuu_Z%c/nZfEvents_NoHFnoSV", f))
-                                       ->Clone(TString::Format("n_Z%cEvents_comb",f));
-        // hr_nEvts[f]->Add((TH1F*) f_input_->Get(  TString::Format("raw_eff_plots/dy/Zuu_Z%c/n_Z%cEvents", f, f)));
+        h_nEvts [channel][f] = (TH1F*) h_temp_ ->Clone(TString::Format("h%s_nZ%cEvents"                                          , channel.Data(), f));
+        hr_nEvts[channel][f] = (TH1F*) f_input_->Get(  TString::Format("raw_event_eff_plots/dy/%s_Z%c/nZfEvents_NoHFnoSV_central", channel.Data(), f))
+                                               ->Clone(TString::Format("n%s_Z%cEvents_original"                                  , channel.Data(), f));
         cout << " done." << endl;
       // Rebin plots
-        transferContents(hr_nEvts[f], h_nEvts[f]);
-        for( const TString & tag : tags )
-            for( const TString & sv : svTypes)
-        {   cout << "\tCreating Eff. for conditions: " << f << "," << tag << "," << sv << "...";
-            h_nTaggedEvts [f][tag][sv] = (TH1F*) h_temp_ ->Clone(TString::Format("h_nt_Z%cEvts_%s%s"                            ,f,tag.Data(),sv.Data()));
-            hr_nTaggedEvts[f][tag][sv] = (TH1F*) f_input_->Get(  TString::Format("raw_event_eff_plots/dy/Zuu_Z%c/nZfEvents_%s%s",f,tag.Data(),sv.Data()))
-                                                         ->Clone(TString::Format("h_nt_Z%cEvts_%s%s_comb"                       ,f,tag.Data(),sv.Data()));
-            // hr_nTaggedEvts[f][tag][sv]->Add((TH1F*) f_input_->Get(  TString::Format("raw_eff_plots/dy/Zuu_Z%c/nt_%cJets_2D_%s%s",f,f,tag.Data(),sv.Data())));
+        transferContents(hr_nEvts[channel][f], h_nEvts[channel][f]);
+        for(         const TString & tag : tags    )
+            for(     const TString &  sv : svTypes )
+                for( const TString & unc : uncVar  )
+        {   cout << "\tCreating Eff. for conditions: " << f << "," << tag << "," << sv << "," << unc << "...";
+            h_nTaggedEvts [channel][f][tag][sv][unc]
+                = (TH1F*) h_temp_ ->Clone(TString::Format("h%s_nt_Z%cEvts_%s%s_%s"                         ,channel.Data(),f,tag.Data(),sv.Data(),unc.Data()));
+            hr_nTaggedEvts[channel][f][tag][sv][unc]
+                = (TH1F*) f_input_->Get(  TString::Format("raw_event_eff_plots/dy/%s_Z%c/nZfEvents_%s%s_%s",channel.Data(),f,tag.Data(),sv.Data(),unc.Data()))
+                                  ->Clone(TString::Format("h%s_nt_Z%cEvts_%s%s_%s_original"                ,channel.Data(),f,tag.Data(),sv.Data(),unc.Data()));
           // Rebin plots
             cout << " done. Transferring contents." << endl;
-            transferContents(hr_nTaggedEvts[f][tag][sv], h_nTaggedEvts[f][tag][sv]);
+            transferContents(hr_nTaggedEvts[channel][f][tag][sv][unc], h_nTaggedEvts[channel][f][tag][sv][unc]);
           // Make eff plot
-            h_EvtTagEff[f][tag][sv] = makeEffPlots(TString::Format("h_Z%cEvtTagEff_%s%s",f,tag.Data(),sv.Data()), h_nTaggedEvts[f][tag][sv], h_nEvts[f]);
-            //printPlotValues(h_EvtTagEff[f][tag][sv]);
+            h_EvtTagEff[channel][f][tag][sv][unc]
+                = makeEffPlots( TString::Format( "h%s_Z%cEvtTagEff_%s%s_%s",channel.Data(),f,tag.Data(),sv.Data(),unc.Data()) ,
+                                h_nTaggedEvts[channel][f][tag][sv][unc],
+                                h_nEvts[channel][f]
+                              );
+            //printPlotValues(h_EvtTagEff[channel][f][tag][sv][unc]);
         }
     }
-    // Set up histograms from data.
 
+    // Set up histograms from data.
+    TString dsName = "";
     cout << "Retrieving plots from data..." << endl;
-    for( const TString & tag : tags )
-        for( const TString & sv : svTypes)
-    {    cout << "\tExtracting Results from Data for conditions: " << tag << "," << sv << "...";
-        h_nTaggedEvts_Data [tag][sv] = (TH1F*) h_temp_ ->Clone(TString::Format("h_nt_ZHFEvts_%s%s"                    ,tag.Data(),sv.Data()));
-        hr_nTaggedEvts_Data[tag][sv] = (TH1F*) f_input_->Get(  TString::Format("raw_event_eff_plots/muon/Zuu/nZfEvents_%s%s",tag.Data(),sv.Data()))
-                                                       ->Clone(TString::Format("h_nt_ZHFEvts_%s%s_comb"               ,tag.Data(),sv.Data()));
-        // hr_nTaggedEvts[f][tag][sv]->Add((TH1F*) f_input_->Get(  TString::Format("raw_eff_plots/dy/Zuu_Z%c/nt_%cJets_2D_%s%s",f,f,tag.Data(),sv.Data())));
+    for(             const TString& channel : channels )
+        for(         const TString&     tag : tags     )
+            for(     const TString&      sv : svTypes  )
+    {   cout << "\tExtracting Results from Data for conditions: " << channel << "," << tag << "," << sv << "...";
+        if(channel == "Zuu") dsName = "muon";
+        if(channel == "Zee") dsName = "elec";
+        h_nTaggedEvts_Data[channel][tag][sv]
+            = (TH1F*) h_temp_ ->Clone(TString::Format("h%s_nt_ZHFEvts_%s%s",          channel.Data(),tag.Data(),sv.Data()));
+        hr_nTaggedEvts_Data[channel][tag][sv]
+            = (TH1F*) f_input_->Get(  TString::Format("raw_event_eff_plots/%s/%s/nZfEvents_%s%s_central",
+                                                                        dsName.Data(),channel.Data(),tag.Data(),sv.Data()))
+                              ->Clone(TString::Format("h%s_nt_ZHFEvts_%s%s_original", channel.Data(),tag.Data(),sv.Data()));
         cout << " done. Rebinning contents." << endl;
       // Rebin plots
-        transferContents(hr_nTaggedEvts_Data[tag][sv], h_nTaggedEvts_Data[tag][sv]);
+        transferContents(hr_nTaggedEvts_Data[channel][tag][sv], h_nTaggedEvts_Data[channel][tag][sv]);
     }
 
   // For each tag/sv, Calculate the average efficiency for each flavor, then make presentable efficiency plots.
-    for( const TString & tag : tags )
-        for( const TString & sv : svTypes)
-        { for( char& f : flavors) avgEff[f][tag][sv] = calculateAvgEff(h_EvtTagEff[f][tag][sv], h_nTaggedEvts_Data[tag][sv]);
-          c_combinedEffPlot[tag][sv] = makeCombinedEffPlots(tag, sv, h_EvtTagEff['b'][tag][sv], h_EvtTagEff['c'][tag][sv], h_EvtTagEff['l'][tag][sv]);
-        }
+    for(             const TString& channel : channels )
+        for(         const TString&     tag : tags     )
+            for(     const TString&      sv : svTypes  )
+            {   for( const TString&     unc : uncVar   )
+                    for( char& f : flavors) avgEff[channel][f][tag][sv][unc] = calculateAvgEff(h_EvtTagEff[channel][f][tag][sv][unc], h_nTaggedEvts_Data[channel][tag][sv]);
+                c_combinedEffPlot[channel][tag][sv] = makeCombinedEffPlots(channel, tag, sv, h_EvtTagEff[channel]['b'][tag][sv], h_EvtTagEff[channel]['c'][tag][sv], h_EvtTagEff[channel]['l'][tag][sv]);
+            }
 
   // Write histograms, canvases to file
     TDirectory* individualEffPlotDir = f_output_->mkdir("IndividualEffPlots");
     individualEffPlotDir->cd();
-    for( char& f : flavors)
-    {   //h_nJets [f]->Write();
-        //hr_nJets[f]->Write();
-        for( const TString & tag : tags )
-            for( const TString & sv : svTypes)
-                h_EvtTagEff[f][tag][sv]->Write();
-    }
+    for(                 const TString& channel : channels )
+        for(                      char&       f : flavors  )
+            for(         const TString&     tag : tags     )
+                for(     const TString&      sv : svTypes  )
+                    for( const TString&     unc : uncVar   )
+                    h_EvtTagEff[channel][f][tag][sv][unc]->Write();
     TDirectory* combinedEffPlotDir = f_output_->mkdir("CombinedEffPlots");
     combinedEffPlotDir->cd();
-    for( const TString & tag : tags )
-        for( const TString & sv : svTypes)
-            c_combinedEffPlot[tag][sv]->Write();
+    for(         const TString& channel : channels )
+        for(     const TString&     tag : tags     )
+            for( const TString&      sv : svTypes  )
+                c_combinedEffPlot[channel][tag][sv]->Write();
 
 
     f_output_->Close();
@@ -152,11 +169,6 @@ EventEffPlotAndCalc::~EventEffPlotAndCalc()
     delete f_input_;
     delete f_output_;
     delete h_temp_;
-    // for( auto& kv : h_nJets  ) delete kv.second;
-    // for( auto& kv : hr_nJets ) delete kv.second;
-    // for( auto& kv1 : h_nTaggedJets  ) for(auto kv2 : kv1.second) delete kv2.second;
-    // for( auto& kv1 : hr_nTaggedJets ) for(auto kv2 : kv1.second) delete kv2.second;
-    // for( auto& kv1 : h_JetTagEff    ) for(auto kv2 : kv1.second) delete kv2.second;
 }
 
 bool EventEffPlotAndCalc::processCommandLineInput(int argc, char* argv[])
@@ -283,13 +295,89 @@ TCanvas* EventEffPlotAndCalc::makeCombinedEffPlots(TString tag, TString sv, TH1F
     h_leff->Draw("hist PE sames");
 
   // Set up legend labels
-    TString bLegLabel = TString::Format("Z+b (avg: %0.5f#pm%0.5f)", avgEff['b'][tag][sv].first, avgEff['b'][tag][sv].second);
-    TString cLegLabel = TString::Format("Z+c (avg: %0.5f#pm%0.5f)", avgEff['c'][tag][sv].first, avgEff['c'][tag][sv].second);
-    TString lLegLabel = TString::Format("Z+l (avg: %0.5f#pm%0.5f)", avgEff['l'][tag][sv].first, avgEff['l'][tag][sv].second);
+    // TString bLegLabel = TString::Format("Z+b (avg: %0.5f#pm%0.5f)", avgEff['b'][tag][sv].first, avgEff['b'][tag][sv].second);
+    // TString cLegLabel = TString::Format("Z+c (avg: %0.5f#pm%0.5f)", avgEff['c'][tag][sv].first, avgEff['c'][tag][sv].second);
+    // TString lLegLabel = TString::Format("Z+l (avg: %0.5f#pm%0.5f)", avgEff['l'][tag][sv].first, avgEff['l'][tag][sv].second);
 
   // The legend continues
     TLegend *leg = new TLegend(0.5,0.15,0.95,0.35);
     leg->SetHeader(TString::Format("Z+jet Event Selection Eff. for %s/%s", tag.Data(), sv.Data()));
+    // leg->AddEntry(h_beff, bLegLabel, "L");
+    // leg->AddEntry(h_ceff, cLegLabel, "L");
+    // leg->AddEntry(h_leff, lLegLabel, "L");
+    leg->SetBorderSize(0);
+    leg->SetFillStyle(0);
+    leg->Draw();
+
+    return plot;
+}
+
+
+TCanvas* EventEffPlotAndCalc::makeCombinedEffPlots(TString channel, TString tag, TString sv, std::map<TString, TH1F*>& ho_b, std::map<TString, TH1F*>& ho_c, std::map<TString, TH1F*>& ho_l)
+{
+  // Takes three efficiency plots and a data distribution of the differential
+  // variable. Plots the three plots on a canvas.
+    // cout << "Drawing combined efficiency plot for tag/sv: " << tag << "/" << sv << endl;
+    TCanvas* plot = new TCanvas(TString("effPlot_")+channel+"_"+tag+sv, TString("effPlot_")+channel+"_"+tag+sv);
+    plot->cd();
+    TH1F* h_beff = (TH1F*) ho_b["central"]->Clone("h_beff");
+    TH1F* h_ceff = (TH1F*) ho_c["central"]->Clone("h_ceff");
+    TH1F* h_leff = (TH1F*) ho_l["central"]->Clone("h_leff");
+    // h_beff->SetTitle("Eff. vs. Lead Tagged Jet p_{T};Jet p_{T} (GeV);Efficiency");
+    h_beff->SetLineColor(kRed    );  h_beff->SetLineWidth(2.5);  //beff->SetMarkerColor(kRed);  beff->SetMarkerStyle(20);  beff->SetMarkerSize(1);
+    h_ceff->SetLineColor(kBlue   );  h_ceff->SetLineWidth(2.5);
+    h_leff->SetLineColor(kGreen+2);  h_leff->SetLineWidth(2.5);
+
+  // Set Y-axis to (0.0001, 1)
+    h_beff->SetAxisRange(0.001, 1.2, "Y");
+   // Give plot a log axis
+    plot->SetLogy();
+
+  // Draw them histos.
+    h_beff->GetXaxis()->SetTitle("Lead HF Jet p_{T} (GeV)");
+    h_beff->GetYaxis()->SetTitle("Event Selection Efficiency");
+    h_beff->Draw("hist PE");
+    h_ceff->Draw("hist PE sames");
+    h_leff->Draw("hist PE sames");
+
+  // Calculate systematics
+    double central_b      = avgEff[channel]['b'][tag][sv]["central"].first;
+    double sysUnc_b_sfHFp = avgEff[channel]['b'][tag][sv]["sfHFp"  ].first - central_b;
+    double sysUnc_b_sfHFm = avgEff[channel]['b'][tag][sv]["sfHFm"  ].first - central_b;
+    double sysUnc_b_sfLp  = avgEff[channel]['b'][tag][sv]["sfLp"   ].first - central_b;
+    double sysUnc_b_sfLm  = avgEff[channel]['b'][tag][sv]["sfLm"   ].first - central_b;
+    double sysUnc_b_sfHF  = (sysUnc_b_sfHFp - sysUnc_b_sfHFm)/2;
+    double sysUnc_b_sfL   = (sysUnc_b_sfLp  - sysUnc_b_sfLm )/2;
+    double sysUnc_b       = sqrt(sysUnc_b_sfL*sysUnc_b_sfL + sysUnc_b_sfHF*sysUnc_b_sfHF);
+
+    double central_c      = avgEff[channel]['c'][tag][sv]["central"].first;
+    double sysUnc_c_sfHFp = avgEff[channel]['c'][tag][sv]["sfHFp"  ].first - central_c;
+    double sysUnc_c_sfHFm = avgEff[channel]['c'][tag][sv]["sfHFm"  ].first - central_c;
+    double sysUnc_c_sfLp  = avgEff[channel]['c'][tag][sv]["sfLp"   ].first - central_c;
+    double sysUnc_c_sfLm  = avgEff[channel]['c'][tag][sv]["sfLm"   ].first - central_c;
+    double sysUnc_c_sfHF  = (sysUnc_c_sfHFp - sysUnc_c_sfHFm)/2;
+    double sysUnc_c_sfL   = (sysUnc_c_sfLp  - sysUnc_c_sfLm )/2;
+    double sysUnc_c       = sqrt(sysUnc_c_sfL*sysUnc_c_sfL + sysUnc_c_sfHF*sysUnc_c_sfHF);
+
+    double central_l      = avgEff[channel]['l'][tag][sv]["central"].first;
+    double sysUnc_l_sfHFp = avgEff[channel]['l'][tag][sv]["sfHFp"  ].first - central_l;
+    double sysUnc_l_sfHFm = avgEff[channel]['l'][tag][sv]["sfHFm"  ].first - central_l;
+    double sysUnc_l_sfLp  = avgEff[channel]['l'][tag][sv]["sfLp"   ].first - central_l;
+    double sysUnc_l_sfLm  = avgEff[channel]['l'][tag][sv]["sfLm"   ].first - central_l;
+    double sysUnc_l_sfHF  = (sysUnc_l_sfHFp - sysUnc_l_sfHFm)/2;
+    double sysUnc_l_sfL   = (sysUnc_l_sfLp  - sysUnc_l_sfLm )/2;
+    double sysUnc_l       = sqrt(sysUnc_l_sfL*sysUnc_l_sfL + sysUnc_l_sfHF*sysUnc_l_sfHF);
+
+
+  // Set up legend labels
+    TString unc = "central";
+    TString bLegLabel = TString::Format("Z+b (avg: %0.5f #pm %0.5f (st) #pm %0.5f (sy))", avgEff[channel]['b'][tag][sv][unc].first, avgEff[channel]['b'][tag][sv][unc].second, sysUnc_b);
+    TString cLegLabel = TString::Format("Z+c (avg: %0.5f #pm %0.5f (st) #pm %0.5f (sy))", avgEff[channel]['c'][tag][sv][unc].first, avgEff[channel]['c'][tag][sv][unc].second, sysUnc_c);
+    TString lLegLabel = TString::Format("Z+l (avg: %0.5f #pm %0.5f (st) #pm %0.5f (sy))", avgEff[channel]['l'][tag][sv][unc].first, avgEff[channel]['l'][tag][sv][unc].second, sysUnc_l);
+
+  // The legend continues
+    TLegend *leg = new TLegend(0.26,0.12,0.91,0.34);
+    leg->SetHeader(TString::Format("%s+jet Event Selection Eff. for %s/%s", channel.Data(), tag.Data(), sv.Data()));
     leg->AddEntry(h_beff, bLegLabel, "L");
     leg->AddEntry(h_ceff, cLegLabel, "L");
     leg->AddEntry(h_leff, lLegLabel, "L");
