@@ -52,6 +52,12 @@ AnalysisConfig::AnalysisConfig(TString fnc)
     stdCSVOpPts["CSVM"] = pt.get<float>("HF TAGGING OPERATING POINTS.CSVM");
     stdCSVOpPts["CSVT"] = pt.get<float>("HF TAGGING OPERATING POINTS.CSVT");
     stdCSVOpPts["CSVS"] = pt.get<float>("HF TAGGING OPERATING POINTS.CSVS");
+    stdCSVOpPts["ChmLvsL"] = pt.get<float>("HF TAGGING OPERATING POINTS.ChmLvsL");
+    stdCSVOpPts["ChmLvsB"] = pt.get<float>("HF TAGGING OPERATING POINTS.ChmLvsB");
+    stdCSVOpPts["ChmMvsL"] = pt.get<float>("HF TAGGING OPERATING POINTS.ChmMvsL");
+    stdCSVOpPts["ChmMvsB"] = pt.get<float>("HF TAGGING OPERATING POINTS.ChmMvsB");
+    stdCSVOpPts["ChmTvsL"] = pt.get<float>("HF TAGGING OPERATING POINTS.ChmTvsL");
+    stdCSVOpPts["ChmTvsB"] = pt.get<float>("HF TAGGING OPERATING POINTS.ChmTvsB");
 
     flatHFTagSF["NoHF"      ] = pt.get<float>("CSV SCALE FACTORS.NoHF"      );
     flatHFTagSF["SVT"       ] = pt.get<float>("CSV SCALE FACTORS.SVT"       );
@@ -60,6 +66,9 @@ AnalysisConfig::AnalysisConfig(TString fnc)
     flatHFTagSF["CSVT"      ] = pt.get<float>("CSV SCALE FACTORS.CSVT"      );
     flatHFTagSF["CSVS"      ] = pt.get<float>("CSV SCALE FACTORS.CSVS"      );
     flatHFTagSF["CSVS_ljmis"] = pt.get<float>("CSV SCALE FACTORS.CSVS_ljmis");
+    flatHFTagSF["ChmL"      ] = pt.get<float>("CSV SCALE FACTORS.ChmL"      );
+    flatHFTagSF["ChmM"      ] = pt.get<float>("CSV SCALE FACTORS.ChmM"      );
+    flatHFTagSF["ChmT"      ] = pt.get<float>("CSV SCALE FACTORS.ChmT"      );
 
     muonPtMin  = pt.get<float>("MUON.muon_pt_min" );
     muonEtaMax = pt.get<float>("MUON.muon_eta_max");
@@ -139,13 +148,16 @@ AnalysisConfig::AnalysisConfig(TString fnc)
     btagEffDYFile = pt.get<string>("BTAGGING.btag_eff_file_dy");
     btagEffBGFile = pt.get<string>("BTAGGING.btag_eff_file_bg");
     btagSFFile    = pt.get<string>("BTAGGING.btag_sf_file"    );
+    ctagSFFile    = pt.get<string>("BTAGGING.ctag_sf_file"    );
     jetTagWeightBG = new JetTagWeight();
-    jetTagWeightBG->setSFFile( btagSFFile );
+    jetTagWeightBG->setCSVSFFile( btagSFFile );
+    jetTagWeightBG->setChmSFFile( ctagSFFile );
     jetTagWeightBG->setEffFile(btagEffBGFile);
     if(btagEffBGFile == btagEffDYFile) jetTagWeightDY = jetTagWeightBG;
     else
     {   jetTagWeightDY = new JetTagWeight();
-        jetTagWeightDY->setSFFile( btagSFFile );
+        jetTagWeightDY->setCSVSFFile( btagSFFile );
+        jetTagWeightDY->setChmSFFile( ctagSFFile );
         jetTagWeightDY->setEffFile(btagEffDYFile);
     }
 }

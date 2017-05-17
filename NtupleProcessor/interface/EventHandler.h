@@ -45,15 +45,15 @@ public:
     static const std::vector<TString> UncertVariations;
 
   // Methods
-    bool mapTree(TTree*);                         // Maps class variables to an input TTree.
-    void evalCriteria();                          // Evaluates the class' list of event selection criteria
-    bool triggered(std::vector<int>&);            // Returns if this event triggered one of the listed triggers.
-    void resetSelectionVariables();               // Resets all selection variables to false.
-    void printJets();                             // Test function that prints jets and their properties.
+    bool  mapTree(TTree*);                         // Maps class variables to an input TTree.
+    void  evalCriteria();                          // Evaluates the class' list of event selection criteria
+    bool  triggered(std::vector<int>&);            // Returns if this event triggered one of the listed triggers.
+    void  resetSelectionVariables();               // Resets all selection variables to false.
+    void  printJets();                             // Test function that prints jets and their properties.
     float calculatePUReweight(int);
     float calculateJetMSVQuickCorrection(int);
     float calculateJetTagEvtWeight(std::string, std::string, std::string uncert = "central", bool debug=false);
-    void processLeptons();
+    void  processLeptons();
 
   // Running Variables
     TString options;         // Options input with TreeIterator.
@@ -68,6 +68,8 @@ public:
                         int   m_jet_flv[maxNumJets];   float m_lep_iso04 [maxNumElecs];   int   m_event       ;
                                                        int   m_lep_pdgId [maxNumElecs];
     float m_new_lep_charge[2];
+    float m_jet_ctagVsL[maxNumJets];
+    float m_jet_ctagVsB[maxNumJets];
     int   m_jet_hadflv[maxNumJets];
     int   m_jet_parflv[maxNumJets];
     float m_jet_vtx_px[maxNumJets];

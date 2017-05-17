@@ -25,7 +25,7 @@ using std::endl;    using std::ofstream;   using std::setw;
 using std::min;     using std::map;
 typedef unsigned int Index;
 
-const vector<TString> JetEffPlotExtractor::HFTags = {"NoHF", "CSVL", "CSVM", "CSVT", "CSVS"};
+const vector<TString> JetEffPlotExtractor::HFTags = {"NoHF", "CSVL", "CSVM", "CSVT", "CSVS", "ChmL", "ChmM", "ChmT"};
 const vector<TString> JetEffPlotExtractor::SVTypes= {"noSV", "oldSV", "pfSV", "pfISV", "qcSV", "cISV", "cISVf", "cISVp"};
 const vector<TString> JetEffPlotExtractor::selectionLabels = {"loose", "zpjmet"};   // Set up histograms for differing selections:
   // loose: Only with triggering and json selections.

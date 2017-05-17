@@ -58,6 +58,7 @@ class AnalysisConfig : public ConfigReader
     std::string                          btagEffDYFile          ;
     std::string                          btagEffBGFile          ;
     std::string                          btagSFFile             ;
+    std::string                          ctagSFFile             ;
     std::vector<std::string>             muonTriggers           ;
     std::vector<std::string>             elecTriggers           ;
     std::vector<std::pair<float,float> > jetPtBins              ;

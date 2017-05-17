@@ -20,10 +20,10 @@ using std::stringstream;   using std::string;     using std::cout;   using std::
 using std::endl;           using std::ofstream;   using std::setw;   using std::min   ;
 typedef unsigned int Index;
 
-// const vector<TString> TemplateExtractor::HFTags  = {"NoHF", "CSVL", "CSVM", "CSVT", "CSVS"};
-// const vector<TString> TemplateExtractor::SVTypes = {"noSV", "oldSV", "pfSV", "pfISV", "qcSV", "cISV", "cISVf", "cISVp"};
-const vector<TString> TemplateExtractor::HFTags  = {"CSVM", "CSVT"};
-const vector<TString> TemplateExtractor::SVTypes = {"noSV", "pfSV", "pfISV", "cISV"};
+const vector<TString> TemplateExtractor::HFTags  = {"NoHF", "CSVL", "CSVM", "CSVT", "CSVS", "ChmL", "ChmM", "ChmT"};
+const vector<TString> TemplateExtractor::SVTypes = {"noSV", "oldSV", "pfSV", "pfISV", "qcSV", "cISV", "cISVf", "cISVp"};
+// const vector<TString> TemplateExtractor::HFTags  = {"CSVM", "CSVT"};
+// const vector<TString> TemplateExtractor::SVTypes = {"noSV", "pfSV", "pfISV", "cISV"};
 
 TemplateExtractor::TemplateExtractor(EventHandler& eh, TDirectory* d, TString o) : HistogramExtractor(eh, d, o), tempPrefix("template_")
 {

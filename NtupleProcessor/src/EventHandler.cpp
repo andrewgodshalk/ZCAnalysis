@@ -23,9 +23,8 @@ using std::cout;   using std::endl;   using std::vector;   using std::swap;
 using std::setw;   using std::setprecision;
 using std::sqrt;   using std::string; using std::sort;
 
-const vector<TString> EventHandler::HFTags = {"NoHF", "CSVL", "CSVM", "CSVT", "CSVS"};
-// const vector<TString> EventHandler::SVType = {"noSV", "oldSV", "pfSV", "pfISV", "qcSV", "cISV", "cISVf", "cISVp"};
-const vector<TString> EventHandler::SVType = {"noSV", "pfSV", "pfISV", "qcSV", "cISV", "cISVf", "cISVp"};
+const vector<TString> EventHandler::HFTags = {"NoHF", "CSVL", "CSVM", "CSVT", "CSVS", "ChmL", "ChmM", "ChmT"};
+const vector<TString> EventHandler::SVType = {"noSV", "oldSV", "pfSV", "pfISV", "qcSV", "cISV", "cISVf", "cISVp"};
 const vector<TString> EventHandler::UncertVariations= {"central", "sfHFp", "sfHFm", "sfLp", "sfLm"};
 
 EventHandler::EventHandler(TString fnac, TString o) : anCfg(fnac), options(o)
@@ -51,16 +50,29 @@ EventHandler::EventHandler(TString fnac, TString o) : anCfg(fnac), options(o)
     m_elec_trig = vector<int>(anCfg.elecTriggers.size(), 0);
 
   // Hard code in some pointers for HF/SV usage, because who has time for config files?
-    HFTagDiscrimVar["NoHF"] = m_jet_csv;
-    HFTagDiscrimVar["CSVL"] = m_jet_csv;
-    HFTagDiscrimVar["CSVM"] = m_jet_csv;
-    HFTagDiscrimVar["CSVT"] = m_jet_csv;
-    HFTagDiscrimVar["CSVS"] = m_jet_csv;
+    HFTagDiscrimVar["NoHF"]    = m_jet_csv;
+    HFTagDiscrimVar["CSVL"]    = m_jet_csv;
+    HFTagDiscrimVar["CSVM"]    = m_jet_csv;
+    HFTagDiscrimVar["CSVT"]    = m_jet_csv;
+    HFTagDiscrimVar["CSVS"]    = m_jet_csv;
+    HFTagDiscrimVar["CSVS"]    = m_jet_csv;
+    HFTagDiscrimVar["ChmLvsL"] = m_jet_ctagVsL;
+    HFTagDiscrimVar["ChmLvsB"] = m_jet_ctagVsB;
+    HFTagDiscrimVar["ChmMvsL"] = m_jet_ctagVsL;
+    HFTagDiscrimVar["ChmMvsB"] = m_jet_ctagVsB;
+    HFTagDiscrimVar["ChmTvsL"] = m_jet_ctagVsL;
+    HFTagDiscrimVar["ChmTvsB"] = m_jet_ctagVsB;
     HFTagDiscrimOP ["NoHF"] = anCfg.stdCSVOpPts["NoHF"];
     HFTagDiscrimOP ["CSVL"] = anCfg.stdCSVOpPts["CSVL"];
     HFTagDiscrimOP ["CSVM"] = anCfg.stdCSVOpPts["CSVM"];
     HFTagDiscrimOP ["CSVT"] = anCfg.stdCSVOpPts["CSVT"];
     HFTagDiscrimOP ["CSVS"] = anCfg.stdCSVOpPts["CSVS"];
+    HFTagDiscrimOP ["ChmLvsL"] = anCfg.stdCSVOpPts["ChmLvsL"];
+    HFTagDiscrimOP ["ChmLvsB"] = anCfg.stdCSVOpPts["ChmLvsB"];
+    HFTagDiscrimOP ["ChmMvsL"] = anCfg.stdCSVOpPts["ChmMvsL"];
+    HFTagDiscrimOP ["ChmMvsB"] = anCfg.stdCSVOpPts["ChmMvsB"];
+    HFTagDiscrimOP ["ChmTvsL"] = anCfg.stdCSVOpPts["ChmTvsL"];
+    HFTagDiscrimOP ["ChmTvsB"] = anCfg.stdCSVOpPts["ChmTvsB"];
 
     SVVariable["noSV" ] = m_jet_msv             ;
     SVVariable["oldSV"] = m_jet_msv             ;
@@ -110,6 +122,8 @@ bool EventHandler::mapTree(TTree* tree)
         "Jet_eta"    , "met_sumEt",
         "Jet_phi"    ,
         "Jet_btagCSV",
+        "Jet_ctagVsL",
+        "Jet_ctagVsB",
         "Jet_vtxMass",
         "Jet_vtxPx",
         "Jet_vtxPy",
@@ -227,22 +241,25 @@ bool EventHandler::mapTree(TTree* tree)
     tree->SetBranchAddress( "selLeptons_eleMVAIdSppring16GenPurp", m_sellep_eleMVAIdSppring16GenPurp );
 
   // Jet variables
-    tree->SetBranchAddress( "nJet"               , &m_nJets             );
-    tree->SetBranchAddress( "Jet_pt"             ,  m_jet_pt            );
-    tree->SetBranchAddress( "Jet_eta"            ,  m_jet_eta           );
-    tree->SetBranchAddress( "Jet_phi"            ,  m_jet_phi           );
-    tree->SetBranchAddress( "Jet_btagCSV"        ,  m_jet_csv           );
-    tree->SetBranchAddress( "Jet_vtxMass"        ,  m_jet_msv           );
-    tree->SetBranchAddress( "Jet_vtxPx"          , m_jet_vtx_px         );
-    tree->SetBranchAddress( "Jet_vtxPy"          , m_jet_vtx_py         );
-    tree->SetBranchAddress( "Jet_vtxPz"          , m_jet_vtx_pz         );
-    tree->SetBranchAddress( "Jet_vtxPosX"        , m_jet_vtx_x          );
-    tree->SetBranchAddress( "Jet_vtxPosY"        , m_jet_vtx_y          );
-    tree->SetBranchAddress( "Jet_vtxPosZ"        , m_jet_vtx_z          );
-    tree->SetBranchAddress( "Jet_vtxCat_IVF"     , m_jet_vtxCat_IVF     );
-    tree->SetBranchAddress( "Jet_vtxMassCorr_IVF", m_jet_vtxMassCorr_IVF);
-    tree->SetBranchAddress( "Jet_newVtxMass"     , m_jet_msv_new        );
-    tree->SetBranchAddress( "Jet_incVtxMass"     , m_jet_msv_inc        );
+    tree->SetBranchAddress( "nJet"               , &m_nJets              );
+    tree->SetBranchAddress( "Jet_pt"             ,  m_jet_pt             );
+    tree->SetBranchAddress( "Jet_eta"            ,  m_jet_eta            );
+    tree->SetBranchAddress( "Jet_phi"            ,  m_jet_phi            );
+    tree->SetBranchAddress( "Jet_btagCSV"        ,  m_jet_csv            );
+    tree->SetBranchAddress( "Jet_ctagVsL"        ,  m_jet_ctagVsL        );
+    tree->SetBranchAddress( "Jet_ctagVsB"        ,  m_jet_ctagVsB        );
+    tree->SetBranchAddress( "Jet_vtxMass"        ,  m_jet_msv            );
+    tree->SetBranchAddress( "Jet_vtxPx"          ,  m_jet_vtx_px         );
+    tree->SetBranchAddress( "Jet_vtxPy"          ,  m_jet_vtx_py         );
+    tree->SetBranchAddress( "Jet_vtxPz"          ,  m_jet_vtx_pz         );
+    tree->SetBranchAddress( "Jet_vtxPosX"        ,  m_jet_vtx_x          );
+    tree->SetBranchAddress( "Jet_vtxPosY"        ,  m_jet_vtx_y          );
+    tree->SetBranchAddress( "Jet_vtxPosZ"        ,  m_jet_vtx_z          );
+    tree->SetBranchAddress( "Jet_vtxCat_IVF"     ,  m_jet_vtxCat_IVF     );
+    tree->SetBranchAddress( "Jet_vtxMassCorr_IVF",  m_jet_vtxMassCorr_IVF);
+    tree->SetBranchAddress( "Jet_newVtxMass"     ,  m_jet_msv_new        );
+    tree->SetBranchAddress( "Jet_incVtxMass"     ,  m_jet_msv_inc        );
+
     tree->SetBranchAddress("nprimaryVertices"    , &m_npv_array         );
     tree->SetBranchAddress("primaryVertices_x"   ,  m_pv_x              );
     tree->SetBranchAddress("primaryVertices_y"   ,  m_pv_y              );
@@ -428,7 +445,6 @@ void EventHandler::evalCriteria()
             evtWeight *= anCfg.lepSFs[lType+"_sf_trig"].getSF(m_lep_pt[validLeptons[1]],m_lep_eta[validLeptons[1]]).first;
             //cout << "     SF TEST!! " << lType << ", " << evtWeight << endl;
         }
-
     }
 
   // ADDED 2016-11-10 - MEANT FOR COMBINATION OF DY AND DY1J EVENTS.
@@ -471,21 +487,35 @@ void EventHandler::evalCriteria()
 
       // Jet is HF if it passes the CSV operating point and has a reconstructed secondary vertex.
         evt_i = validJets[vJet_i];  // Set the evt_i to the validJet's index within the EventHandler.
-        for(auto& svType : SVType)
-            for(auto& hfTag : HFTags)
-                if(HFTagDiscrimVar[hfTag][evt_i] >= HFTagDiscrimOP[hfTag] && SVVariable[svType][evt_i] >= SVMinimumVal[svType])
-                { // Unfortunate hardcoded checking: check the vertex category of the corrected secondary vertices, if the svType is appropriate.
-                  // cISVf = full SV reco'd (==0)
-                  // cISVp = psuedo vertex (==1)
-                    if(svType == "cISVf" && m_jet_vtxCat_IVF[evt_i] != 0) continue;
-                    if(svType == "cISVp" && m_jet_vtxCat_IVF[evt_i] != 1) continue;
-                  // Set HFSVtag Variables.
-                    HFJets[hfTag][svType][vJet_i] = true;
-                    if(!hasHFJets[hfTag][svType])
-                    {   leadHFJet[hfTag][svType] = vJet_i;
-                        hasHFJets[hfTag][svType] = true;
-                    }
+        for(auto& hfTag : HFTags)
+        { // Evaluate the appropriate tagging variable.
+            bool tagged = false;
+
+              if(TString(hfTag(0,3)) == "Chm")   // If charm tagger...
+                  tagged =    HFTagDiscrimVar[hfTag+"vsL"][evt_i] >= HFTagDiscrimOP[hfTag+"vsL"]
+                           && HFTagDiscrimVar[hfTag+"vsB"][evt_i] >= HFTagDiscrimOP[hfTag+"vsB"];
+              if(TString(hfTag(0,3)) == "CSV")   // If csv tagger...
+                  tagged = HFTagDiscrimVar[hfTag][evt_i] >= HFTagDiscrimOP[hfTag];
+              if(hfTag == "NoHF")   // If not using a tagger...
+                  tagged = true;
+
+          // If jet was tagged, cycle through SV types
+            if(tagged)
+                for(auto& svType : SVType)
+                    if(tagged && SVVariable[svType][evt_i] >= SVMinimumVal[svType])
+            { // Unfortunate hardcoded checking: check the vertex category of the corrected secondary vertices, if the svType is appropriate.
+              // cISVf = full SV reco'd (==0)
+              // cISVp = psuedo vertex (==1)
+                if(svType == "cISVf" && m_jet_vtxCat_IVF[evt_i] != 0) continue;
+                if(svType == "cISVp" && m_jet_vtxCat_IVF[evt_i] != 1) continue;
+              // Set HFSVtag Variables.
+                HFJets[hfTag][svType][vJet_i] = true;
+                if(!hasHFJets[hfTag][svType])
+                {   leadHFJet[hfTag][svType] = vJet_i;
+                    hasHFJets[hfTag][svType] = true;
                 }
+            }
+        }
     }
 
   // Combine a few of the checks into a couple of comprehensive variables.

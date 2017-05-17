@@ -30,28 +30,33 @@ class JetTagWeight
    ~JetTagWeight(){}
 
     bool  setEffFile(const std::string&);
-    bool  setSFFile( const std::string&);
+    bool  setCSVSFFile( const std::string&);
+    bool  setChmSFFile( const std::string&);
     float getJetEff( char, std::string opPt, std::string svType, float, float);
     float getJetSF ( char, std::string opPt, float, float, std::string type="central");
 
   private:
     std::string fn_eff_;
-    std::string fn_btag_sf_;
+    std::string fn_csv_sf_;
+    std::string fn_chm_sf_;
     bool effLoaded_;
     float effPtMin_ ;  // Boundaries for efficiency histogram
     float effPtMax_ ;
     float effEtaMin_;
     float effEtaMax_;
-    bool sfLoaded_;
     TDirectory *histHolder_;    // Directory created to store histograms.
+    bool csvSFLoaded_;
+    bool chmSFLoaded_;
       // If not specified, cloned histograms will create themselves in their
       // parent histo's TFile directory and cease existing when the file is closed.
 
-    BTagCalibration btagCalib_;
+    BTagCalibration csvCalib_;
+    BTagCalibration chmCalib_;
     std::map<std::string, BTagCalibrationReader> btagCalibReader_;
     std::map<std::string, BTagEntry::OperatingPoint> opPtMap_; // Map of BTagEntry operating points to my operating points.
     std::map<char, BTagEntry::JetFlavor> flvMap_ ;        // Map of flavor enums to my flavor characters.
-    std::map<char, std::string> flvSet_ ;  // Set to load for a given flavor.
+    std::map<char, std::string> flvSetCSV_ ;  // Set to load for a given flavor.
+    std::map<char, std::string> flvSetChm_ ;  // Set to load for a given flavor.
     std::vector<char> flavor_;
     std::vector<std::string> opPt_;
     std::vector<std::string> svTypes_;

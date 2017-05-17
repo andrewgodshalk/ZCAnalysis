@@ -24,7 +24,7 @@ using std::endl;           using std::ofstream;   using std::setw;   using std::
 using std::map;
 typedef unsigned int Index;
 
-const vector<TString> EventEffPlotExtractor::HFTags  = {"NoHF", "CSVL", "CSVM", "CSVT", "CSVS"};
+const vector<TString> EventEffPlotExtractor::HFTags  = {"NoHF", "CSVL", "CSVM", "CSVT", "CSVS", "ChmL", "ChmM", "ChmT"};
 const vector<TString> EventEffPlotExtractor::SVTypes = {"noSV", "oldSV", "pfSV", "pfISV", "qcSV", "cISV", "cISVf", "cISVp"};
 const vector<TString> EventEffPlotExtractor::UncertVariations= {"central", "sfHFp", "sfHFm", "sfLp", "sfLm"};
   // Scale factor uncertainty up, down, for HF and Light scale factors.

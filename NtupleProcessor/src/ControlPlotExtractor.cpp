@@ -29,13 +29,10 @@ typedef unsigned int Index;
 const vector<TString> ControlPlotExtractor::multName  = {"", "_ld"  , "_sl"      , "_ex"   };
 const vector<TString> ControlPlotExtractor::multTitle = {"", "Lead ", "Sub-lead ", "Extra "};
 
-// const vector<TString> ControlPlotExtractor::HFTags    = {"NoHF", "CSVL", "CSVM", "CSVT", "CSVS"};
+// const vector<TString> ControlPlotExtractor::HFTags    = {"NoHF", "CSVL", "CSVM", "CSVT", "CSVS", "ChmL", "ChmM", "ChmT"};
 // const vector<TString> ControlPlotExtractor::SVTypes   = {"noSV", "oldSV", "pfSV", "pfISV", "qcSV", "cISV", "cISVf", "cISVp"};
-// const vector<TString> ControlPlotExtractor::SVTypes   = {"noSV", "pfSV", "pfISV", "cISV"};
-// const vector<TString> ControlPlotExtractor::HFTags    = {"CSVM", "CSVT"};
-// const vector<TString> ControlPlotExtractor::SVTypes   = {"noSV", "pfSV", "pfISV", "cISV", "cISVf"};
-const vector<TString> ControlPlotExtractor::HFTags    = {"CSVM"};
-const vector<TString> ControlPlotExtractor::SVTypes   = {"noSV", "cISVf"};
+const vector<TString> ControlPlotExtractor::HFTags    = {"CSVL", "CSVM", "CSVT", "ChmL", "ChmM", "ChmT"};
+const vector<TString> ControlPlotExtractor::SVTypes   = {"noSV", "pfSV", "pfISV", "cISVf"};
 
 ControlPlotExtractor::ControlPlotExtractor(EventHandler& eh, TDirectory* d, TString o) : HistogramExtractor(eh, d, o)
 {

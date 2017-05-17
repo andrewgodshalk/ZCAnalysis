@@ -17,19 +17,23 @@ using std::string;
 using std::cout;   using std::endl;
 
 JetTagWeight::JetTagWeight()
-: fn_eff_(""), fn_btag_sf_(""), effLoaded_(false), effPtMin_(-1), effPtMax_(-1), effEtaMin_(-1), effEtaMax_(-1), sfLoaded_(false),
+: fn_eff_(""), fn_csv_sf_(""), fn_chm_sf_(""), effLoaded_(false),
+  effPtMin_(-1), effPtMax_(-1), effEtaMin_(-1), effEtaMax_(-1),
+  csvSFLoaded_(false), chmSFLoaded_(false),
   histHolder_(new TDirectory("JetTagWeight_histHolder_", "JetTagWeight Histogram Holder"))
 { // Set up maps from my labels to BTV's enums.
-    opPtMap_ =  { {"NoHF", BTagEntry::OP_LOOSE}, //{"SVT",  BTagEntry::OP_LOOSE },
-                  {"CSVL", BTagEntry::OP_LOOSE}, {"CSVM", BTagEntry::OP_MEDIUM},
-                  {"CSVT", BTagEntry::OP_TIGHT}, {"CSVS", BTagEntry::OP_TIGHT }
-                };
-    flvMap_  =  { {'b',BTagEntry::FLAV_B}, {'c', BTagEntry::FLAV_C}, {'l', BTagEntry::FLAV_UDSG} };
-    flvSet_  =  { {'b',"comb"}, {'c',"comb"}, {'l',"incl"} };
-    flavor_  =  { 'b', 'c', 'l' };
-    opPt_    =  { "NoHF", "CSVL", "CSVM", "CSVT", "CSVS" };
-    svTypes_ =  { "noSV", "pfSV", "pfISV", "qcSV", "cISV", "cISVf", "cISVp"};
-    // svTypes_ =  { "noSV", "oldSV", "pfSV", "pfISV", "qcSV", "cISV", "cISVf", "cISVp"};
+    opPtMap_   = { {"NoHF", BTagEntry::OP_LOOSE},
+                   {"CSVL", BTagEntry::OP_LOOSE}, {"CSVM", BTagEntry::OP_MEDIUM},
+                   {"CSVT", BTagEntry::OP_TIGHT}, {"CSVS", BTagEntry::OP_TIGHT },
+                   {"ChmL", BTagEntry::OP_LOOSE}, {"ChmM", BTagEntry::OP_MEDIUM},
+                   {"ChmT", BTagEntry::OP_TIGHT}
+                 };
+    flvMap_    = { {'b',BTagEntry::FLAV_B}, {'c', BTagEntry::FLAV_C}, {'l', BTagEntry::FLAV_UDSG} };
+    flvSetCSV_ = { {'b',"comb"}, {'c',"comb"}, {'l',"incl"} };
+    flvSetChm_ = { {'b',"TnP"} , {'c',"comb"}, {'l',"incl"} };
+    flavor_    = { 'b', 'c', 'l' };
+    opPt_      = { "NoHF", "CSVL", "CSVM", "CSVT", "CSVS", "ChmL", "ChmM", "ChmT"};
+    svTypes_   = { "noSV", "oldSV", "pfSV", "pfISV", "qcSV", "cISV", "cISVf", "cISVp"};
 }
 
 
@@ -43,9 +47,13 @@ bool JetTagWeight::setEffFile(const string& fn)
         for( string& op : opPt_)
             for( string& sv : svTypes_)
     {   TString plot_name = TString::Format("dy_Zll_zpjmet_%s%s_%cJetEff", op.c_str(), sv.c_str(), f);
-        // TString plot_name = TString::Format("h_%cJetTagEff_%s%s", f, op.c_str(), sv.c_str());
-        jetTagEff_[f][op][sv] = (TH2F*) effFile->Get(plot_name.Data())->Clone((plot_name+"_clone").Data());
-        // cout << "    " << jetTagEff_[f][op][sv]->GetName() << endl;
+        cout << "    Getting eff plot: " << plot_name;
+        TH2F* temp = (TH2F*) effFile->Get(plot_name.Data());
+        if(temp != NULL)
+        {   jetTagEff_[f][op][sv] = (TH2F*) temp->Clone((plot_name+"_clone").Data());
+            cout << " --> " << jetTagEff_[f][op][sv]->GetName() << endl;
+        }
+        else cout << " --> PLOT NOT FOUND, ASSUMING EFF. = 1.0" << endl;
     }
     effFile->Close();
     // for( char& f : flavor_)
@@ -63,17 +71,32 @@ bool JetTagWeight::setEffFile(const string& fn)
 }
 
 
-bool JetTagWeight::setSFFile( const string& fn)
+bool JetTagWeight::setCSVSFFile( const string& fn)
 {
-    fn_btag_sf_ = fn;
+    fn_csv_sf_ = fn;
     string tagger = "CSVv2";
-    btagCalib_ = BTagCalibration(tagger, fn_btag_sf_);
-    for( string& op : opPt_)
+    csvCalib_ = BTagCalibration(tagger, fn_csv_sf_);
+    for( string& op : opPt_) if( op.substr(0,3) == "CSV" || op == "NoHF")
     {   btagCalibReader_[op] = BTagCalibrationReader(opPtMap_[op], "central", {"up","down"});
         for( char& f : flavor_)
-            btagCalibReader_[op].load(btagCalib_, flvMap_[f], flvSet_[f]);
+            btagCalibReader_[op].load(csvCalib_, flvMap_[f], flvSetCSV_[f]);
     }
-    sfLoaded_ = true;
+    csvSFLoaded_ = true;
+    return true;
+}
+
+
+bool JetTagWeight::setChmSFFile( const string& fn)
+{
+    fn_chm_sf_ = fn;
+    string tagger = "cTag";
+    chmCalib_ = BTagCalibration(tagger, fn_chm_sf_);
+    for( string& op : opPt_) if( op.substr(0,3) == "Chm")
+    {   btagCalibReader_[op] = BTagCalibrationReader(opPtMap_[op], "central", {"up","down"});
+        for( char& f : flavor_)
+            btagCalibReader_[op].load(chmCalib_, flvMap_[f], flvSetChm_[f]);
+    }
+    chmSFLoaded_ = true;
     return true;
 }
 
@@ -82,7 +105,7 @@ float JetTagWeight::getJetEff(char flv, string opPt, string svType, float pt, fl
 {
     // cout << TString::Format("JetTagWeight::getJetEff(%c, %s, %s, %f, %f)", flv, opPt.c_str(), svType.c_str(), pt, eta) << endl;
     float eff = 1.0;
-    if(effLoaded_)
+    if(effLoaded_ && jetTagEff_[flv][opPt][svType] != NULL)
     { // cout << "    ...loading eff from " << jetTagEff_[flv][opPt][svType]->GetTitle() << "..." << endl;
       // Check to see that pt, eta are within bounds of eff bins. If not, use last viable bin.
         int globalBinNum = jetTagEff_[flv][opPt][svType]->FindBin(pt, eta);
@@ -115,7 +138,7 @@ float JetTagWeight::getJetSF(char flv, string opPt, float pt, float eta, string 
     }
 
   // Get value from btag calibration reader
-    if(sfLoaded_ && opPt != "SVT" && opPt != "NoHF")
+    if(csvSFLoaded_ && chmSFLoaded_ && opPt != "SVT" && opPt != "NoHF")
     {   sf = btagCalibReader_[opPt].eval_auto_bounds(type, flvMap_[flv], eta, pt);
         //cout << "    ...from file: " << sf << endl;
     }
