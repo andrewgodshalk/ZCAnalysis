@@ -64,9 +64,8 @@ EffPlotAndCalc::EffPlotAndCalc(int argc, char* argv[])
     const vector<TString> decayChainLabels = {"Zuu", "Zee", "Zll"};
     // const vector<TString> decayChainLabels = {"Zuu", "Zee"};
     const vector<TString> selectionLabels = {"loose", "zpjmet"};
-    // const vector<TString> svTypes = {"noSV", "oldSV", "pfSV", "pfISV", "qcSV", "cISV", "cISVf", "cISVp"};
-    const vector<TString> svTypes = {"noSV", "pfSV", "pfISV", "qcSV", "cISV", "cISVf", "cISVp"};
-    const vector<TString> tags    = {"NoHF","CSVL","CSVM","CSVT", "CSVS"};
+    const vector<TString> tags    = {"NoHF", "CSVL", "CSVM", "CSVT", "CSVS", "ChmL", "ChmM", "ChmT"};
+    const vector<TString> svTypes = {"noSV", "oldSV", "pfSV", "pfISV", "qcSV", "cISV", "cISVf", "cISVp"};
     array<char,3>   flavors = {'l','c','b'};
 
   // Set up plot names.
@@ -124,7 +123,8 @@ EffPlotAndCalc::EffPlotAndCalc(int argc, char* argv[])
 
           // Make eff plot
             TString effPlotName = TString::Format(efficiencyPlotNameFormat.Data(), ds.Data(), dc.Data(), sel.Data(), tag.Data(), sv.Data(), flv );
-            h_JetTagEff[effPlotName] = makeEffPlots(effPlotName, h_nTaggedJets[numNewPlotLabel], h_nJets[denNewPlotLabel]);
+            h_JetTagEff[effPlotName]   = makeEffPlots(effPlotName, h_nTaggedJets[numNewPlotLabel], h_nJets[denNewPlotLabel]);
+            // h_JetTagEff1D[effPlotName] = h_JetTagEff[effPlotName]->ProjectionX("_1D", 0, -1, "e");
             // printPlotValues(h_JetTagEff[effPlotName]);
         }
     }
@@ -132,6 +132,8 @@ EffPlotAndCalc::EffPlotAndCalc(int argc, char* argv[])
   // Write histograms to file
     for( auto& label_effPlot : h_JetTagEff )
         label_effPlot.second->Write();
+    // for( auto& label_effPlot : h_JetTagEff1D )
+    //     label_effPlot.second->Write();
     f_output_->Close();
 
     cout << "\n"

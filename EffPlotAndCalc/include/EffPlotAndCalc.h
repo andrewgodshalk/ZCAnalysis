@@ -53,6 +53,7 @@ private:
     std::map<TString, TH2F*>  h_nTaggedJets;  // Storage for plot from root file, with original binning.
     std::map<TString, TH2F*> hr_nTaggedJets;  // Storage for new # of jet plots, with new binning.
     std::map<TString, TH2F*>  h_JetTagEff  ;  // Final efficiency plot
+    std::map<TString, TH1D*>  h_JetTagEff1D;  // Final efficiency plot
     TFile* f_input_;
     TFile* f_output_;
     std::string fn_input_;
