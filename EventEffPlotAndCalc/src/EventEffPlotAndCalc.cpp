@@ -69,12 +69,9 @@ EventEffPlotAndCalc::EventEffPlotAndCalc(int argc, char* argv[])
 
   // Set up output histograms
     array<char,3>   flavors = {'l','c','b'};
-    // const vector<TString> svTypes = {"noSV", "oldSV", "pfSV", "pfISV", "qcSV", "cISV", "cISVf", "cISVp"};
-    // const vector<TString> svTypes = {"noSV", "pfSV", "pfISV", "qcSV", "cISV", "cISVf", "cISVp"};
-    // const vector<TString> tags    = {"NoHF","CSVL","CSVM","CSVT", "CSVS"};
     const vector<TString> channels = {"Zuu", "Zee"};
-    const vector<TString> svTypes  = {"noSV", "pfSV", "pfISV", "cISV", "cISVf"};
-    const vector<TString> tags     = {"NoHF", "CSVM", "CSVT"};
+    const vector<TString> tags     = {"NoHF", "CSVL", "CSVM", "CSVT", "CSVS", "ChmL", "ChmM", "ChmT"};
+    const vector<TString> svTypes  = {"noSV", "oldSV", "pfSV", "pfISV", "qcSV", "cISV", "cISVf", "cISVp"};
     const vector<TString> uncVar   = {"central", "sfHFp", "sfHFm", "sfLp", "sfLm"};
 
     for( const TString& channel : channels )
