@@ -45,6 +45,7 @@ class ControlPlotMaker
     bool    outputAsEPS         ;
     bool    usingLegStats       ;
     int     rebinOpt            ;
+    bool    integralInLegend    ;
 
     TFile* inputFile;
     TFile* outputFile;

@@ -15,6 +15,7 @@ ControlPlotMaker.cpp
 #include <TFile.h>
 #include <THStack.h>
 #include <TImage.h>
+#include <TLatex.h>
 #include <TLegend.h>
 #include <TRegexp.h>
 #include "../interface/ControlPlotMaker.h"
@@ -25,7 +26,7 @@ using std::endl;   using std::vector;
 using std::map ;   using std::list  ;
 
 ControlPlotMaker::ControlPlotMaker(TString fnac, TString fni, TString fno, TString o, bool log, bool flv, bool tau, bool eps)
- : anCfg(fnac), fnInput(fni), fnOutput(fno), options(o), usingLogScale(log), splitDYByFlavor(flv), splitTauDecayFromDY(tau), outputAsEPS(eps), usingLegStats(true), rebinOpt(2)
+ : anCfg(fnac), fnInput(fni), fnOutput(fno), options(o), usingLogScale(log), splitDYByFlavor(flv), splitTauDecayFromDY(tau), outputAsEPS(eps), usingLegStats(true), rebinOpt(2), integralInLegend(false)
 {
   // TEST output
     cout << "  ControlPlotMaker::ControlPlotMaker(): Created.\n"
@@ -51,7 +52,7 @@ ControlPlotMaker::ControlPlotMaker(TString fnac, TString fni, TString fno, TStri
     vector<string> dsNameVec  = { "muon", "elec",        "dy",       "dy_tautau",       "dy_Zl",     "dy_Zc",    "dy_Zb",      "zz",     "wz",     "ww",       "tt",        "tt_lep",         "ttsemi",         "tthad",          "t_s",          "t_t",          "t_tw",             "tbar_s",             "tbar_t",             "tbar_tw" };
     Color_t dsColorVec[]      = { kBlack, kBlack,      kRed+1,           kYellow,        kRed+1,      kRed+1,     kRed+1,  kGreen-1, kGreen-2, kGreen-3,    kBlue-0,         kBlue-0,          kBlue-2,         kBlue-3,           kRed,           kRed,       kOrange+3,                 kRed,                 kRed,             kOrange+3 };
     Style_t dsStyleVec[]      = {      0,      0,        1001,              1001,          1001,        3001,       3002,      1001,     1001,     1001,       1001,            1001,             1001,            1001,           1001,           1001,            1001,                 1001,                 1001,                  3001 };
-    string  dsLegLabel[]      = { "Data", "Data", "Drell-Yan", "DY (Z->#tau#tau", "DY (Z+udsg}",  "DY (Z+c)", "DY (Z+c)",      "ZZ",     "WZ",     "WW", "t#bar{t}", "t#bar{t}(lep)", "t#bar{t}(semi)", "t#bar{t}(had)", "t(s-channel)", "t(t-channel)", "t(tW-channel)", "#bar{t}(s-channel)", "#bar{t}(t-channel)", "#bar{t}(tW-channel)" };
+    string  dsLegLabel[]      = { "Data", "Data", "Drell-Yan", "DY (Z->#tau#tau", "DY (Z+udsg)",  "DY (Z+c)", "DY (Z+c)",      "ZZ",     "WZ",     "WW", "t#bar{t}", "t#bar{t}(lep)", "t#bar{t}(semi)", "t#bar{t}(had)", "t(s-channel)", "t(t-channel)", "t(tW-channel)", "#bar{t}(s-channel)", "#bar{t}(t-channel)", "#bar{t}(tW-channel)" };
 
     for(unsigned int i=0; i<dsNameVec.size(); i++)
     {   dsColor[dsNameVec[i]] = dsColorVec[i];
@@ -61,12 +62,16 @@ ControlPlotMaker::ControlPlotMaker(TString fnac, TString fni, TString fno, TStri
   // Set up input and outut files, taking into account that the two could be the same file.
     map<TString, TFile*> fileList;
     fileList[fnInput] = fileList[fnOutput] = NULL;
-    for(auto& kv : fileList)
-    {   cout << "  ControlPlotMaker::ControlPlotMaker(): Opening file: " << kv.first << endl;
-        kv.second = TFile::Open(kv.first, "UPDATE");
-    }
-    inputFile  = fileList[fnInput ];
-    outputFile = fileList[fnOutput];
+    // for(auto& kv : fileList)
+    // {   cout << "  ControlPlotMaker::ControlPlotMaker(): Opening file: " << kv.first << endl;
+    //     kv.second = TFile::Open(kv.first, "UPDATE");
+    // }
+
+    inputFile  = fileList[fnInput ] = TFile::Open(fnInput, "UPDATE");
+    if(fnInput == fnOutput)
+        outputFile = fileList[fnOutput] = inputFile;
+    else
+        outputFile = fileList[fnOutput] = TFile::Open(fnOutput, "RECREATE");
 
   // For the Zuu, then Zee plots...
     //vector<string> decayChain = {"Zuu"};
@@ -159,12 +164,46 @@ ControlPlotMaker::ControlPlotMaker(TString fnac, TString fni, TString fno, TStri
                 TString cName  = decayChain[ds_i]+"_"+histToStack;
                 TString cTitle = dsHist[allDatasets[0]]->GetTitle();
                 TCanvas *plot  = new TCanvas(cName,cTitle, 600, 600);
+                plot->SetHighLightColor(2);
+                plot->Range(0,0,1,1);
+                plot->SetFillColor(0);
+                plot->SetFillStyle(4000);
+                plot->SetBorderMode(0);
+                plot->SetBorderSize(2);
+                plot->SetFrameFillStyle(1000);
+                plot->SetFrameBorderMode(0);
+
                 plot->cd();
-                TPad * stackPad = new TPad("stackPad", "stackPad", 0, 0.2, 1, 1);
+                TPad * stackPad = new TPad("stackPad", "stackPad", 0, 0.3, 1, 1);
                 stackPad->Draw();
+                stackPad->cd();
+                stackPad->Range(3.951682,-3,208.9113,-0.4156831);
+                stackPad->SetFillColor(0);
+                stackPad->SetBorderMode(0);
+                stackPad->SetBorderSize(2);
+                stackPad->SetLogy();
+                stackPad->SetLeftMargin(0.12709);
+                stackPad->SetRightMargin(0.0434783);
+                stackPad->SetBottomMargin(0.005);
+                stackPad->SetFrameBorderMode(0);
+                stackPad->SetFrameBorderMode(0);
+
                 plot->cd();
-                TPad * ratioPad = new TPad("ratioPad", "ratioPad", 0, 0, 1, 0.2);
+                TPad * ratioPad = new TPad("ratioPad", "ratioPad", 0, 0, 1, 0.3);
                 ratioPad->Draw();
+                ratioPad->cd();
+                ratioPad->Range(3.951682,-0.2885246,208.9113,1.678689);
+                ratioPad->SetFillColor(0);
+                ratioPad->SetBorderMode(0);
+                ratioPad->SetBorderSize(2);
+                ratioPad->SetTickx(1);
+                ratioPad->SetTicky(1);
+                ratioPad->SetLeftMargin(0.12709);
+                ratioPad->SetRightMargin(0.0434783);
+                ratioPad->SetTopMargin(0.04);
+                ratioPad->SetBottomMargin(0.35);
+                ratioPad->SetFrameBorderMode(0);
+                ratioPad->SetFrameBorderMode(0);
 
               // Plot the data and stack on the same histogram.
                 stackPad->cd();
@@ -188,20 +227,44 @@ ControlPlotMaker::ControlPlotMaker(TString fnac, TString fni, TString fno, TStri
                 dataHist->Draw("axis same");
 
               // Set up legend
-                TLegend *leg = new TLegend(0.65,0.60,0.95,0.89);
-                leg->AddEntry(dataHist, TString(allDatasets[0])+" ("+Form("%.1f",dataHist->Integral())+")", "P");
-                //leg->AddEntry(dataHist, TString(dsLegLabel[0])+" ("+Form("%.1f",dataHist->Integral())+")", "P");
+                TLegend *leg = NULL;
+                if(integralInLegend) leg = new TLegend(0.65,0.60,0.90,0.89);
+                else                 leg = new TLegend(0.72,0.50,0.98,0.89);
+                if(decayChain[ds_i] == "Zuu") leg->SetHeader("Z\\rightarrow\\mu\\mu Channel");
+                if(decayChain[ds_i] == "Zee") leg->SetHeader("Z\\rightarrow ee Channel");
+
+              // Data histogram listing
+                TString legLabel = "";
+                if(integralInLegend) legLabel = Form("%s (%.1f)", dsLegLabel[0].c_str(), dataHist->Integral());
+                else                 legLabel = Form("%s",        dsLegLabel[0].c_str()                      );
+                leg->AddEntry(dataHist, legLabel, "p");
+              // Bkgd histo listings
                 for(list<string>::reverse_iterator ds = dsOrder.rbegin(); ds!=dsOrder.rend(); ds++)
-                    leg->AddEntry(dsHist[*ds], TString(*ds)+" ("+Form("%.1f",dsHist[*ds]->Integral())+")", "F");
+                {   TH1* hist = dsHist[*ds];
+                    unsigned int k; for(k=0; k<dsNameVec.size(); k++) if(dsNameVec[k]==*ds) break;
+                    if(k==dsNameVec.size()) cout << " ERROR: DS NAME NOT FOUND IN LIST: " << *ds << endl;
+                    // else cout << " Legend label found: " << *ds << " found at " << k << " (" << dsLegLabel[k] << ")" << endl;
+                    if(integralInLegend) legLabel = Form("%s (%.1f)", dsLegLabel[k].c_str(), hist->Integral());
+                    else                 legLabel = Form("%s",        dsLegLabel[k].c_str()                  );
+                    leg->AddEntry(hist, legLabel, "f");
+                }
+
                 leg->SetBorderSize(0);
                 leg->SetFillStyle(0);
                 leg->Draw();
+
+                stackPad->cd();
+                TLatex* tex = new TLatex(0.45,0.92,"CMS Internal #sqrt{s} = 13 TeV, 35.9 fb^{-1}");
+                tex->SetNDC();
+                tex->SetTextFont(42);
+                tex->SetLineWidth(2);
+                tex->Draw();
 
               // Plot the ratio plot.
                 ratioPad->cd();
                 ratioPad->SetLogy(0);   // Set ratio pad to linear scale
                 ratioPad->SetGrid();
-                ratioPad->SetTopMargin(0);
+                // ratioPad->SetTopMargin(0);
                 //Make MC denominator plot
                 //TH1F* mcHist    = createSimSumPlot(simStack);
 
@@ -232,7 +295,7 @@ ControlPlotMaker::ControlPlotMaker(TString fnac, TString fni, TString fno, TStri
                 delete ratioHist;
 
                 //////////////////UNCOMMENT HERE TO TEST ONLY ONE PLOT
-                //break;
+                // break;
             }
         }
     }
@@ -268,6 +331,9 @@ TH1* ControlPlotMaker::createStackHisto(string& ds, TString& selectionName, TStr
   // Create a clone to the appropriate histogram,
     // cout << "      Attempting to retrieve from " << ds << ": " << histName << "..." << endl;
     TH1* h = (TH1*)(dsDirectory[ds]->GetDirectory(selectionName)->Get(histName)->Clone(ds+"_"+histName));
+    h->SetTitle("");
+    // h->SetXTitle("");
+    // h->SetLabel()
 
   // If hist is at the zhf level, rebin to make it a bit more reasonable.
     //if(histName(0,3)=="zhf" && !histName.Contains("mult")) h->Rebin(3);
@@ -288,6 +354,7 @@ TH1* ControlPlotMaker::createStackHisto(string& ds, TString& selectionName, TStr
         if(ds=="dy_tautau" || ds=="dy_Zl" || ds=="dy_Zc" || ds=="dy_Zb" ) h->Scale(anCfg.setWeight["dy"]);
         else                                                              h->Scale(anCfg.setWeight[ ds ]);
     }
+    h->SetTitleSize( 0.05, "x" );
     return h;
 }
 
@@ -298,10 +365,12 @@ TH1F* ControlPlotMaker::createRatioPlot(TH1F* num, TH1F* denom)
     TH1F * h_ratio = (TH1F*) num->Clone("ratioHist");
     h_ratio->SetTitle("");
     h_ratio->GetYaxis()->SetTitle("Data/MC");
-    h_ratio->GetXaxis()->SetTitle("");
-    h_ratio->SetTitleSize(  0.12, "y" );
-    h_ratio->SetTitleOffset(0.30, "y");
-    h_ratio->SetLabelSize(  0.08, "xy");
+    // h_ratio->GetXaxis()->SetTitle("");
+    h_ratio->SetTitleSize(   0.1 , "x" );
+    h_ratio->SetTitleSize(   0.12, "y" );
+    h_ratio->SetTitleOffset( 0.35, "y" );
+    h_ratio->SetLabelSize(   0.08, "x" );
+    h_ratio->SetLabelSize(   0.06, "y" );
     h_ratio->Divide(denom);
     h_ratio->SetMinimum(0.5);
     h_ratio->SetMaximum(1.5);
