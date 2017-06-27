@@ -32,7 +32,9 @@ JetTagWeight::JetTagWeight()
     flvSetCSV_ = { {'b',"comb"}, {'c',"comb"}, {'l',"incl"} };
     flvSetChm_ = { {'b',"TnP"} , {'c',"comb"}, {'l',"incl"} };
     flavor_    = { 'b', 'c', 'l' };
-    opPt_      = { "NoHF", "CSVL", "CSVM", "CSVT", "CSVS", "ChmL", "ChmM", "ChmT"};
+    opPt_      = { "NoHF", "CSVL", "CSVM", "CSVT", "CSVS", "ChmL", "ChmM", "ChmT"
+                   "BCLL","BCLM","BCLT","BCML","BCMM","BCMT","BCTL","BCTM","BCTT"  // combined b/c tagger
+                 };
     svTypes_   = { "noSV", "oldSV", "pfSV", "pfISV", "qcSV", "cISV", "cISVf", "cISVp"};
 }
 
@@ -137,9 +139,20 @@ float JetTagWeight::getJetSF(char flv, string opPt, float pt, float eta, string 
         }
     }
 
-  // Get value from btag calibration reader
     if(csvSFLoaded_ && chmSFLoaded_ && opPt != "SVT" && opPt != "NoHF")
-    {   sf = btagCalibReader_[opPt].eval_auto_bounds(type, flvMap_[flv], eta, pt);
+    {   if(opPt.substr(0,2) == "BC")  // If combining taggers, combine SFs
+        {   string btag = "NoHF";
+            string ctag = "NoHF";
+            if(opPt[2] == 'L') btag = "CSVL";
+            if(opPt[2] == 'M') btag = "CSVM";
+            if(opPt[2] == 'T') btag = "CSVT";
+            if(opPt[3] == 'L') ctag = "ChmL";
+            if(opPt[3] == 'M') ctag = "ChmM";
+            if(opPt[3] == 'T') ctag = "ChmT";
+            sf = getJetSF(flv,btag,pt,eta,type) * getJetSF(flv,ctag,pt,eta,type);
+        }
+        else  // Get value from btag calibration reader directly
+            sf = btagCalibReader_[opPt].eval_auto_bounds(type, flvMap_[flv], eta, pt);
         //cout << "    ...from file: " << sf << endl;
     }
 

@@ -54,11 +54,12 @@ public:
     float calculateJetMSVQuickCorrection(int);
     float calculateJetTagEvtWeight(std::string, std::string, std::string uncert = "central", bool debug=false);
     void  processLeptons();
+    bool  jetSatisfiesTag(Index, TString);
 
   // Running Variables
     TString options;         // Options input with TreeIterator.
 
-// Variables for mapping tree entries. Public so they can be referred to by outside classes.
+  // Variables for mapping tree entries. Public so they can be referred to by outside classes.
     float m_Z_mass;     int   m_nJets;                 int   m_nLeps;                     float m_MET_et      ;
     float m_Z_pt  ;     float m_jet_pt [maxNumJets];   float m_lep_pt    [maxNumElecs];   float m_MET_phi     ;
     float m_Z_eta ;     float m_jet_eta[maxNumJets];   float m_lep_eta   [maxNumElecs];   float m_MET_sumet   ;

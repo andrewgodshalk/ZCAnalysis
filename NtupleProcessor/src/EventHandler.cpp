@@ -23,7 +23,9 @@ using std::cout;   using std::endl;   using std::vector;   using std::swap;
 using std::setw;   using std::setprecision;
 using std::sqrt;   using std::string; using std::sort;
 
-const vector<TString> EventHandler::HFTags = {"NoHF", "CSVL", "CSVM", "CSVT", "CSVS", "ChmL", "ChmM", "ChmT"};
+const vector<TString> EventHandler::HFTags = {"NoHF", "CSVL", "CSVM", "CSVT", "CSVS", "ChmL", "ChmM", "ChmT",
+        "BCLL","BCLM","BCLT","BCML","BCMM","BCMT","BCTL","BCTM","BCTT"  // combined b/c tagger
+    };
 const vector<TString> EventHandler::SVType = {"noSV", "oldSV", "pfSV", "pfISV", "qcSV", "cISV", "cISVf", "cISVp"};
 const vector<TString> EventHandler::UncertVariations= {"central", "sfHFp", "sfHFm", "sfLp", "sfLm"};
 
@@ -488,24 +490,15 @@ void EventHandler::evalCriteria()
       // Jet is HF if it passes the CSV operating point and has a reconstructed secondary vertex.
         evt_i = validJets[vJet_i];  // Set the evt_i to the validJet's index within the EventHandler.
         for(auto& hfTag : HFTags)
-        { // Evaluate the appropriate tagging variable.
-            bool tagged = false;
-
-              if(TString(hfTag(0,3)) == "Chm")   // If charm tagger...
-                  tagged =    HFTagDiscrimVar[hfTag+"vsL"][evt_i] >= HFTagDiscrimOP[hfTag+"vsL"]
-                           && HFTagDiscrimVar[hfTag+"vsB"][evt_i] >= HFTagDiscrimOP[hfTag+"vsB"];
-              if(TString(hfTag(0,3)) == "CSV")   // If csv tagger...
-                  tagged = HFTagDiscrimVar[hfTag][evt_i] >= HFTagDiscrimOP[hfTag];
-              if(hfTag == "NoHF")   // If not using a tagger...
-                  tagged = true;
+        {
+          // Evaluate the appropriate tagging variable.
+            bool tagged = jetSatisfiesTag(evt_i, hfTag);
 
           // If jet was tagged, cycle through SV types
             if(tagged)
                 for(auto& svType : SVType)
                     if(tagged && SVVariable[svType][evt_i] >= SVMinimumVal[svType])
             { // Unfortunate hardcoded checking: check the vertex category of the corrected secondary vertices, if the svType is appropriate.
-              // cISVf = full SV reco'd (==0)
-              // cISVp = psuedo vertex (==1)
                 if(svType == "cISVf" && m_jet_vtxCat_IVF[evt_i] != 0) continue;
                 if(svType == "cISVp" && m_jet_vtxCat_IVF[evt_i] != 1) continue;
               // Set HFSVtag Variables.
@@ -614,40 +607,57 @@ float EventHandler::calculateJetMSVQuickCorrection(int jet_i)
 float EventHandler::calculateJetTagEvtWeight(string hfOpPt, string svOpPt, string uncert, bool debug)
 { // For given flavor tag, calculate an event weight based on jet tagging efficiency and tagging data/mc scalefactors.
   // See link for method used: https://twiki.cern.ch/twiki/bin/view/CMS/BTagSFMethods#1a_Event_reweighting_using_scale
-    float probData = 1.0;
-    float probMC   = 1.0;
-  // For each valid jet...
-    if(debug) cout << "      For " << validJets.size() << " jets: ";
-    if(debug) cout << "\n      f vi(ei){eff,sf}tag pt eta hftagVal hfTagOP svVal svOP -->PD PM";
-    for(Index vJet_i=0, jet_i=0; vJet_i<validJets.size(); vJet_i++)
-    {
-        jet_i = validJets[vJet_i]; // Get jet_i, the valid jet's actual index within the raw array.
+    float wt = 1.0;
 
-      // Get the jet flavor.
-        char flv = 'l';
-        switch(abs(m_jet_hadflv[jet_i]))
-        {  case 5 : flv = 'b'; break;
-           case 4 : flv = 'c'; break;
-           default: flv = 'l';
-        }
-      // Get the jet tagging efficiency and SF
-        JetTagWeight* jtw = usingDY ? anCfg.jetTagWeightDY : anCfg.jetTagWeightBG;
-        float jetEff = jtw->getJetEff(flv, hfOpPt, svOpPt, m_jet_pt[jet_i], m_jet_eta[jet_i]        );
-        float jetSF  = jtw->getJetSF (flv, hfOpPt,         m_jet_pt[jet_i], m_jet_eta[jet_i], uncert);
-
-      // Get whether this jet was tagged or not.
-        bool tagged = HFJets[hfOpPt][svOpPt][vJet_i];
-
-      // Factor into probability values.
-        probData *= (tagged ? jetEff*jetSF : 1.0-jetEff*jetSF );
-        probMC   *= (tagged ? jetEff       : 1.0-jetEff       );
-        if(debug) cout << "\n      " << flv << " " << vJet_i << "(" << jet_i << "){"<<jetEff<<","<<jetSF<<"}"<<(tagged?'t':'n') << " "
-        << setprecision(2) << m_jet_pt[jet_i] << " " << m_jet_eta[jet_i] << " "
-        << HFTagDiscrimVar[hfOpPt][jet_i] << " " << HFTagDiscrimOP[hfOpPt] << " "
-        << SVVariable[svOpPt][jet_i] << " " << SVMinimumVal[svOpPt] << " "
-        << " --> " << probData << " / " << probMC;
+  // If using a combined tagger, get the weight for each tag separately.
+    TString tag = hfOpPt.c_str();
+    if(hfOpPt.substr(0,2) == "BC")
+    {   TString btag = "NoHF";
+        TString ctag = "NoHF";
+        if(hfOpPt[2] == 'L') btag = "CSVL";
+        if(hfOpPt[2] == 'M') btag = "CSVM";
+        if(hfOpPt[2] == 'T') btag = "CSVT";
+        if(hfOpPt[3] == 'L') ctag = "ChmL";
+        if(hfOpPt[3] == 'M') ctag = "ChmM";
+        if(hfOpPt[3] == 'T') ctag = "ChmT";
+        wt = calculateJetTagEvtWeight(btag.Data(),svOpPt,uncert,debug) * calculateJetTagEvtWeight(ctag.Data(),svOpPt,uncert,debug);
     }
-    float wt = probData/probMC;
+    else
+    {   float probData = 1.0;
+        float probMC   = 1.0;
+      // For each valid jet...
+        if(debug) cout << "      For " << validJets.size() << " jets: ";
+        if(debug) cout << "\n      f vi(ei){eff,sf}tag pt eta hftagVal hfTagOP svVal svOP -->PD PM";
+        for(Index vJet_i=0, jet_i=0; vJet_i<validJets.size(); vJet_i++)
+        {
+            jet_i = validJets[vJet_i]; // Get jet_i, the valid jet's actual index within the raw array.
+
+          // Get the jet flavor.
+            char flv = 'l';
+            switch(abs(m_jet_hadflv[jet_i]))
+            {  case 5 : flv = 'b'; break;
+               case 4 : flv = 'c'; break;
+               default: flv = 'l';
+            }
+          // Get the jet tagging efficiency and SF
+            JetTagWeight* jtw = usingDY ? anCfg.jetTagWeightDY : anCfg.jetTagWeightBG;
+            float jetEff = jtw->getJetEff(flv, hfOpPt, svOpPt, m_jet_pt[jet_i], m_jet_eta[jet_i]        );
+            float jetSF  = jtw->getJetSF (flv, hfOpPt,         m_jet_pt[jet_i], m_jet_eta[jet_i], uncert);
+
+          // Get whether this jet was tagged or not.
+            bool tagged = HFJets[hfOpPt][svOpPt][vJet_i];
+
+          // Factor into probability values.
+            probData *= (tagged ? jetEff*jetSF : 1.0-jetEff*jetSF );
+            probMC   *= (tagged ? jetEff       : 1.0-jetEff       );
+            if(debug) cout << "\n      " << flv << " " << vJet_i << "(" << jet_i << "){"<<jetEff<<","<<jetSF<<"}"<<(tagged?'t':'n') << " "
+            << setprecision(2) << m_jet_pt[jet_i] << " " << m_jet_eta[jet_i] << " "
+            << HFTagDiscrimVar[hfOpPt][jet_i] << " " << HFTagDiscrimOP[hfOpPt] << " "
+            << SVVariable[svOpPt][jet_i] << " " << SVMinimumVal[svOpPt] << " "
+            << " --> " << probData << " / " << probMC;
+        }
+        wt = probData/probMC;
+    }
     if(debug) cout << "\n      jetTagEvtWeight calculated for " << hfOpPt << ": " << svOpPt << ": " << wt << std::fixed << endl;
 
     /////////////// TO FIX: 2017-03-03 TEMPORARY SOLUTION: Set wt to zero until new jet eff. histograms w/ sv selection created.
@@ -786,4 +796,30 @@ void EventHandler::processLeptons()
 
   // Profit.
 
+}
+
+
+// Function that evaluates a jet heavy flavor tag.
+bool EventHandler::jetSatisfiesTag(Index evt_i, TString tag)
+{
+    bool tagged = false;
+    if(TString(tag(0,2)) == "BC")   // If using both taggers, check both taggers.
+    {   TString btag = "NoHF";
+        TString ctag = "NoHF";
+        if(tag[2] == 'L') btag = "CSVL";
+        if(tag[2] == 'M') btag = "CSVM";
+        if(tag[2] == 'T') btag = "CSVT";
+        if(tag[3] == 'L') ctag = "ChmL";
+        if(tag[3] == 'M') ctag = "ChmM";
+        if(tag[3] == 'T') ctag = "ChmT";
+        tagged = jetSatisfiesTag(evt_i, btag) && jetSatisfiesTag(evt_i, ctag);
+    }
+    if(TString(tag(0,3)) == "Chm")   // If charm tagger...
+        tagged =    HFTagDiscrimVar[tag+"vsL"][evt_i] >= HFTagDiscrimOP[tag+"vsL"]
+                 && HFTagDiscrimVar[tag+"vsB"][evt_i] >= HFTagDiscrimOP[tag+"vsB"];
+    if(TString(tag(0,3)) == "CSV")   // If csv tagger...
+        tagged = HFTagDiscrimVar[tag][evt_i] >= HFTagDiscrimOP[tag];
+    if(tag == "NoHF")   // If not using a tagger...
+        tagged = true;
+    return tagged;
 }
