@@ -23,10 +23,12 @@ using std::cout;   using std::endl;   using std::vector;   using std::swap;
 using std::setw;   using std::setprecision;
 using std::sqrt;   using std::string; using std::sort;
 
-const vector<TString> EventHandler::HFTags = {"NoHF", "CSVL", "CSVM", "CSVT", "CSVS", "ChmL", "ChmM", "ChmT",
-        "BCLL","BCLM","BCLT","BCML","BCMM","BCMT","BCTL","BCTM","BCTT"  // combined b/c tagger
+const vector<TString> EventHandler::HFTags = {"NoHF", "CSVL", "CSVM", "CSVT",
+        // "CSVS", "ChmL", "ChmM", "ChmT",
+        // "BCLL","BCLM","BCLT","BCML","BCMM","BCMT","BCTL","BCTM","BCTT"  // combined b/c tagger
     };
-const vector<TString> EventHandler::SVType = {"noSV", "oldSV", "pfSV", "pfISV", "qcSV", "cISV", "cISVf", "cISVp"};
+// const vector<TString> EventHandler::SVType = {"noSV", "oldSV", "pfSV", "pfISV", "qcSV", "cISV", "cISVf", "cISVp"};
+const vector<TString> EventHandler::SVType = {"noSV", "pfSV", "pfISV", "cISV", "cISVf"};
 const vector<TString> EventHandler::UncertVariations= {"central", "sfHFp", "sfHFm", "sfLp", "sfLm"};
 
 EventHandler::EventHandler(TString fnac, TString o) : anCfg(fnac), options(o)
