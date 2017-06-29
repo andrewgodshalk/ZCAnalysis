@@ -110,6 +110,12 @@ bool EventHandler::mapTree(TTree* tree)
     if(hasVtypeFix) cout << "  [EH]: VTYPE FIX FIELDS FOUND." << endl;
     else            cout << "  [EH]: VTYPE FIX FIELDS NOT FOUND." << endl;
 
+  // For Duong's skim ntuples (2017-06-28)
+  // Auto-detect for lepton charge. Not saved in Duong's, but checked in Vtype creation.
+    hasFixedVtypeCharge = tree->GetListOfBranches()->FindObject("vLeptons_new_charge");
+    if(hasFixedVtypeCharge) cout << "  [EH]: VTYPE FIX CHARGE FOUND." << endl;
+    else                    cout << "  [EH]: VTYPE FIX CHARGE NOT FOUND." << endl;
+
   // Deactivate all branches, reactivate as necessary.
     tree->SetBranchStatus("*",0);
     vector<TString> branches_to_reactivate = {
@@ -219,9 +225,10 @@ bool EventHandler::mapTree(TTree* tree)
     {   tree->SetBranchAddress( "vLeptons_new_pt"       ,  m_lep_pt         );
         tree->SetBranchAddress( "vLeptons_new_eta"      ,  m_lep_eta        );
         tree->SetBranchAddress( "vLeptons_new_phi"      ,  m_lep_phi        );
-        tree->SetBranchAddress( "vLeptons_new_charge"   ,  m_new_lep_charge );
         tree->SetBranchAddress( "vLeptons_new_relIso03" ,  m_lep_iso03      );
         tree->SetBranchAddress( "vLeptons_new_relIso04" ,  m_lep_iso04      );
+      if(hasFixedVtypeCharge)
+        tree->SetBranchAddress( "vLeptons_new_charge"   ,  m_new_lep_charge );
     }
     tree->SetBranchAddress( "nvLeptons"           , &m_nvLeps      );
     tree->SetBranchAddress( "vLeptons_pt"         ,  m_vlep_pt     );
@@ -296,8 +303,8 @@ bool EventHandler::mapTree(TTree* tree)
 void EventHandler::evalCriteria()
 { // Evaluates the class' list of event selection criteria
 
-  // cout << "   EventHandler::evalCriteria(): BEGIN." << endl;
-  // cout << "    EventHandler::evalCriteria(): TEST: EVENT NUMBER = " << m_event << endl;
+    // cout << endl << "\n    EventHandler::evalCriteria(): BEGIN."
+    //                 "\n    EventHandler::evalCriteria(): TEST: EVENT NUMBER = " << m_event << endl;
 
     resetSelectionVariables();
 
@@ -356,24 +363,22 @@ void EventHandler::evalCriteria()
 
     if(!hasVtypeFix) processLeptons();
 
-    // cout << "\nVTYPE: " << m_Vtype << endl;
-
-    // for(int i=0; i<m_nselLeps; i++)
-    //   cout << "    EH: Selected Lep Props ( #, id, pt, eta, iso, charge, MVA): = (" << i << ", " << m_sellep_pdgId[i] << ", " << m_sellep_pt[i] << ", " << m_sellep_eta[i] << ", " << m_sellep_iso03[i] << ", " << m_sellep_charge[i] << ", " << m_sellep_eleMVAIdSppring16GenPurp[i] << ")" << endl;
-
   // Perform selection on leptons and store indexes sorted by pt.
     if(m_Vtype==0)
     {
       // Reset a couple of variables becase of ntuple fixes.
         m_nLeps = 2;
-        if(hasVtypeFix) { m_lep_charge[0] = m_new_lep_charge[0];
-                          m_lep_charge[1] = m_new_lep_charge[1];
-                        //   m_lep_pdgId [0] = m_new_lep_pdgId [0];
-                        //   m_lep_pdgId [1] = m_new_lep_pdgId [1];
-                        }
+        if(hasVtypeFix)
+        {   if(!hasFixedVtypeCharge) m_lep_charge[0] = m_lep_charge[1] = 0;   // For Duong's skims. The vtype fix given by VHbb group doesn't include the lepton charge.
+            else
+            {   m_lep_charge[0] = m_new_lep_charge[0];
+                m_lep_charge[1] = m_new_lep_charge[1];
+            }
+            //   m_lep_pdgId [0] = m_new_lep_pdgId [0];
+            //   m_lep_pdgId [1] = m_new_lep_pdgId [1];
+        }
         for(Index i=0; i<m_nLeps; i++)
-        {
-            // cout << "    EventHandler::evalCriteria(): MUON Props (elec #, pt, eta, iso, charge): = (" << i << ", " << m_lep_pt[i] << ", " << m_lep_eta[i] << ", " << m_lep_iso04[i] << ", " << m_new_lep_charge[i] << ")" << endl;
+        {   // cout << "    EventHandler::evalCriteria(): MUON Props (elec #, pt, eta, iso, charge): = (" << i << ", " << m_lep_pt[i] << ", " << m_lep_eta[i] << ", " << m_lep_iso04[i] << ", " << m_new_lep_charge[i] << ")" << endl;
           // Perform selection on this muon. Skip to next if it doesn't meet criteria.
             if(         m_lep_pt   [i] <anCfg.muonPtMin
                 || fabs(m_lep_eta  [i])>anCfg.muonEtaMax
@@ -388,12 +393,17 @@ void EventHandler::evalCriteria()
     }
     else if(m_Vtype==1)
     {
-        m_nLeps = 2;
-        if(hasVtypeFix) { m_lep_charge[0] = m_new_lep_charge[0];
-                          m_lep_charge[1] = m_new_lep_charge[1]; }
+        if(hasVtypeFix)
+        {   if(!hasFixedVtypeCharge) m_lep_charge[0] = m_lep_charge[1] = 0;   // For Duong's skims. The vtype fix given by VHbb group doesn't include the lepton charge.
+            else
+            {   m_lep_charge[0] = m_new_lep_charge[0];
+                m_lep_charge[1] = m_new_lep_charge[1];
+            }
+            //   m_lep_pdgId [0] = m_new_lep_pdgId [0];
+            //   m_lep_pdgId [1] = m_new_lep_pdgId [1];
+        }
         for(Index i=0; i<m_nLeps; i++)
-        {
-            // cout << "    EventHandler::evalCriteria(): ELEC Props (elec #, pt, eta, iso, charge): = (" << i << ", " << m_lep_pt[i] << ", " << m_lep_eta[i] << ", " << m_lep_iso03[i] << ", " << m_lep_charge[i] << ")" << endl;
+        {   // cout << "    EventHandler::evalCriteria(): ELEC Props (elec #, pt, eta, iso, charge): = (" << i << ", " << m_lep_pt[i] << ", " << m_lep_eta[i] << ", " << m_lep_iso03[i] << ", " << m_lep_charge[i] << ")" << endl;
           // Perform selection on this electron.
             if(    m_lep_pt [i] < anCfg.elecPtMin
                 || (fabs(m_lep_eta[i])>anCfg.elecEtaInnerMax && (fabs(m_lep_eta[i])<anCfg.elecEtaOuterMin || fabs(m_lep_eta[i])>anCfg.elecEtaOuterMax))
@@ -406,18 +416,25 @@ void EventHandler::evalCriteria()
         }
     }
 
-
   // Check lepton id, isolation (TO IMPLEMENT. ALREADY DONE IN NTUPLER)
     hasValidMuons =    m_Vtype==0
                     && isMuTriggered
                     && validLeptons.size() >=2
-                    && (m_lep_charge[validLeptons[0]]*m_lep_charge[validLeptons[1]]==-1 || !anCfg.dilepMuonReqOppSign )
+                    && (    m_lep_charge[validLeptons[0]]*m_lep_charge[validLeptons[1]]==-1
+                         || !anCfg.dilepMuonReqOppSign
+                         || (hasVtypeFix && !hasFixedVtypeCharge)
+                       )
     ;
     hasValidElectrons =    m_Vtype==1
                         && isElTriggered
                         && validLeptons.size() >=2
-                        && (m_lep_charge[validLeptons[0]]*m_lep_charge[validLeptons[1]]==-1 || !anCfg.dilepElecReqOppSign )
+                        && (   m_lep_charge[validLeptons[0]]*m_lep_charge[validLeptons[1]]==-1
+                            || !anCfg.dilepElecReqOppSign
+                            || (hasVtypeFix && !hasFixedVtypeCharge) // For "Fixed" and "skim" ntuples: Pass if the vtype is fixed, but does not have charge requirement.
+                          )                                          // Charge should be taken into account in fix.
     ;
+
+    // cout << "    hasValidMuons/Electrons?: " << (hasValidMuons?"yes":"no") << "/" << (hasValidElectrons?"yes":"no") << endl;
 
   // Calculate Z_DelR based on valid muons/electrons.
     Z_DelR = Z_DelPhi = Z_DelEta = -1;
@@ -517,6 +534,8 @@ void EventHandler::evalCriteria()
     isZllEvent = isZeeEvent || isZuuEvent;
     isZpJEvent = isZllEvent && validJets.size()>0;
 
+    // cout << "    Standard Eval Complete" << endl;
+
   // Kick function if not using Sim. Otherwise, check jets for flavor properties
     if(!usingSim) return;
 
@@ -533,7 +552,15 @@ void EventHandler::evalCriteria()
   // For each flavor tag, calculate an event weight based on jet tagging efficiency and tagging data/mc scalefactors.
   // See link for method used: https://twiki.cern.ch/twiki/bin/view/CMS/BTagSFMethods#1a_Event_reweighting_using_scale
     for(auto& hfTag : HFTags) for(auto& svType : SVType) for(auto& uncVar : UncertVariations)
-        if(hasHFJets[hfTag][svType]) jetTagEvtWeight[hfTag][svType][uncVar] = calculateJetTagEvtWeight(hfTag.Data(), svType.Data(), uncVar.Data());
+    {   // cout << "HFJet Weight Calc: " << hfTag << " " << svType << ": ";
+        if(hasHFJets[hfTag][svType])
+        {
+            jetTagEvtWeight[hfTag][svType][uncVar] = calculateJetTagEvtWeight(hfTag.Data(), svType.Data(), uncVar.Data());
+            // jetTagEvtWeight[hfTag][svType][uncVar] = calculateJetTagEvtWeight(hfTag.Data(), svType.Data(), uncVar.Data(), true);
+        }
+    }
+
+    // cout << "    Sim Eval Complete" << endl;
 
   // Kick function if not using DY. Otherwise, check for origin from Z->tautau
     if(!usingDY) return;
@@ -541,6 +568,7 @@ void EventHandler::evalCriteria()
 
     // if(isZpJEvent) printJets();
 
+    // cout << "    DY Eval Complete" << endl;
 }
 
 // Returns whether or not this event has any of the listed triggers.
@@ -608,6 +636,8 @@ float EventHandler::calculateJetTagEvtWeight(string hfOpPt, string svOpPt, strin
 { // For given flavor tag, calculate an event weight based on jet tagging efficiency and tagging data/mc scalefactors.
   // See link for method used: https://twiki.cern.ch/twiki/bin/view/CMS/BTagSFMethods#1a_Event_reweighting_using_scale
     float wt = 1.0;
+    // cout <<      "\n====================================================================\n"
+    //        << Form("=== calculateJetTagEvtWeight(%s,%s,%s)...", hfOpPt.c_str(), svOpPt.c_str(), uncert.c_str()) << endl;
 
   // If using a combined tagger, get the weight for each tag separately.
     TString tag = hfOpPt.c_str();
@@ -643,18 +673,21 @@ float EventHandler::calculateJetTagEvtWeight(string hfOpPt, string svOpPt, strin
             JetTagWeight* jtw = usingDY ? anCfg.jetTagWeightDY : anCfg.jetTagWeightBG;
             float jetEff = jtw->getJetEff(flv, hfOpPt, svOpPt, m_jet_pt[jet_i], m_jet_eta[jet_i]        );
             float jetSF  = jtw->getJetSF (flv, hfOpPt,         m_jet_pt[jet_i], m_jet_eta[jet_i], uncert);
-
           // Get whether this jet was tagged or not.
             bool tagged = HFJets[hfOpPt][svOpPt][vJet_i];
-
           // Factor into probability values.
             probData *= (tagged ? jetEff*jetSF : 1.0-jetEff*jetSF );
             probMC   *= (tagged ? jetEff       : 1.0-jetEff       );
-            if(debug) cout << "\n      " << flv << " " << vJet_i << "(" << jet_i << "){"<<jetEff<<","<<jetSF<<"}"<<(tagged?'t':'n') << " "
-            << setprecision(2) << m_jet_pt[jet_i] << " " << m_jet_eta[jet_i] << " "
-            << HFTagDiscrimVar[hfOpPt][jet_i] << " " << HFTagDiscrimOP[hfOpPt] << " "
-            << SVVariable[svOpPt][jet_i] << " " << SVMinimumVal[svOpPt] << " "
-            << " --> " << probData << " / " << probMC;
+            if(debug)
+            {   cout << "\n      " << flv << " " << vJet_i << "(" << jet_i << "){"<<jetEff<<","<<jetSF<<"}"<<(tagged?'t':'n') << " "
+                     << setprecision(2) << m_jet_pt[jet_i] << " " << m_jet_eta[jet_i] << " ";
+              // If charm...
+                if(TString(hfOpPt.substr(0,3)) == "Chm")   // If charm tagger, print both points.
+                    cout  << HFTagDiscrimVar[hfOpPt+"vsL"][jet_i] << "," << HFTagDiscrimVar[hfOpPt+"vsB"][jet_i] << " "
+                          << HFTagDiscrimOP [hfOpPt+"vsL"]        << "," << HFTagDiscrimOP [hfOpPt+"vsB"];
+                else cout << HFTagDiscrimVar[hfOpPt      ][jet_i] << " " << HFTagDiscrimVar[hfOpPt];
+                cout << " " << SVVariable[svOpPt][jet_i] << " " << SVMinimumVal[svOpPt] << " --> " << probData << " / " << probMC;
+            }
         }
         wt = probData/probMC;
     }

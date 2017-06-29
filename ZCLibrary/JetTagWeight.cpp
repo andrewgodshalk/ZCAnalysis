@@ -32,7 +32,7 @@ JetTagWeight::JetTagWeight()
     flvSetCSV_ = { {'b',"comb"}, {'c',"comb"}, {'l',"incl"} };
     flvSetChm_ = { {'b',"TnP"} , {'c',"comb"}, {'l',"incl"} };
     flavor_    = { 'b', 'c', 'l' };
-    opPt_      = { "NoHF", "CSVL", "CSVM", "CSVT", "CSVS", "ChmL", "ChmM", "ChmT"
+    opPt_      = { "NoHF", "CSVL", "CSVM", "CSVT", "CSVS", "ChmL", "ChmM", "ChmT",
                    "BCLL","BCLM","BCLT","BCML","BCMM","BCMT","BCTL","BCTM","BCTT"  // combined b/c tagger
                  };
     svTypes_   = { "noSV", "oldSV", "pfSV", "pfISV", "qcSV", "cISV", "cISVf", "cISVp"};
@@ -67,8 +67,8 @@ bool JetTagWeight::setEffFile(const string& fn)
     effPtMax_  = jetTagEff_['l']["CSVT"]["pfISV"]->GetXaxis()->GetXmax();
     effEtaMin_ = jetTagEff_['l']["CSVT"]["pfISV"]->GetYaxis()->GetXmin();
     effEtaMax_ = jetTagEff_['l']["CSVT"]["pfISV"]->GetYaxis()->GetXmax();
-    cout << TString::Format("    (Loaded dimensions: {pt}x{eta} = {%f,%f}x{%f,%f})", effPtMin_, effPtMax_, effEtaMin_, effEtaMax_) << endl;
-    cout << "  Complete!" << endl;
+    // cout << TString::Format("    (Loaded dimensions: {pt}x{eta} = {%f,%f}x{%f,%f})", effPtMin_, effPtMax_, effEtaMin_, effEtaMax_) << endl;
+    // cout << "  Complete!" << endl;
     return true;
 }
 
@@ -94,7 +94,8 @@ bool JetTagWeight::setChmSFFile( const string& fn)
     string tagger = "cTag";
     chmCalib_ = BTagCalibration(tagger, fn_chm_sf_);
     for( string& op : opPt_) if( op.substr(0,3) == "Chm")
-    {   btagCalibReader_[op] = BTagCalibrationReader(opPtMap_[op], "central", {"up","down"});
+    {
+        btagCalibReader_[op] = BTagCalibrationReader(opPtMap_[op], "central", {"up","down"});
         for( char& f : flavor_)
             btagCalibReader_[op].load(chmCalib_, flvMap_[f], flvSetChm_[f]);
     }
@@ -124,7 +125,6 @@ float JetTagWeight::getJetEff(char flv, string opPt, string svType, float pt, fl
 
 float JetTagWeight::getJetSF(char flv, string opPt, float pt, float eta, string type)
 {
-    //cout << "  Looking for jet sf: flv=" << flv << ", opPt=" << opPt << ", pt=" << pt << ", eta=" << eta << endl;
     float sf = 1.0;
 
   // Evaluate the input type.
@@ -139,6 +139,7 @@ float JetTagWeight::getJetSF(char flv, string opPt, float pt, float eta, string 
         }
     }
 
+  // Check if scale factors are loaded and the OP requires a SF.
     if(csvSFLoaded_ && chmSFLoaded_ && opPt != "SVT" && opPt != "NoHF")
     {   if(opPt.substr(0,2) == "BC")  // If combining taggers, combine SFs
         {   string btag = "NoHF";
@@ -153,7 +154,6 @@ float JetTagWeight::getJetSF(char flv, string opPt, float pt, float eta, string 
         }
         else  // Get value from btag calibration reader directly
             sf = btagCalibReader_[opPt].eval_auto_bounds(type, flvMap_[flv], eta, pt);
-        //cout << "    ...from file: " << sf << endl;
     }
 
     return sf;

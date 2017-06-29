@@ -166,6 +166,7 @@ public:
     bool usingEvenEventDY   ;
     bool usingOddEventDY    ;
     bool hasVtypeFix        ;
+    bool hasFixedVtypeCharge;
 
   // Lepton Selection Variables
     std::vector<Index> validLeptons, validMuons, validElectrons;    // List of the indexes of leptons, eventually ordered by pt.
